@@ -1,29 +1,27 @@
 package com.yonatankarp.agentdesk.core
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
-class WorkItemIdTest {
-    @Test
-    fun normalizesWhitespaceAndCase() {
-        val id = WorkItemId.parse("  Agent-Task:42  ")
+class WorkItemIdTest :
+    FunSpec({
+        test("normalizes whitespace and case") {
+            val id = WorkItemId.parse("  Agent-Task:42  ")
 
-        assertEquals("agent-task:42", id.value)
-        assertEquals("agent-task:42", id.toString())
-    }
-
-    @Test
-    fun rejectsBlankIds() {
-        assertFailsWith<IllegalArgumentException> {
-            WorkItemId.parse("   ")
+            id.value shouldBe "agent-task:42"
+            id.toString() shouldBe "agent-task:42"
         }
-    }
 
-    @Test
-    fun rejectsUnsupportedCharacters() {
-        assertFailsWith<IllegalArgumentException> {
-            WorkItemId.parse("agent task")
+        test("rejects blank ids") {
+            shouldThrow<IllegalArgumentException> {
+                WorkItemId.parse("   ")
+            }
         }
-    }
-}
+
+        test("rejects unsupported characters") {
+            shouldThrow<IllegalArgumentException> {
+                WorkItemId.parse("agent task")
+            }
+        }
+    })

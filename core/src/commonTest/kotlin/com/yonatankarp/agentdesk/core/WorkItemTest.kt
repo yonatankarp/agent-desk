@@ -1,63 +1,59 @@
 package com.yonatankarp.agentdesk.core
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
-class WorkItemTest {
-    @Test
-    fun titleAndSummaryNormalizeWhitespace() {
-        val title = WorkItemTitle.parse("  Review   build logs  ")
-        val summary = WorkSummary.parse("  CI failed   on the core test task.  ")
+class WorkItemTest :
+    FunSpec({
+        test("title and summary normalize whitespace") {
+            val title = WorkItemTitle.parse("  Review   build logs  ")
+            val summary = WorkSummary.parse("  CI failed   on the core test task.  ")
 
-        assertEquals("Review build logs", title.value)
-        assertEquals("CI failed on the core test task.", summary.value)
-    }
-
-    @Test
-    fun rejectsBlankTitleAndSummary() {
-        assertFailsWith<IllegalArgumentException> {
-            WorkItemTitle.parse("   ")
+            title.value shouldBe "Review build logs"
+            summary.value shouldBe "CI failed on the core test task."
         }
-        assertFailsWith<IllegalArgumentException> {
-            WorkSummary.parse("   ")
+
+        test("rejects blank title and summary") {
+            shouldThrow<IllegalArgumentException> {
+                WorkItemTitle.parse("   ")
+            }
+            shouldThrow<IllegalArgumentException> {
+                WorkSummary.parse("   ")
+            }
         }
-    }
 
-    @Test
-    fun rejectsMultilineTitleAndSummary() {
-        assertFailsWith<IllegalArgumentException> {
-            WorkItemTitle.parse("Review logs\nand retry")
+        test("rejects multiline title and summary") {
+            shouldThrow<IllegalArgumentException> {
+                WorkItemTitle.parse("Review logs\nand retry")
+            }
+            shouldThrow<IllegalArgumentException> {
+                WorkSummary.parse("Build failed\nSee private log path")
+            }
         }
-        assertFailsWith<IllegalArgumentException> {
-            WorkSummary.parse("Build failed\nSee private log path")
+
+        test("applies valid transition") {
+            val item = WorkItem(
+                id = WorkItemId.parse("agent-task:42"),
+                title = WorkItemTitle.parse("Run public hygiene check"),
+                status = WorkStatus.Queued,
+            )
+
+            val started = item.transitionTo(WorkStatus.Running)
+
+            started.status shouldBe WorkStatus.Running
+            item.status shouldBe WorkStatus.Queued
         }
-    }
 
-    @Test
-    fun appliesValidTransition() {
-        val item = WorkItem(
-            id = WorkItemId.parse("agent-task:42"),
-            title = WorkItemTitle.parse("Run public hygiene check"),
-            status = WorkStatus.Queued,
-        )
+        test("rejects invalid transition") {
+            val item = WorkItem(
+                id = WorkItemId.parse("agent-task:42"),
+                title = WorkItemTitle.parse("Run public hygiene check"),
+                status = WorkStatus.Succeeded,
+            )
 
-        val started = item.transitionTo(WorkStatus.Running)
-
-        assertEquals(WorkStatus.Running, started.status)
-        assertEquals(WorkStatus.Queued, item.status)
-    }
-
-    @Test
-    fun rejectsInvalidTransition() {
-        val item = WorkItem(
-            id = WorkItemId.parse("agent-task:42"),
-            title = WorkItemTitle.parse("Run public hygiene check"),
-            status = WorkStatus.Succeeded,
-        )
-
-        assertFailsWith<IllegalArgumentException> {
-            item.transitionTo(WorkStatus.Running)
+            shouldThrow<IllegalArgumentException> {
+                item.transitionTo(WorkStatus.Running)
+            }
         }
-    }
-}
+    })
