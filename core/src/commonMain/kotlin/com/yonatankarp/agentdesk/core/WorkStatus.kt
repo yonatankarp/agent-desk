@@ -14,7 +14,8 @@ enum class WorkStatus {
     Blocked,
     Succeeded,
     Failed,
-    Canceled;
+    Canceled,
+    ;
 
     val isTerminal: Boolean
         get() = this in terminalStatuses
@@ -22,17 +23,16 @@ enum class WorkStatus {
     val requiresHumanAttention: Boolean
         get() = this == NeedsDecision || this == Blocked
 
-    fun canTransitionTo(next: WorkStatus): Boolean =
-        when {
-            this == next -> true
-            isTerminal -> false
-            this == Queued -> next in setOf(Running, Canceled)
-            this == Running -> next in setOf(Waiting, NeedsDecision, Blocked, Succeeded, Failed, Canceled)
-            this == Waiting -> next in setOf(Running, NeedsDecision, Blocked, Failed, Canceled)
-            this == NeedsDecision -> next in setOf(Running, Waiting, Blocked, Failed, Canceled)
-            this == Blocked -> next in setOf(Running, Waiting, NeedsDecision, Failed, Canceled)
-            else -> false
-        }
+    fun canTransitionTo(next: WorkStatus): Boolean = when {
+        this == next -> true
+        isTerminal -> false
+        this == Queued -> next in setOf(Running, Canceled)
+        this == Running -> next in setOf(Waiting, NeedsDecision, Blocked, Succeeded, Failed, Canceled)
+        this == Waiting -> next in setOf(Running, NeedsDecision, Blocked, Failed, Canceled)
+        this == NeedsDecision -> next in setOf(Running, Waiting, Blocked, Failed, Canceled)
+        this == Blocked -> next in setOf(Running, Waiting, NeedsDecision, Failed, Canceled)
+        else -> false
+    }
 
     companion object {
         private val terminalStatuses = setOf(Succeeded, Failed, Canceled)
