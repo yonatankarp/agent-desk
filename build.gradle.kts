@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotest) apply false
+    alias(libs.plugins.kover) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.spotless)

@@ -52,6 +52,34 @@ jobs:
         with:
           gradle-module: :core
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare JVM build
+        uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
+        with:
+          jvm-version: "25"
+
+      - name: Generate core coverage reports
+        run: ./gradlew :core:koverXmlReport :core:koverHtmlReport
+
+      - name: Upload core coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-coverage-report
+          path: |
+            core/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Add coverage summary
+        run: |
+          echo "Core coverage reports uploaded as artifact: core-coverage-report" >> "$GITHUB_STEP_SUMMARY"
+          echo "Local command: ./gradlew :core:koverXmlReport :core:koverHtmlReport" >> "$GITHUB_STEP_SUMMARY"
+
   dependabot:
     if: ${{ github.actor == 'dependabot[bot]' }}
     permissions:
