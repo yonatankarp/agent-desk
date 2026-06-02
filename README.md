@@ -16,6 +16,8 @@ This repository is Kotlin/KMP-first:
 
 The repository is in bootstrap mode. The first product code slice establishes a Kotlin Multiplatform `:core` module with a small domain value object and CI-backed Gradle tests.
 
+Core tests use Kotest on the shared KMP test source set so domain rules can use spec-style tests and richer assertions as the model grows.
+
 ## Local Checks
 
 Run the public-safe repository hygiene check:

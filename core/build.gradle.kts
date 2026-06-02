@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotest)
 }
 
 kotlin {
@@ -9,7 +11,8 @@ kotlin {
 
     sourceSets {
         commonTest.dependencies {
-            implementation(kotlin("test"))
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.kotest.framework.engine)
         }
     }
 }
