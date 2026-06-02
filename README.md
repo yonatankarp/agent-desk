@@ -73,3 +73,7 @@ bash scripts/validate-public-hygiene.sh
 Assume every commit, issue, CI log, screenshot, and report is public.
 
 Do not commit private paths, tokens, real channel IDs, raw agent transcripts, personal data, private URLs, or OpenClaw-internal secrets. Use adapters, templates, and sanitized examples for local integrations.
+
+## Dependency Updates
+
+Dependabot policy and auto-merge gates are documented in [docs/dependabot-policy.md](docs/dependabot-policy.md).

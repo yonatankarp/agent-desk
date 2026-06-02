@@ -9,8 +9,12 @@ Protect `main` with:
 - Require a pull request before merging.
 - Require status checks to pass before merging.
 - Require branch to be up to date before merging.
-- Required status check: `Repo Hygiene`.
-- Add required shared workflow checks as they are adopted from `yonatankarp/github-actions`.
+- Required status checks:
+  - `Repo Hygiene`
+  - `Formatting`
+  - `Gradle Build`
+  - `Coverage`
+- Keep required checks aligned with the current CI workflow as new product surfaces are added.
 - Require Code Owner review.
 - Restrict force pushes.
 - Restrict deletions.

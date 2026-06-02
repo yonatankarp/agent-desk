@@ -19,7 +19,7 @@ curl -fsS -X PUT \
   -d '{
     "required_status_checks": {
       "strict": true,
-      "contexts": ["Repo Hygiene"]
+      "contexts": ["Repo Hygiene", "Formatting", "Gradle Build", "Coverage"]
     },
     "enforce_admins": true,
     "required_pull_request_reviews": {
@@ -40,4 +40,3 @@ curl -fsS -X PUT \
 
 echo
 echo "Branch protection requested for ${owner}/${repo}:${branch}."
-
