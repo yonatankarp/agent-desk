@@ -13,6 +13,7 @@ application {
 
 dependencies {
     implementation(project(":core"))
+    testImplementation(libs.konsist)
     testImplementation(kotlin("test"))
 }
 
