@@ -22,3 +22,11 @@ Relevant constraints, evidence, or prior decisions.
 
 Preferred option and why.
 
+## Security Impact
+
+Threat, secret, permission, or public-repo exposure impact of the decision.
+
+## Agent Collaboration Limits
+
+- [ ] No more than 3 discussion/revision rounds between agents
+- [ ] If unresolved after 3 rounds, record the disagreement and owner decision needed
