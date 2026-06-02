@@ -8,6 +8,7 @@ This repository is public. Treat all tracked files, issues, CI logs, screenshots
 - Desktop and mobile clients are first-class targets.
 - Backend/daemon work should use Kotlin unless there is a concrete, documented reason to introduce another runtime.
 - OpenClaw integration belongs behind an adapter boundary.
+- Prefer reusable workflows and composite actions from `yonatankarp/github-actions` when they fit the slice.
 - Do not commit private OpenClaw paths, real Discord channel IDs, tokens, raw transcripts, personal data, or private logs.
 
 ## Daily Autonomous Run Contract
@@ -44,3 +45,17 @@ Not every role needs a separate agent every day. The orchestrator must decide wh
 
 Work should land through small, coherent commits. Once branch protection is enabled, changes to `main` should require passing CI and review according to the repository ruleset.
 
+## GitHub Actions Reuse
+
+Before adding or changing CI workflows, inspect `yonatankarp/github-actions` for an applicable reusable workflow or composite action.
+
+Known useful candidates:
+
+- `.github/workflows/ci.yml`
+- `.github/workflows/linters.yml`
+- `.github/workflows/dependabot-auto-merge.yml`
+- `.github/actions/gradle-build/action.yml`
+- `.github/actions/prepare-jvm-build/action.yml`
+- `.github/actions/publish-test-reports/action.yml`
+
+Only use shared workflows when the repository has the expected project shape and the workflow can pass cleanly. Keep a small local workflow when a bootstrap slice needs checks that are not covered by the shared repo yet.
