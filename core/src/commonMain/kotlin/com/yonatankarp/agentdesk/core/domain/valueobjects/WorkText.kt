@@ -1,18 +1,4 @@
-package com.yonatankarp.agentdesk.core
-
-data class WorkItem(
-    val id: WorkItemId,
-    val title: WorkItemTitle,
-    val status: WorkStatus,
-    val summary: WorkSummary? = null,
-) {
-    fun transitionTo(next: WorkStatus): WorkItem {
-        require(status.canTransitionTo(next)) {
-            "Cannot transition work item $id from $status to $next"
-        }
-        return copy(status = next)
-    }
-}
+package com.yonatankarp.agentdesk.core.domain.valueobjects
 
 @JvmInline
 value class WorkItemTitle private constructor(val value: String) {

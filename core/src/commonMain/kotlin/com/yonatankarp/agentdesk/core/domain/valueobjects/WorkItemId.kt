@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.core
+package com.yonatankarp.agentdesk.core.domain.valueobjects
 
 @JvmInline
 value class WorkItemId private constructor(val value: String) {

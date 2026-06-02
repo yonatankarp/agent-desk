@@ -1,4 +1,8 @@
-package com.yonatankarp.agentdesk.core
+package com.yonatankarp.agentdesk.core.domain.events
+
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 
 data class WorkEvent(
     val id: WorkEventId,

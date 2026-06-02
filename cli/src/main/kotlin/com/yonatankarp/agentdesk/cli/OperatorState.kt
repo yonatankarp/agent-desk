@@ -1,7 +1,7 @@
 package com.yonatankarp.agentdesk.cli
 
-import com.yonatankarp.agentdesk.core.WorkEvent
-import com.yonatankarp.agentdesk.core.WorkItem
+import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 
 data class OperatorState(
     val workItems: List<WorkItem>,

@@ -1,5 +1,9 @@
-package com.yonatankarp.agentdesk.core
+package com.yonatankarp.agentdesk.core.domain.entities
 
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

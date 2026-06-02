@@ -1,10 +1,10 @@
 package com.yonatankarp.agentdesk.cli
 
-import com.yonatankarp.agentdesk.core.WorkBlockedPayload
-import com.yonatankarp.agentdesk.core.WorkEvent
-import com.yonatankarp.agentdesk.core.WorkEventPayload
-import com.yonatankarp.agentdesk.core.WorkItem
-import com.yonatankarp.agentdesk.core.WorkStartedPayload
+import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.core.domain.events.WorkEventPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 
 class OperatorConsoleRenderer {
     fun render(state: OperatorState): String = buildString {

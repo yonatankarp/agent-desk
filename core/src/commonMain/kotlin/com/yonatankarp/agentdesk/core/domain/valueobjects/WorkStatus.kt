@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.core
+package com.yonatankarp.agentdesk.core.domain.valueobjects
 
 /**
  * Adapter-neutral lifecycle state for supervised agent work.

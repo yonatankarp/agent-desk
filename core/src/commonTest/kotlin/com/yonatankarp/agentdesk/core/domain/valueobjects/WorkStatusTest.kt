@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.core
+package com.yonatankarp.agentdesk.core.domain.valueobjects
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
