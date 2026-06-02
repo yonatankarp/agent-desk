@@ -1,4 +1,4 @@
-package dev.agentdesk.core
+package com.yonatankarp.agentdesk.core
 
 import kotlin.test.Test
 import kotlin.test.assertFalse

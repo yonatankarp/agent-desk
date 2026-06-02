@@ -1,4 +1,4 @@
-package dev.agentdesk.core
+package com.yonatankarp.agentdesk.core
 
 data class WorkItem(
     val id: WorkItemId,
