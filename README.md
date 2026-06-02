@@ -44,6 +44,18 @@ Build and test the CLI module:
 ./gradlew :cli:build
 ```
 
+Run the sample Compose desktop shell:
+
+```bash
+./gradlew :desktop:run
+```
+
+Build and test the desktop module:
+
+```bash
+./gradlew :desktop:build
+```
+
 Check deterministic formatting:
 
 ```bash
@@ -77,7 +89,7 @@ Run both checks before opening a PR:
 ```bash
 bash scripts/validate-public-hygiene.sh
 ./gradlew spotlessCheck
-./gradlew :core:build :cli:build
+./gradlew :core:build :cli:build :desktop:build
 ```
 
 ## Public-Safe Rule
