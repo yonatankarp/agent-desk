@@ -23,11 +23,20 @@ Why is this worth doing now?
 - [ ] Manager
 - [ ] Architect
 - [ ] Developer
+- [ ] Security
 - [ ] Designer, or not applicable
 - [ ] Reviewer/Tester
 - [ ] Docs/Operator
 
+## Agent Collaboration Limits
+
+- [ ] No more than 3 discussion/revision rounds between agents
+- [ ] If unresolved after 3 rounds, reduce scope or mark blocked with the open decision
+
+## Security Notes
+
+Threat, secret, permission, or public-repo exposure concerns for this slice.
+
 ## Evidence
 
 Checks, screenshots, logs, commits, or other proof to attach when done.
-

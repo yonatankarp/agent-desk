@@ -22,3 +22,7 @@ What should happen instead?
 
 Logs, screenshots, checks, or links.
 
+## Security Impact
+
+- [ ] Security impact assessed
+- [ ] No secrets, tokens, private paths, raw transcripts, real channel IDs, or private logs included
