@@ -23,3 +23,11 @@ Decision: Agent Desk should reuse applicable workflows and composite actions fro
 Rationale: Shared CI keeps repeated repository setup consistent and makes Dependabot/branch-protection expectations easier to maintain.
 
 Consequence: Before adding local workflow logic, inspect the shared actions repository. Defer adopting shared JVM/Gradle workflows until Agent Desk has a real Gradle/KMP project shape for them to run against.
+
+## 2026-06-02: Desktop starts with CLI plus Compose, sequenced separately
+
+Decision: Agent Desk desktop scope includes both a thin CLI operator surface and a Compose Multiplatform graphical shell. Build the CLI slice first, then the Compose desktop shell as a separate slice.
+
+Rationale: CLI support gives an inspectable, automation-friendly operator surface that can exercise the shared core event/status model before graphical layout decisions harden. Compose Multiplatform remains the primary graphical desktop console, but it should build on core semantics rather than invent UI-only state.
+
+Consequence: The first desktop implementation slice is [#26](https://github.com/yonatankarp/agent-desk/issues/26), a public-safe CLI operator surface. The follow-up graphical shell slice is [#27](https://github.com/yonatankarp/agent-desk/issues/27), which requires Designer review and should show minimal mock/sample state from the core model.
