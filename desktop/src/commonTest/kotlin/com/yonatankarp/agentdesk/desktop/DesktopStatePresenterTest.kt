@@ -1,6 +1,6 @@
 package com.yonatankarp.agentdesk.desktop
 
-import com.yonatankarp.agentdesk.core.WorkStatus
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

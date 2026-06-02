@@ -2,6 +2,16 @@
 
 Agent Desk core types are public-safe and adapter-neutral. They describe supervised work without naming any private runtime, chat system, or local path.
 
+## Package Layout
+
+The `:core` module keeps domain concepts under `com.yonatankarp.agentdesk.core.domain`:
+
+- `domain.entities`: durable domain entities such as `WorkItem`.
+- `domain.valueobjects`: identifiers, text values, and lifecycle values such as `WorkItemId`, `WorkItemTitle`, `WorkSummary`, and `WorkStatus`.
+- `domain.events`: storage-independent event envelopes and payloads such as `WorkEvent`, `WorkEventId`, `EventSource`, and `WorkStartedPayload`.
+
+Application ports and adapter packages should be added only when a slice introduces real orchestration or integration boundaries. OpenClaw-specific runtime details still belong behind adapters before they reach these domain packages.
+
 ## Work Item
 
 A work item is one bounded unit of delegated agent work that can be inspected, resumed, stopped, or reviewed.

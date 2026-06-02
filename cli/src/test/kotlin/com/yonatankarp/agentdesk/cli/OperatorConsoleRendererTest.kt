@@ -1,15 +1,15 @@
 package com.yonatankarp.agentdesk.cli
 
-import com.yonatankarp.agentdesk.core.EventSource
-import com.yonatankarp.agentdesk.core.EventTimestamp
-import com.yonatankarp.agentdesk.core.WorkEvent
-import com.yonatankarp.agentdesk.core.WorkEventId
-import com.yonatankarp.agentdesk.core.WorkItem
-import com.yonatankarp.agentdesk.core.WorkItemId
-import com.yonatankarp.agentdesk.core.WorkItemTitle
-import com.yonatankarp.agentdesk.core.WorkStartedPayload
-import com.yonatankarp.agentdesk.core.WorkStatus
-import com.yonatankarp.agentdesk.core.WorkSummary
+import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.EventSource
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

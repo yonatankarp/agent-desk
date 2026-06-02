@@ -68,7 +68,7 @@ Run architecture convention checks:
 ./gradlew :core:jvmTest
 ```
 
-The current Konsist rules keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code in the core package, and prevent core production files from importing adapter, desktop, or UI packages.
+The current Konsist rules keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, and prevent core production files from importing adapter, CLI, desktop, or UI packages.
 
 Generate coverage reports:
 
