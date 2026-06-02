@@ -30,10 +30,23 @@ Run the Kotlin core build and tests:
 ./gradlew :core:build
 ```
 
+Check deterministic formatting:
+
+```bash
+./gradlew spotlessCheck
+```
+
+Apply deterministic formatting:
+
+```bash
+./gradlew spotlessApply
+```
+
 Run both checks before opening a PR:
 
 ```bash
 bash scripts/validate-public-hygiene.sh
+./gradlew spotlessCheck
 ./gradlew :core:build
 ```
 
