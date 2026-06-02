@@ -20,6 +20,23 @@ jobs:
       - name: Validate public-safe repository hygiene
         run: bash scripts/validate-public-hygiene.sh
 
+  gradle:
+    name: Gradle Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare JVM build
+        uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
+        with:
+          jvm-version: "21"
+
+      - name: Build core module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :core
+
   dependabot:
     if: ${{ github.actor == 'dependabot[bot]' }}
     permissions:

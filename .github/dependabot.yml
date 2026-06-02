@@ -11,3 +11,13 @@ updates:
       - dependencies
       - chore
 
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:30"
+      timezone: Europe/Berlin
+    labels:
+      - dependencies
+      - chore
