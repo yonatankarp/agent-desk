@@ -34,3 +34,43 @@ status: Blocked
 Terminal statuses are `Succeeded`, `Failed`, and `Canceled`; they do not transition back to active states. `NeedsDecision` and `Blocked` are the only initial statuses treated as requiring human attention.
 
 `Stale` is not a lifecycle status. It should be derived from event timestamps, heartbeats, or runtime health checks so the durable lifecycle state remains stable.
+
+## Event Envelope
+
+`WorkEvent` is the first storage-independent event envelope for deriving current operational state.
+
+- `id`: stable sanitized event identifier.
+- `occurredAt`: RFC 3339 UTC instant string.
+- `source`: adapter-neutral source identifier, such as `mock-adapter` or `local-daemon`.
+- `workItemId`: the work item the event describes.
+- `type`: stable event type derived from the payload.
+- `payload`: typed event-specific data.
+
+OpenClaw-specific runtime details belong in an adapter before they reach this model. The core event source should stay public-safe and adapter-neutral.
+
+### Public-Safe Examples
+
+Work started:
+
+```text
+id: event:agent-task:42:started
+occurredAt: 2026-06-02T21:00:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.started
+payload.title: Run public hygiene check
+payload.summary: Agent accepted the task and started local checks.
+```
+
+Work blocked:
+
+```text
+id: event:agent-task:42:blocked
+occurredAt: 2026-06-02T21:05:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.blocked
+payload.reason: CI failed on the core test task.
+```
+
+These are illustrative public-safe examples, not a serialized wire contract. Serialization can be added in a later slice when storage or adapter code needs it.
