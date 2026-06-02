@@ -57,6 +57,11 @@ jobs:
         with:
           gradle-module: :cli
 
+      - name: Build desktop module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :desktop
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest

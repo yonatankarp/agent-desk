@@ -1,4 +1,6 @@
 plugins {
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.kotest) apply false
     alias(libs.plugins.kover) apply false
     alias(libs.plugins.kotlin.jvm) apply false
