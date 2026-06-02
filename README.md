@@ -46,6 +46,14 @@ Run architecture convention checks:
 
 The current Konsist rules keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code in the core package, and prevent core production files from importing adapter, desktop, or UI packages.
 
+Generate coverage reports:
+
+```bash
+./gradlew :core:koverXmlReport :core:koverHtmlReport
+```
+
+Coverage is report-only for now. CI uploads the generated `:core` coverage reports as an artifact, but does not enforce a threshold until the domain test surface is larger.
+
 Apply deterministic formatting:
 
 ```bash
