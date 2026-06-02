@@ -16,3 +16,10 @@ Rationale: Public CI is useful and the project may become reusable. Public-safe 
 
 Consequence: No tracked private paths, channel IDs, tokens, raw transcripts, private logs, or unsanitized screenshots.
 
+## 2026-06-02: Prefer shared GitHub Actions
+
+Decision: Agent Desk should reuse applicable workflows and composite actions from `yonatankarp/github-actions`.
+
+Rationale: Shared CI keeps repeated repository setup consistent and makes Dependabot/branch-protection expectations easier to maintain.
+
+Consequence: Before adding local workflow logic, inspect the shared actions repository. Defer adopting shared JVM/Gradle workflows until Agent Desk has a real Gradle/KMP project shape for them to run against.
