@@ -20,3 +20,11 @@ jobs:
       - name: Validate public-safe repository hygiene
         run: bash scripts/validate-public-hygiene.sh
 
+  dependabot:
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: yonatankarp/github-actions/.github/workflows/dependabot-auto-merge.yml@v2
+    secrets:
+      GITHUB_PAT: ${{ secrets.CI_PAT }}
