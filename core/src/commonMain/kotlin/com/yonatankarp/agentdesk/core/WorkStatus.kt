@@ -1,4 +1,4 @@
-package dev.agentdesk.core
+package com.yonatankarp.agentdesk.core
 
 /**
  * Adapter-neutral lifecycle state for supervised agent work.
