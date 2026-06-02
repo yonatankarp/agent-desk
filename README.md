@@ -32,6 +32,18 @@ Run the Kotlin core build and tests:
 ./gradlew :core:build
 ```
 
+Run the sample CLI operator surface:
+
+```bash
+./gradlew :cli:run
+```
+
+Build and test the CLI module:
+
+```bash
+./gradlew :cli:build
+```
+
 Check deterministic formatting:
 
 ```bash
@@ -65,7 +77,7 @@ Run both checks before opening a PR:
 ```bash
 bash scripts/validate-public-hygiene.sh
 ./gradlew spotlessCheck
-./gradlew :core:build
+./gradlew :core:build :cli:build
 ```
 
 ## Public-Safe Rule
