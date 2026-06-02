@@ -30,7 +30,7 @@ jobs:
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
         with:
-          jvm-version: "21"
+          jvm-version: "25"
 
       - name: Build core module
         uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
