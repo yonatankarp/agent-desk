@@ -14,5 +14,8 @@ kotlin {
             implementation(libs.kotest.assertions.core)
             implementation(libs.kotest.framework.engine)
         }
+        jvmTest.dependencies {
+            implementation(libs.konsist)
+        }
     }
 }
