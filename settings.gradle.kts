@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "agent-desk"
 
 include(":core")
+include(":cli")
