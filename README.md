@@ -14,11 +14,31 @@ This repository is Kotlin/KMP-first:
 
 ## Current Status
 
-The repository is in bootstrap mode. The first slice establishes public-safe repo hygiene, CI, Dependabot, role expectations, and branch-protection guidance before product code lands.
+The repository is in bootstrap mode. The first product code slice establishes a Kotlin Multiplatform `:core` module with a small domain value object and CI-backed Gradle tests.
+
+## Local Checks
+
+Run the public-safe repository hygiene check:
+
+```bash
+bash scripts/validate-public-hygiene.sh
+```
+
+Run the Kotlin core build and tests:
+
+```bash
+./gradlew :core:build
+```
+
+Run both checks before opening a PR:
+
+```bash
+bash scripts/validate-public-hygiene.sh
+./gradlew :core:build
+```
 
 ## Public-Safe Rule
 
 Assume every commit, issue, CI log, screenshot, and report is public.
 
 Do not commit private paths, tokens, real channel IDs, raw agent transcripts, personal data, private URLs, or OpenClaw-internal secrets. Use adapters, templates, and sanitized examples for local integrations.
-
