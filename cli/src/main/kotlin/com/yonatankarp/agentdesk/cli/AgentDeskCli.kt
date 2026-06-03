@@ -1,17 +1,16 @@
 package com.yonatankarp.agentdesk.cli
 
-import com.yonatankarp.agentdesk.app.config.AgentDeskMode
 import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfig
+import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfigParser
 import com.yonatankarp.agentdesk.app.config.ConfigValidationException
-import com.yonatankarp.agentdesk.app.config.EventStoreLocation
-import com.yonatankarp.agentdesk.app.config.RuntimeEventSourceKind
 import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.OperatorStateLoadException
+import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
+import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
+import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
-import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
-import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-import com.yonatankarp.agentdesk.core.domain.projections.WorkEventProjector
 import java.io.IOException
 import java.io.InputStream
 import java.io.PrintStream
@@ -51,6 +50,15 @@ object AgentDeskCli {
     } catch (exception: CliInputException) {
         error.println("Error: ${exception.publicMessage}")
         1
+    } catch (exception: ConfigValidationException) {
+        error.println("Error: ${exception.message ?: "Runtime configuration is invalid."}")
+        1
+    } catch (exception: OperatorStateLoadException) {
+        error.println("Error: ${exception.message ?: "Operator state could not be loaded."}")
+        1
+    } catch (exception: OperatorStateProjectionException) {
+        error.println("Error: ${exception.message ?: "Operator state could not be projected."}")
+        1
     }
 
     private fun CliOptions.toOperatorState(input: InputStream): OperatorState = when (mode) {
@@ -62,11 +70,7 @@ object AgentDeskCli {
 
     private fun loadRuntimeStateFromConfig(path: String): OperatorState {
         val config = readRuntimeConfig(path)
-
-        return when (config.mode) {
-            AgentDeskMode.Sample -> SampleOperatorState.current()
-            AgentDeskMode.StoredEvents -> readEventsFromConfiguredStore(config).toOperatorState()
-        }
+        return RuntimeConfiguredOperatorStateLoader().load(config)
     }
 
     private fun readRuntimeConfig(path: String): AgentDeskRuntimeConfig {
@@ -83,44 +87,10 @@ object AgentDeskCli {
             throw CliInputException("Runtime configuration file could not be parsed.")
         }
 
-        return try {
-            properties.toRuntimeConfig()
-        } catch (exception: ConfigValidationException) {
-            throw CliInputException(exception.message ?: "Runtime configuration is invalid.")
-        }
+        return AgentDeskRuntimeConfigParser.parse(properties.toStringMap())
     }
 
-    private fun Properties.toRuntimeConfig(): AgentDeskRuntimeConfig {
-        val defaults = AgentDeskRuntimeConfig.defaults()
-        val mode = getProperty("mode")?.let(AgentDeskMode::parse) ?: defaults.mode
-        val source = getProperty("source")?.let(RuntimeEventSourceKind::parse) ?: defaults.source
-        val eventStoreLocation = getProperty("eventStoreLocation")?.let(EventStoreLocation::parse)
-
-        return AgentDeskRuntimeConfig(
-            mode = mode,
-            source = source,
-            eventStoreLocation = eventStoreLocation,
-        )
-    }
-
-    private fun readEventsFromConfiguredStore(config: AgentDeskRuntimeConfig): List<WorkEvent> {
-        val location = config.eventStoreLocation
-            ?: throw CliInputException("stored event mode requires eventStoreLocation")
-        val storePath =
-            try {
-                Path.of(location.value)
-            } catch (exception: InvalidPathException) {
-                throw CliInputException("Configured event store could not be read.")
-            }
-
-        return try {
-            LocalFileWorkEventRepository(storePath).readAll()
-        } catch (exception: WorkEventStoreException) {
-            throw CliInputException(exception.message ?: "Configured event store could not be read.")
-        } catch (exception: SecurityException) {
-            throw CliInputException("Configured event store could not be read.")
-        }
-    }
+    private fun Properties.toStringMap(): Map<String, String> = stringPropertyNames().associateWith(::getProperty)
 
     private fun readEventsFromInput(input: InputStream): List<WorkEvent> = try {
         readEvents(input.readBytes().decodeToString())
@@ -184,18 +154,7 @@ object AgentDeskCli {
         throw CliInputException("Invalid event record at line $lineNumber.")
     }
 
-    private fun List<WorkEvent>.toOperatorState(): OperatorState {
-        val projection = WorkEventProjector.project(this)
-        val issue = projection.ignoredEvents.firstOrNull()
-        if (issue != null) {
-            throw CliInputException("Invalid event sequence: ${issue.reason}.")
-        }
-
-        return OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-        )
-    }
+    private fun List<WorkEvent>.toOperatorState(): OperatorState = OperatorStateProjector.project(this)
 
     private fun usage(): String =
         """

@@ -19,6 +19,14 @@ class AgentDeskRuntimeConfigTest :
                     config.eventStoreLocation shouldBe null
                 }
             }
+
+            `when`("external properties omit all values") {
+                then("the shared parser returns the same defaults") {
+                    val config = AgentDeskRuntimeConfigParser.parse(emptyMap())
+
+                    config shouldBe AgentDeskRuntimeConfig.defaults()
+                }
+            }
         }
 
         given("stored event configuration") {
@@ -38,6 +46,22 @@ class AgentDeskRuntimeConfigTest :
                 then("they do not depend on Kotlin enum names") {
                     AgentDeskMode.parse("stored-events") shouldBe AgentDeskMode.StoredEvents
                     RuntimeEventSourceKind.parse("local-event-store") shouldBe RuntimeEventSourceKind.LocalEventStore
+                }
+            }
+
+            `when`("external properties describe the local store") {
+                then("the shared parser returns validated stored event config") {
+                    val config = AgentDeskRuntimeConfigParser.parse(
+                        mapOf(
+                            "mode" to "stored-events",
+                            "source" to "local-event-store",
+                            "eventStoreLocation" to "agent-desk-events.ndjson",
+                        ),
+                    )
+
+                    config.mode shouldBe AgentDeskMode.StoredEvents
+                    config.source shouldBe RuntimeEventSourceKind.LocalEventStore
+                    config.eventStoreLocation.toString() shouldBe "agent-desk-events.ndjson"
                 }
             }
         }
