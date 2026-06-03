@@ -118,6 +118,8 @@ Record fields:
 
 The JSON contract must stay public-safe. It must not include local paths, credentials, channel ids, raw transcripts, private runtime ids, or OpenClaw-specific internal fields.
 
+Local newline-delimited JSON persistence is described in [Local event store](local-event-store.md).
+
 ## Event Projection
 
 `WorkEventProjector` derives current operator state from an ordered stream of canonical `WorkEvent` records.
