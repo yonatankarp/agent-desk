@@ -3,25 +3,33 @@ package com.yonatankarp.agentdesk.core.domain.entities
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 
 class WorkItemTest :
-    FunSpec({
-        test("applies valid transition") {
-            val item = CoreFixtures.workItem(status = WorkStatus.Queued)
+    BehaviorSpec({
+        given("a queued work item") {
+            `when`("it transitions to running") {
+                then("it returns a running copy and leaves the original queued") {
+                    val item = CoreFixtures.workItem(status = WorkStatus.Queued)
 
-            val started = item.transitionTo(WorkStatus.Running)
+                    val started = item.transitionTo(WorkStatus.Running)
 
-            started.status shouldBe WorkStatus.Running
-            item.status shouldBe WorkStatus.Queued
+                    started.status shouldBe WorkStatus.Running
+                    item.status shouldBe WorkStatus.Queued
+                }
+            }
         }
 
-        test("rejects invalid transition") {
-            val item = CoreFixtures.workItem(status = WorkStatus.Succeeded)
+        given("a terminal work item") {
+            `when`("it transitions back to running") {
+                then("it rejects the invalid transition") {
+                    val item = CoreFixtures.workItem(status = WorkStatus.Succeeded)
 
-            shouldThrow<IllegalArgumentException> {
-                item.transitionTo(WorkStatus.Running)
+                    shouldThrow<IllegalArgumentException> {
+                        item.transitionTo(WorkStatus.Running)
+                    }
+                }
             }
         }
     })
