@@ -1,7 +1,8 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotest)
     alias(libs.plugins.kover)
 }
 
@@ -17,6 +18,12 @@ kotlin {
         }
         jvmTest.dependencies {
             implementation(libs.konsist)
+            implementation(libs.kotest.runner.junit5)
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
 }
