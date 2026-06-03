@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-03: Label-driven generated release notes
+
+Decision: Agent Desk uses GitHub's generated release notes configuration to group merged PRs by public-safe labels instead of maintaining custom release-note scripts.
+
+Rationale: The tag-driven workflow already asks GitHub to generate notes. A small `.github/release.yml` keeps the release surface maintainable, reviewable, and aligned with ordinary PR labeling.
+
+Consequence: Maintainers should label PRs before pushing a `v*` release tag. PRs without a matching category still appear under Other Changes, while explicit skip labels keep noise out of public releases.
+
 ## 2026-06-03: Tag-driven CLI jar releases
 
 Decision: Agent Desk releases are created from `v*` Git tags and publish the executable CLI jar as both an Actions artifact and a GitHub Release asset.
