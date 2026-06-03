@@ -10,7 +10,11 @@ The `:core` module keeps domain concepts under `com.yonatankarp.agentdesk.core.d
 - `domain.valueobjects`: identifiers, text values, and lifecycle values such as `WorkItemId`, `WorkItemTitle`, `WorkSummary`, and `WorkStatus`.
 - `domain.events`: storage-independent event envelopes and payloads such as `WorkEvent`, `WorkEventId`, `EventSource`, and `WorkStartedPayload`.
 
-Application ports and adapter packages should be added only when a slice introduces real orchestration or integration boundaries. OpenClaw-specific runtime details still belong behind adapters before they reach these domain packages.
+The `:app` module keeps reusable application and presentation behavior under `com.yonatankarp.agentdesk.app`:
+
+- `app.operator`: adapter-neutral operator state, projections, sample state, event lines, and status presentations shared by CLI and desktop.
+
+CLI input/output and Compose UI mapping stay adapter-specific. OpenClaw-specific runtime details still belong behind adapters before they reach these shared packages.
 
 ## Work Item
 

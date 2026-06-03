@@ -1,18 +1,17 @@
-package com.yonatankarp.agentdesk.desktop
+package com.yonatankarp.agentdesk.app.operator
 
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
-object DesktopStatePresenter {
-    fun activeCount(state: DesktopOperatorState): Int = state.workItems.count { !it.status.isTerminal }
+object OperatorStatePresenter {
+    fun activeCount(state: OperatorState): Int = state.workItems.count { !it.status.isTerminal }
 
-    fun attentionItems(state: DesktopOperatorState): List<WorkItem> = state.workItems.filter { it.status.requiresHumanAttention }
+    fun attentionItems(state: OperatorState): List<WorkItem> = state.workItems.filter { it.status.requiresHumanAttention }
 
-    fun eventLines(state: DesktopOperatorState): List<EventLine> = state.events.map { event ->
+    fun eventLines(state: OperatorState): List<EventLine> = state.events.map { event ->
         EventLine(
             occurredAt = event.occurredAt.toString(),
             type = event.type.wireName,
@@ -37,26 +36,4 @@ object DesktopStatePresenter {
         is WorkStartedPayload -> summary?.toString() ?: title.toString()
         is WorkBlockedPayload -> reason.toString()
     }
-}
-
-data class EventLine(
-    val occurredAt: String,
-    val type: String,
-    val workItemId: String,
-    val source: String,
-    val detail: String,
-)
-
-data class StatusPresentation(
-    val label: String,
-    val tone: StatusTone,
-)
-
-enum class StatusTone {
-    Neutral,
-    Active,
-    Attention,
-    Blocked,
-    Success,
-    Failure,
 }

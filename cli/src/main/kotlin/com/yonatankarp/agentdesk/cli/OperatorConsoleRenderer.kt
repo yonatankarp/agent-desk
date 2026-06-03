@@ -1,10 +1,8 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
-import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-import com.yonatankarp.agentdesk.core.domain.events.WorkEventPayload
-import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 
 class OperatorConsoleRenderer {
     fun render(state: OperatorState): String = buildString {
@@ -12,9 +10,9 @@ class OperatorConsoleRenderer {
         appendLine()
         appendWorkItems(state.workItems)
         appendLine()
-        appendAttentionQueue(state.workItems)
+        appendAttentionQueue(state)
         appendLine()
-        appendRecentEvents(state.events)
+        appendRecentEvents(state)
     }.trimEnd()
 
     private fun StringBuilder.appendWorkItems(workItems: List<WorkItem>) {
@@ -32,9 +30,9 @@ class OperatorConsoleRenderer {
         }
     }
 
-    private fun StringBuilder.appendAttentionQueue(workItems: List<WorkItem>) {
+    private fun StringBuilder.appendAttentionQueue(state: OperatorState) {
         appendLine("Attention queue")
-        val attentionItems = workItems.filter { it.status.requiresHumanAttention }
+        val attentionItems = OperatorStatePresenter.attentionItems(state)
         if (attentionItems.isEmpty()) {
             appendLine("- none")
             return
@@ -45,23 +43,19 @@ class OperatorConsoleRenderer {
         }
     }
 
-    private fun StringBuilder.appendRecentEvents(events: List<WorkEvent>) {
+    private fun StringBuilder.appendRecentEvents(state: OperatorState) {
         appendLine("Recent events")
-        if (events.isEmpty()) {
+        val lines = OperatorStatePresenter.eventLines(state)
+        if (lines.isEmpty()) {
             appendLine("- none")
             return
         }
 
-        events.forEach { event ->
+        lines.forEach { line ->
             appendLine(
-                "- ${event.occurredAt} ${event.type.wireName} ${event.workItemId} " +
-                    "from ${event.source} - ${event.payload.describe()}",
+                "- ${line.occurredAt} ${line.type} ${line.workItemId} " +
+                    "from ${line.source} - ${line.detail}",
             )
         }
-    }
-
-    private fun WorkEventPayload.describe(): String = when (this) {
-        is WorkStartedPayload -> summary?.toString() ?: title.toString()
-        is WorkBlockedPayload -> reason.toString()
     }
 }
