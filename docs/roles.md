@@ -22,6 +22,7 @@ Outputs:
 - architecture notes
 - data-model review
 - integration-boundary review
+- dependency-direction and package/module placement review
 - migration or coupling risks
 
 ## Developer
@@ -58,6 +59,8 @@ Outputs:
 
 Compliance is separate from QA, Security, and Reviewer. QA proves behavior through checks; Security focuses on secrets, privacy, permissions, adapters, persistence, and public-safe boundaries; Reviewer focuses on code, design, or implementation quality.
 
+Every Compliance review for a code slice must include an architecture boundary check covering dependency direction, package/module placement, forbidden imports, and issue acceptance criteria. If no boundary is relevant, say why.
+
 ## Security
 
 Owns secrets, privacy, permissions, adapters, persistence, and public-safe boundaries.
@@ -87,6 +90,7 @@ Owns code, design, or implementation review separate from QA evidence.
 Outputs:
 
 - diff risks
+- dependency, package, and boundary concerns missed by implementation
 - maintainability notes
 - behavioral or design concerns
 - requested changes or approval
@@ -105,3 +109,5 @@ Outputs:
 ## Slice Reports
 
 Every slice completion report should list QA/Tester and Compliance explicitly. If a role is not applicable, the report must say why.
+
+Compliance entries in slice reports should include `Architecture boundary check:` with the result or a clear not-applicable reason.

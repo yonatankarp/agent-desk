@@ -12,6 +12,9 @@ Changed:
 Evidence:
 - ...
 
+Compliance:
+- Architecture boundary check: dependency direction, package/module placement, forbidden imports, and issue acceptance criteria checked | not applicable because ...
+
 Issues:
 - ...
 
@@ -21,4 +24,3 @@ Next:
 Needs Yonatan:
 - Nothing
 ```
-

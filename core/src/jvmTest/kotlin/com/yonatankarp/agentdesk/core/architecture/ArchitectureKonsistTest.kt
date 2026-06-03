@@ -1,8 +1,10 @@
 package com.yonatankarp.agentdesk.core.architecture
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 
 class ArchitectureKonsistTest :
     FunSpec({
@@ -67,10 +69,19 @@ class ArchitectureKonsistTest :
                 .scopeFromProject(moduleName = "core", sourceSetName = "commonMain")
                 .files
                 .assertTrue { file ->
-                    !file.hasImport { import ->
-                        blockedImportPrefixes.any { import.name.startsWith(it) }
-                    }
+                    !file.hasBlockedConcreteImport()
                 }
+        }
+
+        test("forbidden domain import guard catches serialization fixtures") {
+            val fixture =
+                Konsist
+                    .scopeFromFile("core/src/jvmTest/resources/architecture/ForbiddenDomainImportFixture.kt")
+                    .files
+                    .single()
+
+            fixture.hasPackage("com.yonatankarp.agentdesk.core.domain.fixture").shouldBeTrue()
+            fixture.hasBlockedConcreteImport().shouldBeTrue()
         }
     }) {
     companion object {
@@ -108,5 +119,9 @@ class ArchitectureKonsistTest :
                 "okhttp3.",
                 "org.slf4j.",
             )
+
+        private fun KoFileDeclaration.hasBlockedConcreteImport(): Boolean = hasImport { import ->
+            blockedImportPrefixes.any { import.name.startsWith(it) }
+        }
     }
 }

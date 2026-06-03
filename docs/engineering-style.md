@@ -13,7 +13,7 @@ Agent Desk code should stay small, explicit, and easy to move across adapters. T
 ## Domain Modeling
 
 - Keep `:core` public-safe and adapter-neutral.
-- Keep `core.domain..` free of concrete libraries and adapters. Domain packages must not depend on serialization, IO, UI, persistence, HTTP, logging, filesystem, runtime integration packages, or adapter-specific APIs.
+- Keep `core.domain..` free of concrete libraries and adapters. Domain packages may depend on Kotlin and stdlib plus approved domain packages only, unless an exception is documented in the slice and guarded by architecture tests. Domain packages must not depend on serialization, IO, UI, persistence, HTTP, logging, filesystem, runtime integration packages, or adapter-specific APIs.
 - Model durable business concepts as explicit domain types, not primitive strings passed through adapters.
 - Prefer a shared value object underneath semantically similar wrappers when the structure is identical but names differ in the ubiquitous language.
 - Add `application`, port, and adapter packages only when a slice introduces real orchestration or integration behavior.
