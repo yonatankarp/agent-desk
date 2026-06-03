@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release CLI Jar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare JVM build
+        uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
+        with:
+          jvm-version: "25"
+
+      - name: Validate public-safe repository hygiene
+        run: bash scripts/validate-public-hygiene.sh
+
+      - name: Check Spotless formatting
+        run: ./gradlew spotlessCheck
+
+      - name: Build executable CLI jar
+        run: ./gradlew :cli:executableJar
+
+      - name: Smoke-run executable CLI jar
+        run: java -jar cli/build/libs/agent-desk-cli-all.jar
+
+      - name: Upload executable CLI jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-desk-cli-all
+          path: cli/build/libs/agent-desk-cli-all.jar
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cli/build/libs/agent-desk-cli-all.jar

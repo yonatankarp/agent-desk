@@ -64,6 +64,17 @@ Build the standalone executable CLI jar:
 java -jar cli/build/libs/agent-desk-cli-all.jar
 ```
 
+## Releases
+
+Releases are created by pushing a version tag that starts with `v`, for example:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow runs public hygiene, `spotlessCheck`, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, uploads it as an Actions artifact, and attaches the same jar to the GitHub Release.
+
 Run the sample Compose desktop shell:
 
 ```bash

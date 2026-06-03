@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-03: Tag-driven CLI jar releases
+
+Decision: Agent Desk releases are created from `v*` Git tags and publish the executable CLI jar as both an Actions artifact and a GitHub Release asset.
+
+Rationale: Tag-driven releases keep the public pipeline minimal, auditable, and free of secrets while making the packaged CLI easy to retrieve.
+
+Consequence: Release candidates must pass public hygiene, Spotless formatting, executable jar packaging, and a jar smoke run before publication.
+
 ## 2026-06-02: KMP-first product direction
 
 Decision: Agent Desk is Kotlin/KMP-first. Kotlin shared core owns domain models, event schemas, reducers, filtering, and sync/state logic. Desktop and mobile are first-class clients.
