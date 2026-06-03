@@ -85,10 +85,118 @@ jobs:
             core/build/reports/kover/**
           if-no-files-found: error
 
-      - name: Add coverage summary
+      - name: Generate coverage summary
         run: |
-          echo "Core coverage reports uploaded as artifact: core-coverage-report" >> "$GITHUB_STEP_SUMMARY"
-          echo "Local command: ./gradlew :core:koverXmlReport :core:koverHtmlReport" >> "$GITHUB_STEP_SUMMARY"
+          python3 <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          report_path = Path("core/build/reports/kover/report.xml")
+          root = ET.parse(report_path).getroot()
+          counters = {
+              counter.attrib["type"]: (
+                  int(counter.attrib["covered"]),
+                  int(counter.attrib["missed"]),
+              )
+              for counter in root.findall("counter")
+          }
+
+          def percentage(covered, missed):
+              total = covered + missed
+              if total == 0:
+                  return "n/a"
+              return f"{covered / total * 100:.2f}%"
+
+          rows = []
+          for counter_type in ("LINE", "BRANCH", "INSTRUCTION", "METHOD", "CLASS"):
+              covered, missed = counters[counter_type]
+              rows.append(
+                  f"| {counter_type.title()} | {percentage(covered, missed)} | {covered} | {missed} |"
+              )
+
+          summary = "\n".join(
+              [
+                  "<!-- agent-desk:core-coverage-summary -->",
+                  "## Core Coverage",
+                  "",
+                  "| Metric | Coverage | Covered | Missed |",
+                  "| --- | ---: | ---: | ---: |",
+                  *rows,
+                  "",
+                  "Artifact: `core-coverage-report`",
+                  "Local command: `./gradlew :core:koverXmlReport :core:koverHtmlReport`",
+                  "",
+              ]
+          )
+          Path("coverage-summary.md").write_text(summary, encoding="utf-8")
+          PY
+
+      - name: Add coverage summary to workflow run
+        if: ${{ github.event_name != 'pull_request' }}
+        run: cat coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload core coverage summary
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-coverage-summary
+          path: coverage-summary.md
+          if-no-files-found: error
+
+  coverage-comment:
+    name: Coverage Comment
+    runs-on: ubuntu-latest
+    needs: coverage
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+    permissions:
+      contents: read
+      pull-requests: write
+    concurrency:
+      group: coverage-comment-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Download core coverage summary
+        uses: actions/download-artifact@v4
+        with:
+          name: core-coverage-summary
+
+      - name: Comment coverage summary on pull request
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            const marker = '<!-- agent-desk:core-coverage-summary -->';
+            const body = fs.readFileSync('coverage-summary.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.find((comment) =>
+              ['github-actions', 'github-actions[bot]'].includes(comment.user?.login) &&
+                comment.body?.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
 
   dependabot:
     if: ${{ github.actor == 'dependabot[bot]' }}
