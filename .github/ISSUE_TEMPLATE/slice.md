@@ -23,10 +23,14 @@ Why is this worth doing now?
 - [ ] Manager
 - [ ] Architect
 - [ ] Developer
+- [ ] QA/Tester
+- [ ] Compliance
 - [ ] Security
 - [ ] Designer, or not applicable
-- [ ] Reviewer/Tester
+- [ ] Reviewer, or not applicable
 - [ ] Docs/Operator
+
+If a role is not applicable, explain why in the slice report.
 
 ## Agent Collaboration Limits
 

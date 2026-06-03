@@ -34,6 +34,40 @@ Outputs:
 - local verification
 - implementation notes
 
+## QA/Tester
+
+Owns verification evidence, local checks, CI status, regression risk, and explicit test gaps.
+
+Outputs:
+
+- checks run and their result
+- CI status
+- regression risk notes
+- anything not run, with reason
+
+## Compliance
+
+Owns whether the slice satisfies its stated obligations.
+
+Outputs:
+
+- acceptance criteria review
+- engineering-style and architecture-rule review
+- public-safety and user-constraint review
+- documented gaps or follow-up issues
+
+Compliance is separate from QA, Security, and Reviewer. QA proves behavior through checks; Security focuses on secrets, privacy, permissions, adapters, persistence, and public-safe boundaries; Reviewer focuses on code, design, or implementation quality.
+
+## Security
+
+Owns secrets, privacy, permissions, adapters, persistence, and public-safe boundaries.
+
+Outputs:
+
+- threat, secret, permission, and public-repo exposure review
+- adapter and persistence risk notes
+- security follow-up issues when needed
+
 ## Designer
 
 Owns visible UX and interaction quality.
@@ -46,16 +80,16 @@ Outputs:
 - layout or interaction notes
 - screenshots when available
 
-## Reviewer/Tester
+## Reviewer
 
-Owns quality gates.
+Owns code, design, or implementation review separate from QA evidence.
 
 Outputs:
 
-- checks run
 - diff risks
-- regression notes
-- known test gaps
+- maintainability notes
+- behavioral or design concerns
+- requested changes or approval
 
 ## Docs/Operator
 
@@ -68,3 +102,6 @@ Outputs:
 - runbook changes
 - public-safe artifact review
 
+## Slice Reports
+
+Every slice completion report should list QA/Tester and Compliance explicitly. If a role is not applicable, the report must say why.
