@@ -1,10 +1,10 @@
-import org.gradle.api.file.DuplicatesStrategy
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.tasks.JavaExec
-import org.gradle.jvm.tasks.Jar
 
 plugins {
     application
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.shadow)
 }
 
 kotlin {
@@ -30,26 +30,20 @@ tasks.named<JavaExec>("run") {
     standardInput = System.`in`
 }
 
-val executableJar by tasks.registering(Jar::class) {
+val executableJar by tasks.registering(ShadowJar::class) {
     group = "distribution"
     description = "Assembles a standalone executable CLI jar."
 
-    archiveBaseName = "agent-desk-cli"
-    archiveClassifier = "all"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName = "agent-desk-cli-all.jar"
+    mergeServiceFiles()
 
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
     }
 
     exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
-
     from(sourceSets.main.get().output)
-    from({
-        configurations.runtimeClasspath.get()
-            .filter { it.exists() }
-            .map { if (it.isDirectory) it else zipTree(it) }
-    })
+    configurations = listOf(project.configurations.runtimeClasspath.get())
 }
 
 tasks.named("assemble") {
