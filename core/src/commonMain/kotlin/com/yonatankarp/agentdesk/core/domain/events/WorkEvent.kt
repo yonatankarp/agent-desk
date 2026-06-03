@@ -69,7 +69,11 @@ value class EventSource private constructor(val value: String) {
 
 enum class WorkEventType(val wireName: String) {
     WorkStarted("work.started"),
+    WorkNeedsDecision("work.needs-decision"),
     WorkBlocked("work.blocked"),
+    WorkSucceeded("work.succeeded"),
+    WorkFailed("work.failed"),
+    WorkCanceled("work.canceled"),
 }
 
 sealed interface WorkEventPayload {
@@ -87,4 +91,26 @@ data class WorkBlockedPayload(
     val reason: WorkSummary,
 ) : WorkEventPayload {
     override val type: WorkEventType = WorkEventType.WorkBlocked
+}
+
+data class WorkNeedsDecisionPayload(
+    val reason: WorkSummary,
+) : WorkEventPayload {
+    override val type: WorkEventType = WorkEventType.WorkNeedsDecision
+}
+
+data object WorkSucceededPayload : WorkEventPayload {
+    override val type: WorkEventType = WorkEventType.WorkSucceeded
+}
+
+data class WorkFailedPayload(
+    val reason: WorkSummary,
+) : WorkEventPayload {
+    override val type: WorkEventType = WorkEventType.WorkFailed
+}
+
+data class WorkCanceledPayload(
+    val reason: WorkSummary? = null,
+) : WorkEventPayload {
+    override val type: WorkEventType = WorkEventType.WorkCanceled
 }
