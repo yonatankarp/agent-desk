@@ -62,7 +62,7 @@ class ArchitectureKonsistTest :
                 }
         }
 
-        test("core production files do not import adapter or UI packages") {
+        test("core production files do not import concrete adapter or library packages") {
             Konsist
                 .scopeFromProject(moduleName = "core", sourceSetName = "commonMain")
                 .files
@@ -92,10 +92,21 @@ class ArchitectureKonsistTest :
 
         private val blockedImportPrefixes =
             listOf(
+                "androidx.compose.",
                 "com.yonatankarp.agentdesk.adapter.",
                 "com.yonatankarp.agentdesk.cli.",
                 "com.yonatankarp.agentdesk.desktop.",
+                "com.yonatankarp.agentdesk.app.",
+                "com.yonatankarp.agentdesk.persistence.",
+                "com.yonatankarp.agentdesk.runtime.",
                 "com.yonatankarp.agentdesk.ui.",
+                "io.ktor.",
+                "java.io.",
+                "java.nio.",
+                "kotlin.io.",
+                "kotlinx.serialization.",
+                "okhttp3.",
+                "org.slf4j.",
             )
     }
 }

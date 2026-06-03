@@ -14,6 +14,8 @@ Adapters configure the storage location when constructing the repository. Do not
 
 Runtime config rules for choosing this store are described in [Runtime configuration](runtime-configuration.md).
 
+`WorkEventJson` lives in `com.yonatankarp.agentdesk.app.serialization`, outside the core domain boundary. The repository depends inward on domain `WorkEvent` values and uses the app serialization boundary only when reading or writing the local wire format.
+
 ```kotlin
 val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"))
 ```
