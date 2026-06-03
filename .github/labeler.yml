@@ -3,7 +3,7 @@
 changed-files-labels-limit: 4
 max-files-changed: 75
 
-breaking-change:
+breaking:
   - head-branch:
       - "^breaking/"
       - "^break/"
