@@ -57,6 +57,13 @@ Build and test the CLI module:
 ./gradlew :cli:build
 ```
 
+Build the standalone executable CLI jar:
+
+```bash
+./gradlew :cli:executableJar
+java -jar cli/build/libs/agent-desk-cli-all.jar
+```
+
 Run the sample Compose desktop shell:
 
 ```bash
