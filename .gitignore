@@ -11,3 +11,10 @@ local.properties
 *.tmp
 .DS_Store
 
+# OpenClaw runtime files are private workspace context, not project source.
+.openclaw/
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
