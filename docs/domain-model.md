@@ -89,7 +89,34 @@ type: work.blocked
 payload.reason: CI failed on the core test task.
 ```
 
-These are illustrative public-safe examples, not a serialized wire contract. Serialization can be added in a later slice when storage or adapter code needs it.
+These are illustrative public-safe examples. The stable JSON wire contract is described below.
+
+## Event Serialization
+
+`WorkEventJson` encodes canonical events as compact JSON records. The contract uses stable string fields and `WorkEventType.wireName` values; it does not expose Kotlin class names.
+
+Started event:
+
+```json
+{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}
+```
+
+Blocked event:
+
+```json
+{"id":"event:agent-task:42:blocked","occurredAt":"2026-06-02T21:05:00.123Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.blocked","payload":{"reason":"CI failed on the core test task."}}
+```
+
+Record fields:
+
+- `id`: canonical `WorkEventId`.
+- `occurredAt`: RFC 3339 UTC timestamp.
+- `source`: adapter-neutral `EventSource`.
+- `workItemId`: canonical `WorkItemId`.
+- `type`: stable event wire name such as `work.started` or `work.blocked`.
+- `payload`: event-specific sanitized text fields. Current fields are `title`, `summary`, and `reason`.
+
+The JSON contract must stay public-safe. It must not include local paths, credentials, channel ids, raw transcripts, private runtime ids, or OpenClaw-specific internal fields.
 
 ## Event Projection
 

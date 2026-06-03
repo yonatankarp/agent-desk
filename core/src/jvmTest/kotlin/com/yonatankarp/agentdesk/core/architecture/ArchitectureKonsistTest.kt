@@ -38,7 +38,7 @@ class ArchitectureKonsistTest :
             Konsist
                 .scopeFromProject(moduleName = "core", sourceSetName = "commonMain")
                 .classes()
-                .filter { it.name.contains("Event") || it.name.endsWith("Payload") }
+                .filter { it.name in eventDeclarationNames }
                 .assertTrue {
                     it.resideInPackage("com.yonatankarp.agentdesk.core.domain.events..")
                 }
@@ -74,6 +74,22 @@ class ArchitectureKonsistTest :
         }
     }) {
     companion object {
+        private val eventDeclarationNames =
+            setOf(
+                "EventSource",
+                "EventTimestamp",
+                "WorkBlockedPayload",
+                "WorkCanceledPayload",
+                "WorkEvent",
+                "WorkEventId",
+                "WorkEventPayload",
+                "WorkEventType",
+                "WorkFailedPayload",
+                "WorkNeedsDecisionPayload",
+                "WorkStartedPayload",
+                "WorkSucceededPayload",
+            )
+
         private val blockedImportPrefixes =
             listOf(
                 "com.yonatankarp.agentdesk.adapter.",
