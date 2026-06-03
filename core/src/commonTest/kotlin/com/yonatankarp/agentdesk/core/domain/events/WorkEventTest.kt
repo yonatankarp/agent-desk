@@ -29,6 +29,17 @@ class WorkEventTest :
             }
         }
 
+        given("additional lifecycle events") {
+            `when`("their envelope types are read") {
+                then("they expose stable wire names") {
+                    CoreFixtures.workNeedsDecisionEvent().type.wireName shouldBe "work.needs-decision"
+                    CoreFixtures.workSucceededEvent().type.wireName shouldBe "work.succeeded"
+                    CoreFixtures.workFailedEvent().type.wireName shouldBe "work.failed"
+                    CoreFixtures.workCanceledEvent().type.wireName shouldBe "work.canceled"
+                }
+            }
+        }
+
         given("event identifiers and sources") {
             `when`("raw values use surrounding whitespace and mixed case") {
                 then("they normalize case") {

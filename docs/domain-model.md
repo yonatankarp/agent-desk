@@ -90,3 +90,15 @@ payload.reason: CI failed on the core test task.
 ```
 
 These are illustrative public-safe examples, not a serialized wire contract. Serialization can be added in a later slice when storage or adapter code needs it.
+
+## Event Projection
+
+`WorkEventProjector` derives current operator state from an ordered stream of canonical `WorkEvent` records.
+
+- `WorkStartedPayload` creates or resumes a running `WorkItem` with the event title and summary.
+- `WorkNeedsDecisionPayload` and `WorkBlockedPayload` move existing work into human-attention states.
+- `WorkSucceededPayload`, `WorkFailedPayload`, and `WorkCanceledPayload` move existing work into terminal states.
+- Duplicate event ids are ignored after their first accepted occurrence.
+- Events that require missing prior state, or that would leave a terminal state, are ignored with a deterministic `ProjectionIssue`.
+
+The projector applies events in the order supplied by the caller. Storage and adapter code are responsible for choosing a stable ordering before projection; core does not infer ordering from private runtime behavior.

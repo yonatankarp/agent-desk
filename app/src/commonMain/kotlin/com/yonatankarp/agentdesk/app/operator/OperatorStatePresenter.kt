@@ -2,8 +2,12 @@ package com.yonatankarp.agentdesk.app.operator
 
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
 object OperatorStatePresenter {
@@ -34,6 +38,10 @@ object OperatorStatePresenter {
 
     private fun WorkEventPayload.describe(): String = when (this) {
         is WorkStartedPayload -> summary?.toString() ?: title.toString()
+        is WorkNeedsDecisionPayload -> reason.toString()
         is WorkBlockedPayload -> reason.toString()
+        WorkSucceededPayload -> "Succeeded"
+        is WorkFailedPayload -> reason.toString()
+        is WorkCanceledPayload -> reason?.toString() ?: "Canceled"
     }
 }
