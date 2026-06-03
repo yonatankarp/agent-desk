@@ -12,10 +12,10 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 class OperatorConsoleRendererTest {
     private val renderer = OperatorConsoleRenderer()
@@ -48,22 +48,21 @@ class OperatorConsoleRendererTest {
             ),
         )
 
-        assertContains(output, "Current work")
-        assertContains(output, "- [NeedsDecision] agent-task:42 Run public hygiene check")
-        assertContains(output, "Attention queue")
-        assertContains(output, "- agent-task:42 Run public hygiene check (NeedsDecision)")
-        assertContains(
-            output,
+        output shouldContain "Current work"
+        output shouldContain "- [NeedsDecision] agent-task:42 Run public hygiene check"
+        output shouldContain "Attention queue"
+        output shouldContain "- agent-task:42 Run public hygiene check (NeedsDecision)"
+        output shouldContain (
             "- 2026-06-02T21:00:00Z work.started agent-task:42 from sample-agent - " +
-                "Agent accepted the task and started checks.",
-        )
+                "Agent accepted the task and started checks."
+            )
     }
 
     @Test
     fun `renders empty sections explicitly`() {
         val output = renderer.render(OperatorState(workItems = emptyList(), events = emptyList()))
 
-        assertEquals(
+        output shouldBe
             """
             Agent Desk
 
@@ -75,19 +74,17 @@ class OperatorConsoleRendererTest {
 
             Recent events
             - none
-            """.trimIndent(),
-            output,
-        )
+            """.trimIndent()
     }
 
     @Test
     fun `sample output stays public safe and adapter neutral`() {
         val output = renderer.render(SampleOperatorState.current())
 
-        assertContains(output, "sample-agent")
-        assertFalse(output.contains("/home/"))
-        assertFalse(output.contains("discord", ignoreCase = true))
-        assertFalse(output.contains("token", ignoreCase = true))
-        assertFalse(output.contains("op://", ignoreCase = true))
+        output shouldContain "sample-agent"
+        output shouldNotContain "/home/"
+        output.lowercase() shouldNotContain "discord"
+        output.lowercase() shouldNotContain "token"
+        output.lowercase() shouldNotContain "op://"
     }
 }

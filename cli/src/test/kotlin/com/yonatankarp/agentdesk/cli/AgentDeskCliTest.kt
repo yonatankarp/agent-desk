@@ -1,24 +1,24 @@
 package com.yonatankarp.agentdesk.cli
 
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 
 class AgentDeskCliTest {
     @Test
     fun `sample mode is the default public-safe output`() {
         val result = runCli()
 
-        assertEquals(0, result.exitCode)
-        assertContains(result.output, "Agent Desk")
-        assertContains(result.output, "sample-agent")
+        result.exitCode shouldBe 0
+        result.output shouldContain "Agent Desk"
+        result.output shouldContain "sample-agent"
         assertPublicSafe(result.output)
-        assertEquals("", result.error)
+        result.error shouldBe ""
     }
 
     @Test
@@ -28,21 +28,21 @@ class AgentDeskCliTest {
 
         val result = runCli("--events", eventFile.toString())
 
-        assertEquals(0, result.exitCode)
-        assertContains(result.output, "- [Blocked] agent-task:42 Run public hygiene check")
-        assertContains(result.output, "- agent-task:42 Run public hygiene check (Blocked)")
-        assertContains(result.output, "work.blocked agent-task:42 from mock-adapter")
+        result.exitCode shouldBe 0
+        result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
+        result.output shouldContain "- agent-task:42 Run public hygiene check (Blocked)"
+        result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
         assertPublicSafe(result.output)
-        assertEquals("", result.error)
+        result.error shouldBe ""
     }
 
     @Test
     fun `stdin input renders projected operator state`() {
         val result = runCli("--stdin", input = "$STARTED_EVENT\n")
 
-        assertEquals(0, result.exitCode)
-        assertContains(result.output, "- [Running] agent-task:42 Run public hygiene check")
-        assertContains(result.output, "Attention queue\n- none")
+        result.exitCode shouldBe 0
+        result.output shouldContain "- [Running] agent-task:42 Run public hygiene check"
+        result.output shouldContain "Attention queue\n- none"
     }
 
     @Test
@@ -52,11 +52,11 @@ class AgentDeskCliTest {
 
         val result = runCli("--config", configFile.toString())
 
-        assertEquals(0, result.exitCode)
-        assertContains(result.output, "Agent Desk")
-        assertContains(result.output, "sample-agent")
+        result.exitCode shouldBe 0
+        result.output shouldContain "Agent Desk"
+        result.output shouldContain "sample-agent"
         assertPublicSafe(result.output)
-        assertEquals("", result.error)
+        result.error shouldBe ""
     }
 
     @Test
@@ -75,11 +75,11 @@ class AgentDeskCliTest {
 
         val result = runCli("--config", configFile.toString())
 
-        assertEquals(0, result.exitCode)
-        assertContains(result.output, "- [Blocked] agent-task:42 Run public hygiene check")
-        assertContains(result.output, "work.blocked agent-task:42 from mock-adapter")
+        result.exitCode shouldBe 0
+        result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
+        result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
         assertPublicSafe(result.output)
-        assertEquals("", result.error)
+        result.error shouldBe ""
     }
 
     @Test
@@ -96,10 +96,10 @@ class AgentDeskCliTest {
 
         val result = runCli("--config", configFile.toString())
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "mode must be sample or stored-events")
+        result.exitCode shouldBe 1
+        result.error shouldContain "mode must be sample or stored-events"
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
@@ -115,10 +115,10 @@ class AgentDeskCliTest {
 
         val result = runCli("--config", configFile.toString())
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "stored event mode requires eventStoreLocation")
+        result.exitCode shouldBe 1
+        result.error shouldContain "stored event mode requires eventStoreLocation"
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
@@ -135,108 +135,108 @@ class AgentDeskCliTest {
 
         val result = runCli("--config", configFile.toString())
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Configured event store could not be read.")
+        result.exitCode shouldBe 1
+        result.error shouldContain "Configured event store could not be read."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `invalid input fails without echoing raw private-looking data`() {
         val result = runCli("--stdin", input = """{"secret":"/home/operator/private-token.txt"}""")
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Invalid event record at line 1.")
+        result.exitCode shouldBe 1
+        result.error shouldContain "Invalid event record at line 1."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `duplicate event ids fail with a clear line-numbered error`() {
         val result = runCli("--stdin", input = "$STARTED_EVENT\n$STARTED_EVENT\n")
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Duplicate work event id at line 2.")
+        result.exitCode shouldBe 1
+        result.error shouldContain "Duplicate work event id at line 2."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `unsupported event types fail with a clear line-numbered error`() {
         val result = runCli("--stdin", input = UNSUPPORTED_EVENT)
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Unsupported event type at line 1.")
-        assertEquals("", result.output)
+        result.exitCode shouldBe 1
+        result.error shouldContain "Unsupported event type at line 1."
+        result.output shouldBe ""
     }
 
     @Test
     fun `out-of-order events fail with a clear projection error`() {
         val result = runCli("--stdin", input = BLOCKED_EVENT)
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Invalid event sequence:")
+        result.exitCode shouldBe 1
+        result.error shouldContain "Invalid event sequence:"
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `empty stdin input fails with a clear error`() {
         val result = runCli("--stdin", input = " \n")
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "No event input provided.")
-        assertEquals("", result.output)
+        result.exitCode shouldBe 1
+        result.error shouldContain "No event input provided."
+        result.output shouldBe ""
     }
 
     @Test
     fun `missing event file option value is a usage error`() {
         val result = runCli("--events")
 
-        assertEquals(2, result.exitCode)
-        assertContains(result.error, "Missing value for --events.")
-        assertContains(result.error, "Run with --help for usage.")
-        assertEquals("", result.output)
+        result.exitCode shouldBe 2
+        result.error shouldContain "Missing value for --events."
+        result.error shouldContain "Run with --help for usage."
+        result.output shouldBe ""
     }
 
     @Test
     fun `missing config file option value is a usage error`() {
         val result = runCli("--config")
 
-        assertEquals(2, result.exitCode)
-        assertContains(result.error, "Missing value for --config.")
-        assertContains(result.error, "Run with --help for usage.")
-        assertEquals("", result.output)
+        result.exitCode shouldBe 2
+        result.error shouldContain "Missing value for --config."
+        result.error shouldContain "Run with --help for usage."
+        result.output shouldBe ""
     }
 
     @Test
     fun `invalid event file path fails without echoing the path`() {
         val result = runCli("--events", "\u0000/home/operator/private-token.txt")
 
-        assertEquals(1, result.exitCode)
-        assertContains(result.error, "Event input file could not be read.")
+        result.exitCode shouldBe 1
+        result.error shouldContain "Event input file could not be read."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `config mode cannot be combined with direct event input`() {
         val result = runCli("--config", "agent-desk.config.properties", "--stdin")
 
-        assertEquals(2, result.exitCode)
-        assertContains(result.error, "Choose only one input mode.")
+        result.exitCode shouldBe 2
+        result.error shouldContain "Choose only one input mode."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     @Test
     fun `unknown option fails without echoing the argument`() {
         val result = runCli("--private-token-file=/home/operator/private-token.txt")
 
-        assertEquals(2, result.exitCode)
-        assertContains(result.error, "Unknown option.")
+        result.exitCode shouldBe 2
+        result.error shouldContain "Unknown option."
         assertPublicSafe(result.error)
-        assertEquals("", result.output)
+        result.output shouldBe ""
     }
 
     private fun runCli(
@@ -261,10 +261,10 @@ class AgentDeskCliTest {
     }
 
     private fun assertPublicSafe(text: String) {
-        assertFalse(text.contains("/home/"))
-        assertFalse(text.contains("private-token"))
-        assertFalse(text.contains("discord", ignoreCase = true))
-        assertFalse(text.contains("op://", ignoreCase = true))
+        text shouldNotContain "/home/"
+        text shouldNotContain "private-token"
+        text.lowercase() shouldNotContain "discord"
+        text.lowercase() shouldNotContain "op://"
     }
 
     private data class CliRunResult(

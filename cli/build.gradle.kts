@@ -18,6 +18,7 @@ application {
 dependencies {
     implementation(project(":app"))
     implementation(project(":core"))
+    testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.konsist)
     testImplementation(kotlin("test"))
 }
