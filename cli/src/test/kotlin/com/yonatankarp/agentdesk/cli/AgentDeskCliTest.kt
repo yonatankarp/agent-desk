@@ -75,6 +75,16 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `out-of-order events fail with a clear projection error`() {
+        val result = runCli("--stdin", input = BLOCKED_EVENT)
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid event sequence:")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
     fun `empty stdin input fails with a clear error`() {
         val result = runCli("--stdin", input = " \n")
 
@@ -90,6 +100,16 @@ class AgentDeskCliTest {
         assertEquals(2, result.exitCode)
         assertContains(result.error, "Missing value for --events.")
         assertContains(result.error, "Run with --help for usage.")
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `invalid event file path fails without echoing the path`() {
+        val result = runCli("--events", "\u0000/home/operator/private-token.txt")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Event input file could not be read.")
+        assertPublicSafe(result.error)
         assertEquals("", result.output)
     }
 

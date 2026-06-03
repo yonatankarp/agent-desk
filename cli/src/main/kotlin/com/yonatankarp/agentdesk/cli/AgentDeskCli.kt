@@ -9,6 +9,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file.Files
+import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import kotlin.system.exitProcess
 
@@ -61,6 +62,8 @@ object AgentDeskCli {
             try {
                 Files.readString(Path.of(path))
             } catch (exception: IOException) {
+                throw CliInputException("Event input file could not be read.")
+            } catch (exception: InvalidPathException) {
                 throw CliInputException("Event input file could not be read.")
             } catch (exception: SecurityException) {
                 throw CliInputException("Event input file could not be read.")
