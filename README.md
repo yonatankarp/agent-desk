@@ -38,6 +38,19 @@ Run the sample CLI operator surface:
 ./gradlew :cli:run
 ```
 
+Run the CLI from sanitized newline-delimited event JSON:
+
+```bash
+printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}' | ./gradlew :cli:run --args='--stdin'
+```
+
+Or write a public-safe event record to a file and read it back:
+
+```bash
+printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}' > agent-desk-events.ndjson
+./gradlew :cli:run --args='--events agent-desk-events.ndjson'
+```
+
 Build and test the CLI module:
 
 ```bash
