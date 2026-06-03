@@ -161,7 +161,7 @@ jobs:
           name: core-coverage-summary
 
       - name: Comment coverage summary on pull request
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
