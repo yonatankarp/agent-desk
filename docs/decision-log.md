@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-03: Branch-aware PR release labels
+
+Decision: Agent Desk uses branch-prefix and path-based PR auto-labeling to apply release-note labels before releases are generated.
+
+Rationale: Generated release notes are only as useful as the labels on merged PRs. Encoding branch conventions in `AGENTS.md` and `CONTRIBUTING.md` gives agents and contributors a shared source of truth, while path fallback keeps labeling useful when a branch name is generic.
+
+Consequence: Contributors and agents should create branches with prefixes such as `feat/`, `fix/`, `docs/`, `ci/`, `build/`, `tooling/`, `arch/`, `refactor/`, `chore/`, or `breaking/`. The PR labeler adds matching labels but does not remove manually curated labels.
+
 ## 2026-06-03: Manual SemVer release workflow
 
 Decision: Agent Desk releases are created by manually running the `Release` GitHub Actions workflow from `main` with an explicit `patch`, `minor`, or `major` SemVer bump.
