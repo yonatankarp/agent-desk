@@ -46,6 +46,44 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `empty config file renders default sample state`() {
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(configFile, "")
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Agent Desk")
+        assertContains(result.output, "sample-agent")
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
+    fun `stored event config renders projected operator state`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$BLOCKED_EVENT\n")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "- [Blocked] agent-task:42 Run public hygiene check")
+        assertContains(result.output, "- agent-task:42 Run public hygiene check (Blocked)")
+        assertContains(result.output, "work.blocked agent-task:42 from mock-adapter")
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
     fun `invalid input fails without echoing raw private-looking data`() {
         val result = runCli("--stdin", input = """{"secret":"/home/operator/private-token.txt"}""")
 
@@ -119,6 +157,122 @@ class AgentDeskCliTest {
 
         assertEquals(2, result.exitCode)
         assertContains(result.error, "Unknown option.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `missing config option value is a usage error`() {
+        val result = runCli("--config")
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Missing value for --config.")
+        assertContains(result.error, "Run with --help for usage.")
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `config cannot be combined with other input modes`() {
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+
+        val result = runCli("--config", configFile.toString(), "--sample")
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Choose only one input mode.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `invalid config file path fails without echoing the path`() {
+        val result = runCli("--config", "\u0000/home/operator/private-token.properties")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Runtime config file could not be read.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `stored event config missing event store location fails safely`() {
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid runtime config: stored event mode requires eventStoreLocation")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `invalid runtime config rejects without echoing raw values`() {
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=/home/operator/private-token.ndjson
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid runtime config:")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `stored event config with invalid event store path fails safely`() {
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=events\u0000broken.ndjson
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Configured event store could not be read.")
+        assertFalse(result.error.contains("broken.ndjson"))
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `stored event config duplicate private-looking event ids fail safely`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        val privateLookingEvent =
+            """{"id":"event:private-token:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}"""
+        Files.writeString(eventFile, "$privateLookingEvent\n$privateLookingEvent\n")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Configured event store contains a duplicate work event id at line 2.")
         assertPublicSafe(result.error)
         assertEquals("", result.output)
     }

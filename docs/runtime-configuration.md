@@ -31,6 +31,14 @@ source=mock
 
 The checked-in template is [agent-desk.config.example.properties](agent-desk.config.example.properties). It uses placeholders and sanitized values only.
 
-## Follow-Up Wiring
+## CLI Wiring
 
-The config contract is available in shared app code. CLI file loading in #39 and desktop state loading in #40 should parse this template shape and use `LocalFileWorkEventRepository` when `mode=stored-events`.
+The CLI accepts runtime configuration with:
+
+```bash
+./gradlew :cli:run --args='--config agent-desk.config.properties'
+```
+
+The CLI adapter reads the `.properties` file and passes the string map into shared app configuration parsing. Shared app code owns config validation, stored-event repository loading, and projection into operator state. CLI code owns only argv parsing, file IO for the config document, output rendering, and exit codes.
+
+`--config` is an input mode and cannot be combined with `--sample`, `--stdin`, or `--events`.

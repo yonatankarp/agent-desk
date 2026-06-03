@@ -51,6 +51,13 @@ printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:0
 ./gradlew :cli:run --args='--events agent-desk-events.ndjson'
 ```
 
+Run the CLI from a public-safe runtime config:
+
+```bash
+printf '%s\n' 'mode=stored-events' 'source=local-event-store' 'eventStoreLocation=agent-desk-events.ndjson' > agent-desk.config.properties
+./gradlew :cli:run --args='--config agent-desk.config.properties'
+```
+
 Build and test the CLI module:
 
 ```bash
