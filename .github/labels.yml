@@ -55,9 +55,6 @@
 - name: wip
   color: "#fbca04"
   description: Work in progress
-- name: breaking-change
-  color: "#b60205"
-  description: Breaking user-facing or API change
 - name: breaking
   color: "#b60205"
   description: Breaking user-facing or API change
