@@ -1,8 +1,7 @@
 package com.yonatankarp.agentdesk.core.domain.entities
 
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
+import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -10,11 +9,7 @@ import io.kotest.matchers.shouldBe
 class WorkItemTest :
     FunSpec({
         test("applies valid transition") {
-            val item = WorkItem(
-                id = WorkItemId.parse("agent-task:42"),
-                title = WorkItemTitle.parse("Run public hygiene check"),
-                status = WorkStatus.Queued,
-            )
+            val item = CoreFixtures.workItem(status = WorkStatus.Queued)
 
             val started = item.transitionTo(WorkStatus.Running)
 
@@ -23,11 +18,7 @@ class WorkItemTest :
         }
 
         test("rejects invalid transition") {
-            val item = WorkItem(
-                id = WorkItemId.parse("agent-task:42"),
-                title = WorkItemTitle.parse("Run public hygiene check"),
-                status = WorkStatus.Succeeded,
-            )
+            val item = CoreFixtures.workItem(status = WorkStatus.Succeeded)
 
             shouldThrow<IllegalArgumentException> {
                 item.transitionTo(WorkStatus.Running)
