@@ -1,0 +1,49 @@
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - invalid
+      - no-release-notes
+      - question
+      - skip-release-notes
+      - wontfix
+      - wip
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking-change
+        - breaking
+        - semver-major
+    - title: Highlights
+      labels:
+        - feature
+        - enhancement
+        - slice
+        - semver-minor
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+        - regression
+    - title: Design and Decisions
+      labels:
+        - decision
+        - design
+        - architecture
+        - docs
+        - documentation
+    - title: Dependencies and Tooling
+      labels:
+        - dependencies
+        - dependabot
+        - build
+        - ci
+        - tooling
+    - title: Maintenance
+      labels:
+        - chore
+        - cleanup
+        - refactor
+    - title: Other Changes
+      labels:
+        - "*"
