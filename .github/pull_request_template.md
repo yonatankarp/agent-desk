@@ -36,6 +36,7 @@ If a role is not applicable, explain why in the PR body.
 
 - [ ] Issue acceptance criteria satisfied, or gaps documented
 - [ ] Engineering style, architecture rules, public-safety rules, and user constraints checked
+- [ ] Architecture boundary check covers dependency direction, package/module placement, forbidden imports, and issue-specific acceptance criteria
 
 ## QA Review
 
