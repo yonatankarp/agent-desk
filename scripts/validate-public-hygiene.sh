@@ -32,6 +32,16 @@ run_self_test() {
   fi
 
   rm "$tmpdir/docs/leak.md"
+  printf 'private path: /Users/jane/.ssh/id_ed25519\n' >"$tmpdir/docs/leak-alternation.md"
+  git -C "$tmpdir" add -A
+
+  if AGENT_DESK_HYGIENE_ROOT="$tmpdir" "$script_dir/validate-public-hygiene.sh" >"$tmpdir/alternation.out" 2>&1; then
+    echo "Expected later regex alternative to be detected." >&2
+    cat "$tmpdir/alternation.out" >&2
+    return 1
+  fi
+
+  rm "$tmpdir/docs/leak-alternation.md"
   printf 'Policy examples here are intentionally allowlisted: AUTH_TOKEN=example\n' >"$tmpdir/docs/public-hygiene.md"
   git -C "$tmpdir" add -A
 
@@ -102,7 +112,8 @@ blocked_checks=(
 )
 
 for check in "${blocked_checks[@]}"; do
-  IFS='|' read -r label pattern <<<"$check"
+  label="${check%%|*}"
+  pattern="${check#*|}"
   if git grep -nIE "$pattern" -- "${scan_pathspecs[@]}" "${allowlisted_pathspecs[@]}"; then
     echo "Blocked public-safety pattern found: $label" >&2
     exit 1
