@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
