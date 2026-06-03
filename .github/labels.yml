@@ -1,0 +1,102 @@
+- name: bug
+  color: "#d73a4a"
+  description: Something isn't working
+- name: documentation
+  color: "#0075ca"
+  description: Improvements or additions to documentation
+- name: duplicate
+  color: "#cfd3d7"
+  description: This issue or pull request already exists
+- name: enhancement
+  color: "#a2eeef"
+  description: New feature or request
+- name: good first issue
+  color: "#7057ff"
+  description: Good for newcomers
+- name: help wanted
+  color: "#008672"
+  description: Extra attention is needed
+- name: invalid
+  color: "#e4e669"
+  description: This doesn't seem right
+- name: question
+  color: "#d876e3"
+  description: Further information is requested
+- name: wontfix
+  color: "#ffffff"
+  description: This will not be worked on
+- name: candidate
+  color: "#fbca04"
+  description: Potential future work, not yet committed
+- name: chore
+  color: "#c5def5"
+  description: Tooling, CI, docs, or maintenance work
+- name: slice
+  color: "#1f883d"
+  description: Narrow implementable vertical slice
+- name: blocked
+  color: "#b60205"
+  description: Waiting on owner decision or external setup
+- name: decision
+  color: "#5319e7"
+  description: Product or architecture decision needed
+- name: dependabot
+  color: "#0366d6"
+  description: Automated Dependabot update
+- name: dependencies
+  color: "#0366d6"
+  description: Dependency updates
+- name: no-release-notes
+  color: "#ededed"
+  description: Omit from generated release notes
+- name: skip-release-notes
+  color: "#ededed"
+  description: Omit from generated release notes
+- name: wip
+  color: "#fbca04"
+  description: Work in progress
+- name: breaking-change
+  color: "#b60205"
+  description: Breaking user-facing or API change
+- name: breaking
+  color: "#b60205"
+  description: Breaking user-facing or API change
+- name: semver-major
+  color: "#b60205"
+  description: Release should bump the major version
+- name: feature
+  color: "#a2eeef"
+  description: New feature
+- name: semver-minor
+  color: "#a2eeef"
+  description: Release should bump the minor version
+- name: fix
+  color: "#d73a4a"
+  description: Bug fix
+- name: regression
+  color: "#d73a4a"
+  description: Regression fix
+- name: design
+  color: "#5319e7"
+  description: Product or interaction design
+- name: architecture
+  color: "#5319e7"
+  description: Architecture or boundary decision
+- name: docs
+  color: "#0075ca"
+  description: Documentation-only or documentation-focused change
+- name: build
+  color: "#0366d6"
+  description: Build system or packaging
+- name: ci
+  color: "#0366d6"
+  description: Continuous integration or automation
+- name: tooling
+  color: "#0366d6"
+  description: Developer tooling
+- name: cleanup
+  color: "#c5def5"
+  description: Cleanup without intended behavior change
+- name: refactor
+  color: "#c5def5"
+  description: Internal refactor without intended behavior change
