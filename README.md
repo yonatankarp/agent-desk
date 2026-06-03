@@ -14,9 +14,9 @@ This repository is Kotlin/KMP-first:
 
 ## Current Status
 
-The repository is in bootstrap mode. The first product code slice establishes a Kotlin Multiplatform `:core` module with a small domain value object and CI-backed Gradle tests.
+The repository is in bootstrap mode. Current slices establish shared core domain types, a sample CLI operator surface, a sample Compose desktop shell, and CI-backed checks.
 
-Core tests use Kotest on the shared KMP test source set so domain rules can use spec-style tests and richer assertions as the model grows.
+Start with [docs/index.md](docs/index.md) for deeper architecture, style, process, and domain notes.
 
 ## Local Checks
 
@@ -68,15 +68,11 @@ Run architecture convention checks:
 ./gradlew :core:jvmTest
 ```
 
-The current Konsist rules keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, and prevent core production files from importing adapter, CLI, desktop, or UI packages.
-
 Generate coverage reports:
 
 ```bash
 ./gradlew :core:koverXmlReport :core:koverHtmlReport
 ```
-
-Coverage is report-only for now. CI uploads the generated `:core` coverage reports as an artifact, but does not enforce a threshold until the domain test surface is larger.
 
 Apply deterministic formatting:
 
@@ -101,3 +97,10 @@ Do not commit private paths, tokens, real channel IDs, raw agent transcripts, pe
 ## Dependency Updates
 
 Dependabot policy and auto-merge gates are documented in [docs/dependabot-policy.md](docs/dependabot-policy.md).
+
+## Deeper Docs
+
+- [Documentation index](docs/index.md)
+- [Engineering style](docs/engineering-style.md)
+- [Domain model](docs/domain-model.md)
+- [Decision log](docs/decision-log.md)
