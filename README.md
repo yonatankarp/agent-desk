@@ -64,19 +64,6 @@ Build the standalone executable CLI jar:
 java -jar cli/build/libs/agent-desk-cli-all.jar
 ```
 
-## Releases
-
-Releases are created by pushing a version tag that starts with `v`, for example:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-The release workflow runs public hygiene, `spotlessCheck`, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, uploads it as an Actions artifact, and attaches the same jar to the GitHub Release.
-
-GitHub generates release notes from merged PRs. Maintainers should label PRs before tagging a release so notes land in the right sections; use labels such as `feature`, `enhancement`, `slice`, `bug`, `fix`, `decision`, `docs`, `dependencies`, `ci`, `tooling`, `chore`, or `refactor`. Use `no-release-notes` or `skip-release-notes` only for PRs that should be omitted from public notes.
-
 Run the sample Compose desktop shell:
 
 ```bash
@@ -120,6 +107,14 @@ bash scripts/validate-public-hygiene.sh
 ./gradlew spotlessCheck
 ./gradlew :core:build :cli:build :desktop:build
 ```
+
+## Releases
+
+Releases are created from the `Release` GitHub Actions workflow. Run it manually from `main` and choose the SemVer bump: `patch`, `minor`, or `major`.
+
+The workflow resolves the next `vX.Y.Z` tag from existing tags, runs public hygiene, `spotlessCheck`, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, creates the release tag, uploads the jar as an Actions artifact, and attaches the same jar to the GitHub Release.
+
+GitHub generates release notes from merged PRs. Maintainers should label PRs before running a release so notes land in the right sections; use labels such as `feature`, `enhancement`, `slice`, `bug`, `fix`, `decision`, `docs`, `dependencies`, `ci`, `tooling`, `chore`, or `refactor`. Use `no-release-notes` or `skip-release-notes` only for PRs that should be omitted from public notes.
 
 ## Public-Safe Rule
 
