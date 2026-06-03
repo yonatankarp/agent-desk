@@ -48,6 +48,15 @@ class WorkEventTest :
             EventSource.parse("  Mock-Adapter  ").value shouldBe "mock-adapter"
         }
 
+        test("event identifiers and sources reject unsupported characters") {
+            shouldThrow<IllegalArgumentException> {
+                WorkEventId.parse("event agent task")
+            }
+            shouldThrow<IllegalArgumentException> {
+                EventSource.parse("mock adapter")
+            }
+        }
+
         test("event timestamps require UTC instants") {
             shouldThrow<IllegalArgumentException> {
                 EventTimestamp.parse("2026-06-02 21:00:00")

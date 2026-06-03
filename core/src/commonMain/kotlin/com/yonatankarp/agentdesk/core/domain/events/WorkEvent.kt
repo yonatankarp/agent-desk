@@ -18,7 +18,7 @@ data class WorkEvent(
 @JvmInline
 value class WorkEventId private constructor(val value: String) {
     companion object {
-        private val validPattern = Regex("[a-z0-9][a-z0-9._:-]{0,95}")
+        private val validPattern = "[a-z0-9][a-z0-9._:-]{0,95}".toRegex()
 
         fun parse(raw: String): WorkEventId {
             val normalized = raw.trim().lowercase()
@@ -36,7 +36,7 @@ value class WorkEventId private constructor(val value: String) {
 value class EventTimestamp private constructor(val value: String) {
     companion object {
         private val rfc3339UtcPattern =
-            Regex("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,9})?Z")
+            """\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z""".toRegex()
 
         fun parse(raw: String): EventTimestamp {
             val normalized = raw.trim()
@@ -53,7 +53,7 @@ value class EventTimestamp private constructor(val value: String) {
 @JvmInline
 value class EventSource private constructor(val value: String) {
     companion object {
-        private val validPattern = Regex("[a-z][a-z0-9]*(?:[._:-][a-z0-9]+){0,7}")
+        private val validPattern = "[a-z][a-z0-9]*(?:[._:-][a-z0-9]+){0,7}".toRegex()
 
         fun parse(raw: String): EventSource {
             val normalized = raw.trim().lowercase()
