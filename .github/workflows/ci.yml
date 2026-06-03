@@ -156,7 +156,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Download core coverage summary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: core-coverage-summary
 
