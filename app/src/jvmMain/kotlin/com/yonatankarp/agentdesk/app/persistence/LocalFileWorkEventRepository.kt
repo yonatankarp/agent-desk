@@ -4,52 +4,65 @@ import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
+import java.nio.channels.OverlappingFileLockException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
- * JVM-local event store. A repository instance caches event ids for append-time
- * duplicate checks; create a new instance or call readAll() after external file mutations.
+ * JVM-local event store. Appends serialize through a process-local path lock and
+ * a cooperative file lock, then re-read the store before writing.
  */
 class LocalFileWorkEventRepository(
     private val storePath: Path,
 ) : WorkEventRepository {
-    private var seenIds: MutableSet<WorkEventId>? = null
-
     override fun append(event: WorkEvent) {
-        val existingIds = loadSeenIds()
-        if (event.id in existingIds) {
-            throw WorkEventStoreException("Duplicate work event id ${event.id} in configured event store")
-        }
-
         try {
             storePath.parent?.let(Files::createDirectories)
-            Files.writeString(
-                storePath,
-                WorkEventJson.encode(event) + "\n",
-                StandardOpenOption.CREATE,
-                StandardOpenOption.APPEND,
-            )
-            existingIds += event.id
         } catch (error: IOException) {
             throw WorkEventStoreException("Unable to append work event to configured event store", error)
+        }
+
+        pathLockFor(storePath).withLock {
+            try {
+                FileChannel.open(
+                    storePath,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.READ,
+                    StandardOpenOption.WRITE,
+                ).use { channel ->
+                    channel.lock().use {
+                        val existingIds = readSnapshot().eventIds
+                        if (event.id in existingIds) {
+                            throw WorkEventStoreException("Duplicate work event id ${event.id} in configured event store")
+                        }
+
+                        channel.position(channel.size())
+                        val record = ByteBuffer.wrap(
+                            (WorkEventJson.encode(event) + "\n").toByteArray(StandardCharsets.UTF_8),
+                        )
+                        while (record.hasRemaining()) {
+                            channel.write(record)
+                        }
+                        channel.force(false)
+                    }
+                }
+            } catch (error: IOException) {
+                throw WorkEventStoreException("Unable to append work event to configured event store", error)
+            } catch (error: OverlappingFileLockException) {
+                throw WorkEventStoreException("Unable to append work event to configured event store", error)
+            }
         }
     }
 
     override fun readAll(): List<WorkEvent> {
-        val snapshot = readSnapshot()
-        seenIds = snapshot.eventIds
-        return snapshot.events
-    }
-
-    private fun loadSeenIds(): MutableSet<WorkEventId> {
-        val cached = seenIds
-        if (cached != null) {
-            return cached
-        }
-
-        return readSnapshot().eventIds.also { seenIds = it }
+        return readSnapshot().events
     }
 
     private fun readSnapshot(): EventStoreSnapshot {
@@ -97,4 +110,13 @@ class LocalFileWorkEventRepository(
         val events: List<WorkEvent>,
         val eventIds: MutableSet<WorkEventId>,
     )
+
+    companion object {
+        private val pathLocks = ConcurrentHashMap<Path, ReentrantLock>()
+
+        private fun pathLockFor(storePath: Path): ReentrantLock =
+            pathLocks.computeIfAbsent(storePath.toAbsolutePath().normalize()) {
+                ReentrantLock()
+            }
+    }
 }

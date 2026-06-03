@@ -24,9 +24,12 @@ val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"
 
 - Missing files and empty stores read as an empty event stream.
 - Appends create the parent directory when one is configured.
+- Appends are serialized inside the current JVM by normalized store path, then protected with a cooperative exclusive file lock while the record is written.
 - Duplicate event ids are rejected on append and when reading an existing store.
+- Append duplicate checks re-read the current store while the append lock is held, so two repository instances in the same JVM do not depend on stale in-memory event-id caches.
 - Corrupt records fail with a line-numbered `WorkEventStoreException`.
 - Error messages intentionally refer to the configured event store instead of echoing local filesystem paths.
-- A repository instance caches event ids for append-time duplicate checks. Create a new repository instance or call `readAll()` after another process mutates the file.
+
+This is a local-first newline-delimited event file, not a transactional database. The locking behavior is intended for cooperating Agent Desk CLI, desktop, and runtime adapter processes that use the same repository implementation or otherwise honor JVM file locks. Tools that bypass locks and write directly to the file can still corrupt records; the repository rejects corrupt partial records before appending more data.
 
 The store accepts sanitized event records only. Private paths, credentials, channel ids, raw transcripts, and runtime-specific local identifiers must be stripped before events are appended.
