@@ -41,6 +41,11 @@ jobs:
           if-no-files-found: error
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: cli/build/libs/agent-desk-cli-all.jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            cli/build/libs/agent-desk-cli-all.jar \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag
