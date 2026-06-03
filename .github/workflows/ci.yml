@@ -78,7 +78,7 @@ jobs:
         run: ./gradlew :core:koverXmlReport :core:koverHtmlReport
 
       - name: Upload core coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: core-coverage-report
           path: |
@@ -137,7 +137,7 @@ jobs:
 
       - name: Upload core coverage summary
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: core-coverage-summary
           path: coverage-summary.md
@@ -161,7 +161,7 @@ jobs:
           name: core-coverage-summary
 
       - name: Comment coverage summary on pull request
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
