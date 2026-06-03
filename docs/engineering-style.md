@@ -22,7 +22,8 @@ Agent Desk code should stay small, explicit, and easy to move across adapters. T
 
 - CLI and Compose desktop are adapters over shared application and presentation behavior.
 - Do not put reusable application behavior inside CLI-only code.
-- Build shared use cases, projections, and presenters in modules/packages that both CLI and desktop can call.
+- Build shared use cases, projections, and presenters in the `:app` module so CLI and desktop can both call them.
+- Keep `:core` domain-only; shared operator state and presentation projections belong in `:app`, not `:core`.
 - Keep CLI input, CLI rendering, Compose state mapping, and runtime integration behind separate adapter boundaries as they grow.
 
 ## Tests

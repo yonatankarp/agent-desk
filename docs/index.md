@@ -21,6 +21,6 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 
 ## Current CI Notes
 
-Konsist rules currently keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, and prevent core production files from importing adapter, CLI, desktop, or UI packages.
+Konsist rules currently keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, keep shared `:app` common code under `com.yonatankarp.agentdesk.app`, and prevent core/app production files from importing adapter, CLI, desktop, or UI packages.
 
 Coverage is report-only for now. CI uploads generated `:core` coverage reports as an artifact and comments the parsed summary on pull requests, but it does not enforce a threshold until the domain test surface is larger.

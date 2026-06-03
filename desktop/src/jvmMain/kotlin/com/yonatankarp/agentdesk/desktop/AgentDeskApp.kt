@@ -31,16 +31,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yonatankarp.agentdesk.app.operator.EventLine
+import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
+import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 
 @Composable
 @Preview
 fun previewAgentDeskApp() {
-    AgentDeskApp(SampleDesktopState.current())
+    AgentDeskApp(SampleOperatorState.current())
 }
 
 @Composable
-fun AgentDeskApp(state: DesktopOperatorState) {
+fun AgentDeskApp(state: OperatorState) {
     MaterialTheme(
         colorScheme = lightColorScheme(
             background = Palette.Background,
@@ -87,7 +92,7 @@ fun AgentDeskApp(state: DesktopOperatorState) {
                                 .weight(1f)
                                 .fillMaxWidth(),
                         ) {
-                            EventTimeline(DesktopStatePresenter.eventLines(state))
+                            EventTimeline(OperatorStatePresenter.eventLines(state))
                         }
                     }
 
@@ -97,7 +102,7 @@ fun AgentDeskApp(state: DesktopOperatorState) {
                             .weight(1f)
                             .fillMaxHeight(),
                     ) {
-                        AttentionList(DesktopStatePresenter.attentionItems(state))
+                        AttentionList(OperatorStatePresenter.attentionItems(state))
                     }
                 }
             }
@@ -106,7 +111,7 @@ fun AgentDeskApp(state: DesktopOperatorState) {
 }
 
 @Composable
-private fun Header(state: DesktopOperatorState) {
+private fun Header(state: OperatorState) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -132,9 +137,9 @@ private fun Header(state: DesktopOperatorState) {
             )
         }
 
-        val attentionCount = DesktopStatePresenter.attentionItems(state).size
+        val attentionCount = OperatorStatePresenter.attentionItems(state).size
         Text(
-            text = "${DesktopStatePresenter.activeCount(state)} active / $attentionCount attention",
+            text = "${OperatorStatePresenter.activeCount(state)} active / $attentionCount attention",
             color = Palette.TextMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
@@ -197,7 +202,7 @@ private fun AttentionList(items: List<WorkItem>) {
 
 @Composable
 private fun WorkRow(item: WorkItem) {
-    val status = DesktopStatePresenter.presentationFor(item.status)
+    val status = OperatorStatePresenter.presentationFor(item.status)
 
     Column(
         modifier = Modifier
