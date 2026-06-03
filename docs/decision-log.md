@@ -1,12 +1,20 @@
 # Decision Log
 
+## 2026-06-03: Manual SemVer release workflow
+
+Decision: Agent Desk releases are created by manually running the `Release` GitHub Actions workflow from `main` with an explicit `patch`, `minor`, or `major` SemVer bump.
+
+Rationale: Letting the workflow own version calculation, tag creation, release creation, generated notes, and jar upload avoids UI/tag ordering races and makes release intent explicit.
+
+Consequence: Maintainers should not create release tags or releases manually for normal releases. The workflow uses a focused SemVer increment action for version calculation and keeps tag/release/asset operations explicit through GitHub CLI/API calls.
+
 ## 2026-06-03: Label-driven generated release notes
 
 Decision: Agent Desk uses GitHub's generated release notes configuration to group merged PRs by public-safe labels instead of maintaining custom release-note scripts.
 
-Rationale: The tag-driven workflow already asks GitHub to generate notes. A small `.github/release.yml` keeps the release surface maintainable, reviewable, and aligned with ordinary PR labeling.
+Rationale: The release workflow asks GitHub to generate notes. A small `.github/release.yml` keeps the release surface maintainable, reviewable, and aligned with ordinary PR labeling.
 
-Consequence: Maintainers should label PRs before pushing a `v*` release tag. PRs without a matching category still appear under Other Changes, while explicit skip labels keep noise out of public releases.
+Consequence: Maintainers should label PRs before running the release workflow. PRs without a matching category still appear under Other Changes, while explicit skip labels keep noise out of public releases.
 
 ## 2026-06-03: Tag-driven CLI jar releases
 
@@ -14,7 +22,7 @@ Decision: Agent Desk releases are created from `v*` Git tags and publish the exe
 
 Rationale: Tag-driven releases keep the public pipeline minimal, auditable, and free of secrets while making the packaged CLI easy to retrieve.
 
-Consequence: Release candidates must pass public hygiene, Spotless formatting, executable jar packaging, and a jar smoke run before publication.
+Consequence: Superseded by the manual SemVer release workflow above after tag-first testing exposed UI/tag ordering failures.
 
 ## 2026-06-02: KMP-first product direction
 
