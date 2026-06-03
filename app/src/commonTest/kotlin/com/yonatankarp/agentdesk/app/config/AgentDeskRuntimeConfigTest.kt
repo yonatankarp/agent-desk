@@ -22,6 +22,14 @@ class AgentDeskRuntimeConfigTest :
         }
 
         given("stored event configuration") {
+            `when`("an empty external property map is parsed") {
+                then("it uses the default sample runtime") {
+                    val config = AgentDeskRuntimeConfigParser.parse(emptyMap())
+
+                    config shouldBe AgentDeskRuntimeConfig.defaults()
+                }
+            }
+
             `when`("a sanitized store location is provided") {
                 then("it accepts the local event store source") {
                     val config = AgentDeskRuntimeConfig(
@@ -30,6 +38,22 @@ class AgentDeskRuntimeConfigTest :
                         eventStoreLocation = EventStoreLocation.parse("agent-desk-events.ndjson"),
                     )
 
+                    config.eventStoreLocation.toString() shouldBe "agent-desk-events.ndjson"
+                }
+            }
+
+            `when`("stored event properties are parsed from external names") {
+                then("it applies validated shared app config rules") {
+                    val config = AgentDeskRuntimeConfigParser.parse(
+                        mapOf(
+                            "mode" to "stored-events",
+                            "source" to "local-event-store",
+                            "eventStoreLocation" to "agent-desk-events.ndjson",
+                        ),
+                    )
+
+                    config.mode shouldBe AgentDeskMode.StoredEvents
+                    config.source shouldBe RuntimeEventSourceKind.LocalEventStore
                     config.eventStoreLocation.toString() shouldBe "agent-desk-events.ndjson"
                 }
             }
@@ -115,6 +139,26 @@ class AgentDeskRuntimeConfigTest :
 
                     modeError.message shouldBe "mode must be sample or stored-events"
                     sourceError.message shouldBe "source must be mock or local-event-store"
+                }
+            }
+
+            `when`("parser input contains unsafe raw values") {
+                then("validation fails without echoing them") {
+                    val error = shouldThrow<ConfigValidationException> {
+                        AgentDeskRuntimeConfigParser.parse(
+                            mapOf(
+                                "mode" to "stored-events",
+                                "source" to "local-event-store",
+                                "eventStoreLocation" to "/home/operator/private-token.ndjson",
+                            ),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("eventStoreLocation")
+                        shouldNotContain("/home/")
+                        shouldNotContain("private-token")
+                    }
                 }
             }
         }

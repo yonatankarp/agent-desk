@@ -1,16 +1,22 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfigParser
+import com.yonatankarp.agentdesk.app.config.ConfigValidationException
 import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
+import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
+import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoadException
+import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-import com.yonatankarp.agentdesk.core.domain.projections.WorkEventProjector
 import java.io.IOException
 import java.io.InputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
+import java.util.Properties
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -49,6 +55,40 @@ object AgentDeskCli {
         CliInputMode.Sample -> SampleOperatorState.current()
         is CliInputMode.File -> readEventsFromFile(mode.path).toOperatorState()
         CliInputMode.Stdin -> readEventsFromInput(input).toOperatorState()
+        is CliInputMode.Config -> readConfiguredState(mode.path)
+    }
+
+    private fun readConfiguredState(path: String): OperatorState {
+        val values = readConfig(path)
+        val config =
+            try {
+                AgentDeskRuntimeConfigParser.parse(values)
+            } catch (exception: ConfigValidationException) {
+                throw CliInputException("Invalid runtime config: ${exception.message}")
+            }
+
+        return try {
+            RuntimeConfiguredOperatorStateLoader.load(config)
+        } catch (exception: RuntimeConfiguredOperatorStateLoadException) {
+            throw CliInputException(exception.message ?: "Configured runtime state could not be loaded.")
+        }
+    }
+
+    private fun readConfig(path: String): Map<String, String> {
+        val properties = Properties()
+        try {
+            Files.newInputStream(Path.of(path)).use(properties::load)
+        } catch (exception: IOException) {
+            throw CliInputException("Runtime config file could not be read.")
+        } catch (exception: InvalidPathException) {
+            throw CliInputException("Runtime config file could not be read.")
+        } catch (exception: IllegalArgumentException) {
+            throw CliInputException("Runtime config file could not be read.")
+        } catch (exception: SecurityException) {
+            throw CliInputException("Runtime config file could not be read.")
+        }
+
+        return properties.stringPropertyNames().associateWith(properties::getProperty)
     }
 
     private fun readEventsFromInput(input: InputStream): List<WorkEvent> = try {
@@ -113,17 +153,10 @@ object AgentDeskCli {
         throw CliInputException("Invalid event record at line $lineNumber.")
     }
 
-    private fun List<WorkEvent>.toOperatorState(): OperatorState {
-        val projection = WorkEventProjector.project(this)
-        val issue = projection.ignoredEvents.firstOrNull()
-        if (issue != null) {
-            throw CliInputException("Invalid event sequence: ${issue.reason}.")
-        }
-
-        return OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-        )
+    private fun List<WorkEvent>.toOperatorState(): OperatorState = try {
+        OperatorStateProjector.project(this)
+    } catch (exception: OperatorStateProjectionException) {
+        throw CliInputException(exception.message ?: "Invalid event sequence.")
     }
 
     private fun usage(): String =
@@ -134,11 +167,13 @@ object AgentDeskCli {
           agent-desk [--sample]
           agent-desk --events <file>
           agent-desk --stdin
+          agent-desk --config <file>
 
         Options:
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
+          --config <file> Read public-safe runtime configuration properties.
           --help          Show this help.
         """.trimIndent()
 }
@@ -174,6 +209,16 @@ private data class CliOptions(
                         index += 1
                     }
 
+                    "--config" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --config.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --config.")
+                        }
+                        mode = mode.assign(CliInputMode.Config(path))
+                        index += 1
+                    }
+
                     else -> throw CliUsageException("Unknown option.")
                 }
                 index += 1
@@ -200,6 +245,8 @@ private sealed interface CliInputMode {
     data object Stdin : CliInputMode
 
     data class File(val path: String) : CliInputMode
+
+    data class Config(val path: String) : CliInputMode
 }
 
 private class CliInputException(
