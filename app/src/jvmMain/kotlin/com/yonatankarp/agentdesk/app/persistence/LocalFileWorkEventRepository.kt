@@ -61,9 +61,7 @@ class LocalFileWorkEventRepository(
         }
     }
 
-    override fun readAll(): List<WorkEvent> {
-        return readSnapshot().events
-    }
+    override fun readAll(): List<WorkEvent> = readSnapshot().events
 
     private fun readSnapshot(): EventStoreSnapshot {
         if (!Files.exists(storePath)) {
@@ -114,9 +112,8 @@ class LocalFileWorkEventRepository(
     companion object {
         private val pathLocks = ConcurrentHashMap<Path, ReentrantLock>()
 
-        private fun pathLockFor(storePath: Path): ReentrantLock =
-            pathLocks.computeIfAbsent(storePath.toAbsolutePath().normalize()) {
-                ReentrantLock()
-            }
+        private fun pathLockFor(storePath: Path): ReentrantLock = pathLocks.computeIfAbsent(storePath.toAbsolutePath().normalize()) {
+            ReentrantLock()
+        }
     }
 }
