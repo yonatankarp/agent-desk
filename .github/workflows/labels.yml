@@ -5,12 +5,14 @@ on:
     paths:
       - .github/labels.yml
       - .github/workflows/labels.yml
+      - .github/workflows/pr-labeler.yml
   push:
     branches:
       - main
     paths:
       - .github/labels.yml
       - .github/workflows/labels.yml
+      - .github/workflows/pr-labeler.yml
   workflow_dispatch:
 
 permissions:

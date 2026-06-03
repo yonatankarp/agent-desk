@@ -45,6 +45,23 @@ Not every role needs a separate agent every day. The orchestrator must decide wh
 
 Work should land through small, coherent commits. Once branch protection is enabled, changes to `main` should require passing CI and review according to the repository ruleset.
 
+When creating a branch, use a release-note-aware prefix so PR labels can be inferred automatically:
+
+- `feat/...` or `feature/...` for user-facing additions.
+- `fix/...` or `bugfix/...` for bug fixes.
+- `docs/...` for documentation-only changes.
+- `ci/...` for GitHub Actions and automation.
+- `build/...` for Gradle, packaging, and build configuration.
+- `tooling/...` for developer scripts and repository automation.
+- `arch/...` or `architecture/...` for architecture and boundary decisions.
+- `refactor/...` for internal refactors without intended behavior changes.
+- `chore/...` or `maintenance/...` for routine maintenance.
+- `breaking/...` or `break/...` for breaking user-facing or API changes.
+
+Prefer the narrowest accurate prefix. If a branch spans multiple concerns, choose the primary release-note category and rely on path-based PR labeling for secondary labels.
+
+PR titles should stay human-readable, but start them with the same intent when it reads naturally, for example `feat:`, `fix:`, `docs:`, `ci:`, `build:`, `refactor:`, or `chore:`. Branch prefixes are the automation source of truth; PR title prefixes are reviewer-facing context.
+
 ## GitHub Actions Reuse
 
 Before adding or changing CI workflows, inspect `yonatankarp/github-actions` for an applicable reusable workflow or composite action.
