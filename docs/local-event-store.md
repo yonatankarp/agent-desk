@@ -23,5 +23,6 @@ val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"
 - Duplicate event ids are rejected on append and when reading an existing store.
 - Corrupt records fail with a line-numbered `WorkEventStoreException`.
 - Error messages intentionally refer to the configured event store instead of echoing local filesystem paths.
+- A repository instance caches event ids for append-time duplicate checks. Create a new repository instance or call `readAll()` after another process mutates the file.
 
 The store accepts sanitized event records only. Private paths, credentials, channel ids, raw transcripts, and runtime-specific local identifiers must be stripped before events are appended.
