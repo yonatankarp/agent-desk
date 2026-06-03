@@ -16,6 +16,8 @@ The `:app` module keeps reusable application and presentation behavior under `co
 
 CLI input/output and Compose UI mapping stay adapter-specific. OpenClaw-specific runtime details still belong behind adapters before they reach these shared packages.
 
+Runtime observation imports are described in [Runtime adapter boundary](runtime-adapter-boundary.md).
+
 ## Work Item
 
 A work item is one bounded unit of delegated agent work that can be inspected, resumed, stopped, or reviewed.
