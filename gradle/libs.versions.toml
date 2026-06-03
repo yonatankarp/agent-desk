@@ -7,7 +7,7 @@ kotlin = "2.3.21"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.9"
 shadow = "9.4.2"
-spotless = "8.5.1"
+spotless = "8.6.0"
 
 [plugins]
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
