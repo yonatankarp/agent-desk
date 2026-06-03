@@ -12,6 +12,8 @@ Each line is one compact `WorkEventJson` record:
 
 Adapters configure the storage location when constructing the repository. Do not hard-code private machine paths in source, docs, or committed fixtures.
 
+Runtime config rules for choosing this store are described in [Runtime configuration](runtime-configuration.md).
+
 ```kotlin
 val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"))
 ```
