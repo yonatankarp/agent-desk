@@ -1,0 +1,76 @@
+# Branch prefixes are the primary signal for release-note intent.
+# Path rules are fallback hints when a branch name is generic.
+changed-files-labels-limit: 4
+max-files-changed: 75
+
+breaking-change:
+  - head-branch:
+      - "^breaking/"
+      - "^break/"
+
+feature:
+  - head-branch:
+      - "^feat/"
+      - "^feature/"
+
+fix:
+  - head-branch:
+      - "^fix/"
+      - "^bugfix/"
+
+docs:
+  - head-branch:
+      - "^docs/"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+
+ci:
+  - head-branch:
+      - "^ci/"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+
+build:
+  - head-branch:
+      - "^build/"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.gradle.kts"
+          - "buildSrc/**"
+          - "gradle/**"
+          - "gradle.properties"
+          - "gradlew"
+          - "gradlew.bat"
+          - "settings.gradle.kts"
+
+tooling:
+  - head-branch:
+      - "^tooling/"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/dependabot.yml"
+          - ".github/labeler.yml"
+          - ".github/labels.yml"
+          - "scripts/**"
+
+architecture:
+  - head-branch:
+      - "^arch/"
+      - "^architecture/"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/decision-log.md"
+          - "docs/domain-model.md"
+          - "docs/runtime-adapter-boundary.md"
+
+refactor:
+  - head-branch:
+      - "^refactor/"
+
+chore:
+  - head-branch:
+      - "^chore/"
+      - "^maintenance/"
