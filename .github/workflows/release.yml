@@ -1,9 +1,16 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: SemVer segment to increment.
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
@@ -16,6 +23,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Prepare JVM build
@@ -35,6 +43,22 @@ jobs:
       - name: Smoke-run executable CLI jar
         run: java -jar cli/build/libs/agent-desk-cli-all.jar
 
+      - name: Validate release branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$GITHUB_REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            echo "Run releases from $DEFAULT_BRANCH, not $GITHUB_REF_NAME." >&2
+            exit 1
+          fi
+
+      - name: Resolve next release version
+        id: version
+        uses: reecetech/version-increment@2024.10.1
+        with:
+          scheme: semver
+          increment: ${{ inputs.bump }}
+
       - name: Upload executable CLI jar artifact
         uses: actions/upload-artifact@v4
         with:
@@ -42,28 +66,27 @@ jobs:
           path: cli/build/libs/agent-desk-cli-all.jar
           if-no-files-found: error
 
+      - name: Create release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ steps.version.outputs.v-version }}
+        run: |
+          if git rev-parse "$NEXT_TAG" >/dev/null 2>&1; then
+            echo "Tag already exists: $NEXT_TAG" >&2
+            exit 1
+          fi
+
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$NEXT_TAG" \
+            -f sha="$GITHUB_SHA"
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ steps.version.outputs.v-version }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" \
-              cli/build/libs/agent-desk-cli-all.jar \
-              --clobber
-
-            release_body="$(gh release view "$GITHUB_REF_NAME" --json body --jq .body)"
-            if [ -z "$release_body" ]; then
-              gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
-                -f tag_name="$GITHUB_REF_NAME" \
-                --jq .body > release-notes.md
-              gh release edit "$GITHUB_REF_NAME" \
-                --title "$GITHUB_REF_NAME" \
-                --notes-file release-notes.md
-            fi
-          else
-            gh release create "$GITHUB_REF_NAME" \
-              cli/build/libs/agent-desk-cli-all.jar \
-              --title "$GITHUB_REF_NAME" \
-              --generate-notes \
-              --verify-tag
-          fi
+          gh release create "$NEXT_TAG" \
+            cli/build/libs/agent-desk-cli-all.jar \
+            --title "$NEXT_TAG" \
+            --generate-notes \
+            --verify-tag
