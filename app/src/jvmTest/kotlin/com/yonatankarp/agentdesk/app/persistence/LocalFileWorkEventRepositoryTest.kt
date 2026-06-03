@@ -3,15 +3,20 @@ package com.yonatankarp.agentdesk.app.persistence
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workBlockedEvent
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
+import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class LocalFileWorkEventRepositoryTest :
     BehaviorSpec({
@@ -49,6 +54,56 @@ class LocalFileWorkEventRepositoryTest :
                     repository.readAll().shouldContainExactly(started, blocked)
                 }
             }
+
+            `when`("two repository instances append unique events") {
+                then("both events are preserved in store order") {
+                    val storePath = tempStorePath()
+                    val firstRepository = LocalFileWorkEventRepository(storePath)
+                    val secondRepository = LocalFileWorkEventRepository(storePath)
+                    val started = workStartedEvent()
+                    val blocked = workBlockedEvent()
+
+                    firstRepository.append(started)
+                    secondRepository.append(blocked)
+
+                    LocalFileWorkEventRepository(storePath).readAll().shouldContainExactly(started, blocked)
+                }
+            }
+
+            `when`("repository instances append the same event concurrently") {
+                then("one append is accepted and the duplicate is rejected") {
+                    val storePath = tempStorePath()
+                    val event = workStartedEvent()
+                    val executor = Executors.newFixedThreadPool(2)
+                    val ready = CountDownLatch(2)
+                    val start = CountDownLatch(1)
+                    val results = List(2) {
+                        executor.submit<Result<Unit>> {
+                            ready.countDown()
+                            start.await(5, TimeUnit.SECONDS)
+                            runCatching {
+                                LocalFileWorkEventRepository(storePath).append(event)
+                            }
+                        }
+                    }
+
+                    val outcomes = try {
+                        ready.await(5, TimeUnit.SECONDS)
+                        start.countDown()
+                        results.map { it.get(5, TimeUnit.SECONDS) }
+                    } finally {
+                        executor.shutdownNow()
+                    }
+
+                    outcomes.count { it.isSuccess } shouldBe 1
+                    outcomes.count {
+                        it.exceptionOrNull()
+                            ?.message
+                            ?.contains("Duplicate work event id event:agent-task:42:started") == true
+                    } shouldBe 1
+                    LocalFileWorkEventRepository(storePath).readAll().shouldContainExactly(event)
+                }
+            }
         }
 
         given("duplicate event ids") {
@@ -61,6 +116,26 @@ class LocalFileWorkEventRepositoryTest :
                     repository.append(event)
                     val error = shouldThrow<WorkEventStoreException> {
                         repository.append(event)
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Duplicate work event id event:agent-task:42:started")
+                        shouldNotContain(storePath.toString())
+                    }
+                }
+            }
+
+            `when`("another repository instance appends a duplicate after ids were read") {
+                then("append re-checks the current store and rejects the stale duplicate") {
+                    val storePath = tempStorePath()
+                    val firstRepository = LocalFileWorkEventRepository(storePath)
+                    val secondRepository = LocalFileWorkEventRepository(storePath)
+                    val event = workStartedEvent()
+
+                    firstRepository.readAll().shouldHaveSize(0)
+                    secondRepository.append(event)
+                    val error = shouldThrow<WorkEventStoreException> {
+                        firstRepository.append(event)
                     }
 
                     assertSoftly(error.message.orEmpty()) {
@@ -104,6 +179,43 @@ class LocalFileWorkEventRepositoryTest :
 
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Corrupt work event record at line 1")
+                        shouldNotContain(storePath.toString())
+                    }
+                }
+            }
+
+            `when`("a partial record exists before append") {
+                then("append fails before adding another record") {
+                    val storePath = tempStorePath()
+                    val partialRecord = "{\"id\":\"event:partial\""
+                    Files.writeString(storePath, partialRecord)
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath).append(
+                            workStartedEvent(id = WorkEventId.parse("event:agent-task:42:after-partial")),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Corrupt work event record at line 1")
+                        shouldNotContain(storePath.toString())
+                    }
+                    Files.readString(storePath) shouldBe partialRecord
+                }
+            }
+        }
+
+        given("an unwritable event store target") {
+            `when`("an event is appended") {
+                then("it fails with a path-free public-safe error") {
+                    val storePath = Files.createTempDirectory("agent-desk-store-test")
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath).append(workStartedEvent())
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unable to append work event to configured event store")
                         shouldNotContain(storePath.toString())
                     }
                 }
