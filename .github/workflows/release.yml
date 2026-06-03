@@ -50,6 +50,16 @@ jobs:
             gh release upload "$GITHUB_REF_NAME" \
               cli/build/libs/agent-desk-cli-all.jar \
               --clobber
+
+            release_body="$(gh release view "$GITHUB_REF_NAME" --json body --jq .body)"
+            if [ -z "$release_body" ]; then
+              gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+                -f tag_name="$GITHUB_REF_NAME" \
+                --jq .body > release-notes.md
+              gh release edit "$GITHUB_REF_NAME" \
+                --title "$GITHUB_REF_NAME" \
+                --notes-file release-notes.md
+            fi
           else
             gh release create "$GITHUB_REF_NAME" \
               cli/build/libs/agent-desk-cli-all.jar \
