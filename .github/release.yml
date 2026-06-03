@@ -24,13 +24,6 @@ changelog:
         - bug
         - fix
         - regression
-    - title: Design and Decisions
-      labels:
-        - decision
-        - design
-        - architecture
-        - docs
-        - documentation
     - title: Dependencies and Tooling
       labels:
         - dependencies
@@ -38,6 +31,13 @@ changelog:
         - build
         - ci
         - tooling
+    - title: Design and Decisions
+      labels:
+        - decision
+        - design
+        - architecture
+        - docs
+        - documentation
     - title: Maintenance
       labels:
         - chore
