@@ -31,6 +31,8 @@ source=mock
 
 The checked-in template is [agent-desk.config.example.properties](agent-desk.config.example.properties). It uses placeholders and sanitized values only.
 
-## Follow-Up Wiring
+## Runtime Wiring
 
-The config contract is available in shared app code. CLI file loading in #39 and desktop state loading in #40 should parse this template shape and use `LocalFileWorkEventRepository` when `mode=stored-events`.
+The config contract is available in shared app code. The CLI accepts `--config <file>`, parses this template shape, and uses `LocalFileWorkEventRepository` when `mode=stored-events`.
+
+Desktop state loading in #40 should use the same template shape and repository behavior.

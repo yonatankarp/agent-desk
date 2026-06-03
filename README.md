@@ -38,6 +38,13 @@ Run the sample CLI operator surface:
 ./gradlew :cli:run
 ```
 
+Run the CLI from the default public-safe runtime configuration:
+
+```bash
+printf '%s\n' 'mode=sample' 'source=mock' > agent-desk.config.properties
+./gradlew :cli:run --args='--config agent-desk.config.properties'
+```
+
 Run the CLI from sanitized newline-delimited event JSON:
 
 ```bash
@@ -49,6 +56,13 @@ Or write a public-safe event record to a file and read it back:
 ```bash
 printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}' > agent-desk-events.ndjson
 ./gradlew :cli:run --args='--events agent-desk-events.ndjson'
+```
+
+Or point runtime configuration at the sanitized local event store:
+
+```bash
+printf '%s\n' 'mode=stored-events' 'source=local-event-store' 'eventStoreLocation=agent-desk-events.ndjson' > agent-desk.config.properties
+./gradlew :cli:run --args='--config agent-desk.config.properties'
 ```
 
 Build and test the CLI module:

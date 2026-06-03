@@ -1,7 +1,14 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.config.AgentDeskMode
+import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfig
+import com.yonatankarp.agentdesk.app.config.ConfigValidationException
+import com.yonatankarp.agentdesk.app.config.EventStoreLocation
+import com.yonatankarp.agentdesk.app.config.RuntimeEventSourceKind
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
+import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.projections.WorkEventProjector
@@ -11,6 +18,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
+import java.util.Properties
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -49,6 +57,69 @@ object AgentDeskCli {
         CliInputMode.Sample -> SampleOperatorState.current()
         is CliInputMode.File -> readEventsFromFile(mode.path).toOperatorState()
         CliInputMode.Stdin -> readEventsFromInput(input).toOperatorState()
+        is CliInputMode.Config -> loadRuntimeStateFromConfig(mode.path)
+    }
+
+    private fun loadRuntimeStateFromConfig(path: String): OperatorState {
+        val config = readRuntimeConfig(path)
+
+        return when (config.mode) {
+            AgentDeskMode.Sample -> SampleOperatorState.current()
+            AgentDeskMode.StoredEvents -> readEventsFromConfiguredStore(config).toOperatorState()
+        }
+    }
+
+    private fun readRuntimeConfig(path: String): AgentDeskRuntimeConfig {
+        val properties = Properties()
+        try {
+            Files.newInputStream(Path.of(path)).use(properties::load)
+        } catch (exception: IOException) {
+            throw CliInputException("Runtime configuration file could not be read.")
+        } catch (exception: InvalidPathException) {
+            throw CliInputException("Runtime configuration file could not be read.")
+        } catch (exception: SecurityException) {
+            throw CliInputException("Runtime configuration file could not be read.")
+        } catch (exception: IllegalArgumentException) {
+            throw CliInputException("Runtime configuration file could not be parsed.")
+        }
+
+        return try {
+            properties.toRuntimeConfig()
+        } catch (exception: ConfigValidationException) {
+            throw CliInputException(exception.message ?: "Runtime configuration is invalid.")
+        }
+    }
+
+    private fun Properties.toRuntimeConfig(): AgentDeskRuntimeConfig {
+        val defaults = AgentDeskRuntimeConfig.defaults()
+        val mode = getProperty("mode")?.let(AgentDeskMode::parse) ?: defaults.mode
+        val source = getProperty("source")?.let(RuntimeEventSourceKind::parse) ?: defaults.source
+        val eventStoreLocation = getProperty("eventStoreLocation")?.let(EventStoreLocation::parse)
+
+        return AgentDeskRuntimeConfig(
+            mode = mode,
+            source = source,
+            eventStoreLocation = eventStoreLocation,
+        )
+    }
+
+    private fun readEventsFromConfiguredStore(config: AgentDeskRuntimeConfig): List<WorkEvent> {
+        val location = config.eventStoreLocation
+            ?: throw CliInputException("stored event mode requires eventStoreLocation")
+        val storePath =
+            try {
+                Path.of(location.value)
+            } catch (exception: InvalidPathException) {
+                throw CliInputException("Configured event store could not be read.")
+            }
+
+        return try {
+            LocalFileWorkEventRepository(storePath).readAll()
+        } catch (exception: WorkEventStoreException) {
+            throw CliInputException(exception.message ?: "Configured event store could not be read.")
+        } catch (exception: SecurityException) {
+            throw CliInputException("Configured event store could not be read.")
+        }
     }
 
     private fun readEventsFromInput(input: InputStream): List<WorkEvent> = try {
@@ -132,11 +203,13 @@ object AgentDeskCli {
 
         Usage:
           agent-desk [--sample]
+          agent-desk --config <file>
           agent-desk --events <file>
           agent-desk --stdin
 
         Options:
           --sample        Render built-in public-safe sample state.
+          --config <file> Read public-safe runtime configuration properties.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
           --help          Show this help.
@@ -163,6 +236,16 @@ private data class CliOptions(
                     "--sample" -> mode = mode.assign(CliInputMode.Sample)
 
                     "--stdin" -> mode = mode.assign(CliInputMode.Stdin)
+
+                    "--config" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --config.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --config.")
+                        }
+                        mode = mode.assign(CliInputMode.Config(path))
+                        index += 1
+                    }
 
                     "--events" -> {
                         val path = args.getOrNull(index + 1)
@@ -200,6 +283,8 @@ private sealed interface CliInputMode {
     data object Stdin : CliInputMode
 
     data class File(val path: String) : CliInputMode
+
+    data class Config(val path: String) : CliInputMode
 }
 
 private class CliInputException(
