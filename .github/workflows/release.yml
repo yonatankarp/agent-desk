@@ -60,7 +60,7 @@ jobs:
           increment: ${{ inputs.bump }}
 
       - name: Upload executable CLI jar artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agent-desk-cli-all
           path: cli/build/libs/agent-desk-cli-all.jar
