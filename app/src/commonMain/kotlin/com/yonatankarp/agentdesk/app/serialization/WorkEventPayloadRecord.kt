@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.core.domain.serialization
+package com.yonatankarp.agentdesk.app.serialization
 
 import kotlinx.serialization.Serializable
 

@@ -93,7 +93,9 @@ These are illustrative public-safe examples. The stable JSON wire contract is de
 
 ## Event Serialization
 
-`WorkEventJson` encodes canonical events as compact JSON records. The contract uses stable string fields and `WorkEventType.wireName` values; it does not expose Kotlin class names.
+`WorkEvent` remains storage-independent domain data. JSON encoding and decoding live outside the domain boundary in the shared app serialization package, because JSON and concrete serialization libraries are adapter concerns.
+
+The app wire contract encodes canonical events as compact JSON records. It uses stable string fields and `WorkEventType.wireName` values; it does not expose Kotlin class names.
 
 Started event:
 

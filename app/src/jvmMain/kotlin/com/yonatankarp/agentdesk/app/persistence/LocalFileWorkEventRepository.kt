@@ -1,8 +1,8 @@
 package com.yonatankarp.agentdesk.app.persistence
 
+import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
-import com.yonatankarp.agentdesk.core.domain.serialization.WorkEventJson
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
