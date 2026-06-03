@@ -21,6 +21,7 @@ Use `.example` files, placeholders, sanitized fixtures, and adapter interfaces.
 - Update docs when behavior, architecture, or operational workflow changes.
 - Add or update tests when code behavior changes.
 - Link issues and include evidence in issue comments or PR descriptions.
+- Follow the shared engineering style in [docs/engineering-style.md](docs/engineering-style.md).
 
 ## Pull Request Expectations
 
@@ -31,4 +32,3 @@ Every PR should state:
 - checks run
 - required roles covered
 - any follow-up or blocker
-
