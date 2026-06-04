@@ -83,6 +83,14 @@ eventStoreLocation=agent-desk-events.ndjson
 
 This mock import path is a public-safe fixture workflow for tests and demos. It is not the later local runtime adapter; private runtime details must still be stripped by a concrete adapter before creating sanitized observations.
 
+Run the repeatable public-safe smoke workflow with:
+
+```bash
+bash scripts/mock-runtime-smoke.sh
+```
+
+The smoke creates a temporary sanitized event store, imports the mock runtime source, renders configured operator state, inspects `agent-task:45`, records a mock `resume` action, verifies the action evidence, and removes its temporary files before exiting.
+
 ## Mock Operator Action
 
 The first operator action loop is also mock-only and local-store backed:

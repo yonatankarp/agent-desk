@@ -7,7 +7,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Domain model](domain-model.md): public-safe core concepts, value objects, event envelope, and adapter-neutral examples.
 - [Runtime adapter boundary](runtime-adapter-boundary.md): sanitized import contracts for local/runtime observations.
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
-- [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract.
+- [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
 - [Mobile read-only contract](mobile-read-only-contract.md): shared `:app` read model and first mobile evidence expectations.
 - [Engineering style](engineering-style.md): Kotlin, domain, adapter, test, and documentation conventions.
 - [Decision log](decision-log.md): durable architecture and process decisions.
