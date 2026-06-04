@@ -33,6 +33,20 @@ Do not infer product direction from weak wording such as "expected", "default", 
 
 Do not start or resume work for a closed issue unless the owner explicitly asks for a rerun. If local worktrees or workspaces exist for closed issues, report them as stale local state and ignore them for work selection. Do not let stale workspaces outrank the live GitHub issue backlog.
 
+## Timeboxed Autonomous Runs
+
+When an owner asks for a timeboxed run, such as "run for 2h", treat the duration as a continuous work budget, not as a timeout for one slice. Repeat the daily loop until the timebox expires, there is no actionable work, or a blocker appears.
+
+Within a timeboxed run:
+
+- After every merged or reviewed slice, run Discovery, update issue state, then return to Manager selection if meaningful time remains.
+- If Discovery or a decision issue creates a new unblocked slice and time remains, select that new slice next unless a higher-priority open issue exists.
+- If no open issues exist, Manager/Product should inspect `VISION.md`, recent commits, CI state, docs drift, roadmap gaps, and repeated operator pain, then create or propose the next narrow issue with Goal, Acceptance Criteria, Verification, and Notes.
+- If no issue can be created without guessing product direction or inventing low-value work, stop and report "no actionable work" with the evidence reviewed.
+- Do not keep working merely to consume the clock. Each selected slice must still be narrow, useful, public-safe, and verifiable.
+
+Stop a timeboxed run before the clock expires when credentials, external setup, destructive cleanup, unsafe public action, unclear owner decision, failed checks needing judgment, or unavailable required review blocks responsible progress.
+
 ## Post-Merge Discovery Audit
 
 After every merged or reviewed slice, run a short discovery audit before moving on. The audit should inspect:
