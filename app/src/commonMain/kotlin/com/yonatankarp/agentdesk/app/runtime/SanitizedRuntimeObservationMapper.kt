@@ -3,9 +3,13 @@ package com.yonatankarp.agentdesk.app.runtime
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
@@ -30,9 +34,26 @@ class SanitizedRuntimeObservationMapper {
                 summary = summary?.let(WorkSummary::parse),
             )
 
+        RuntimeWorkObservationKind.NeedsDecision ->
+            WorkNeedsDecisionPayload(
+                reason = WorkSummary.parse(requireNotNull(reason) { "NeedsDecision observations require a reason" }),
+            )
+
         RuntimeWorkObservationKind.Blocked ->
             WorkBlockedPayload(
                 reason = WorkSummary.parse(requireNotNull(reason) { "Blocked observations require a reason" }),
+            )
+
+        RuntimeWorkObservationKind.Succeeded -> WorkSucceededPayload
+
+        RuntimeWorkObservationKind.Failed ->
+            WorkFailedPayload(
+                reason = WorkSummary.parse(requireNotNull(reason) { "Failed observations require a reason" }),
+            )
+
+        RuntimeWorkObservationKind.Canceled ->
+            WorkCanceledPayload(
+                reason = reason?.let(WorkSummary::parse),
             )
     }
 

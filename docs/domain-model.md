@@ -89,6 +89,27 @@ type: work.blocked
 payload.reason: CI failed on the core test task.
 ```
 
+Work needs decision:
+
+```text
+id: event:agent-task:42:needs-decision
+occurredAt: 2026-06-02T21:10:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.needs-decision
+payload.reason: Operator must choose whether to retry the failed check.
+```
+
+Work succeeded:
+
+```text
+id: event:agent-task:42:succeeded
+occurredAt: 2026-06-02T21:15:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.succeeded
+```
+
 These are illustrative public-safe examples. The stable JSON wire contract is described below.
 
 ## Event Serialization
