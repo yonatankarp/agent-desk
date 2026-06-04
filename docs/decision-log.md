@@ -2,17 +2,17 @@
 
 ## 2026-06-04: First mobile client scope
 
-Decision: The first mobile proof is an iOS native shell backed by shared Kotlin state from `:app`, not Compose Multiplatform mobile, Android-first, or a deferred mobile shell.
+Decision: The first mobile proof is a Compose Multiplatform mobile surface backed by shared Kotlin state from `:app`, not a native iOS-only shell, Android-only shell, or deferred mobile shell.
 
-Rationale: Agent Desk already commits to desktop and mobile as first-class targets while keeping shared semantics in Kotlin/KMP. The repository has no product evidence yet that Compose iOS should outweigh a native iOS shell, and Android-first would not match the current stated product direction. Starting with a read-only iOS shell also keeps the mobile surface small enough to verify without introducing action approval risk.
+Rationale: Agent Desk is Kotlin/KMP-first, desktop and mobile are first-class targets, and the desktop product already uses Compose Multiplatform for the graphical shell. A Compose mobile proof keeps the first mobile surface aligned with the existing shared UI/runtime direction instead of adding a native client stack before the product shape is stable. Starting read-only keeps the mobile scope small enough to verify without introducing action approval risk.
 
 Smallest workflow: Mobile should first show read-only current work plus the attention queue from sample or stored events. The view should expose work id, title, status presentation, summary or reason text, stale-attention markers, compact evidence references, and projection warnings when present. It should not trigger stop, resume, retry, or approval actions until the read model and screenshot evidence are stable.
 
-Shared-state contract: `:app` should own the mobile-facing read model by deriving it from existing `OperatorState` projections and presenters. CLI rendering, Compose desktop state, native iOS views, runtime imports, local file persistence, and OpenClaw-specific observation details remain adapter- or client-specific. Runtime adapters may feed sanitized events into `:app`, but private paths, channel ids, raw transcripts, credentials, and runtime internals must not cross into the mobile contract.
+Shared-state contract: `:app` should own the mobile-facing read model by deriving it from existing `OperatorState` projections and presenters. CLI rendering, Compose desktop state, Compose mobile views, runtime imports, local file persistence, and OpenClaw-specific observation details remain adapter- or client-specific. Runtime adapters may feed sanitized events into `:app`, but private paths, channel ids, raw transcripts, credentials, and runtime internals must not cross into the mobile contract.
 
 Verification expectations: The first mobile implementation should include `:app` tests for sample and stored-event projections, attention queue ordering, stale attention, evidence references, and projection warnings. Any screenshot or smoke artifact should be public-safe and show only sanitized read-only current work plus attention queue state.
 
-Consequence: The first implementable follow-up is [#116](https://github.com/yonatankarp/agent-desk/issues/116), which adds the shared mobile read-only operator state contract before native shell wiring.
+Consequence: The first implementable follow-up is [#116](https://github.com/yonatankarp/agent-desk/issues/116), which adds the shared mobile read-only operator state contract before Compose mobile shell wiring.
 
 ## 2026-06-03: Branch-aware PR release labels
 

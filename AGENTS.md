@@ -17,7 +17,7 @@ Each daily run should:
 
 1. Pull latest `main`.
 2. Review open issues, CI, current milestone, `VISION.md`, recent commits, and the state of any local worktrees/workspaces before selecting work.
-3. Choose one narrow, high-leverage open issue. Prefer unblocked `slice` issues. If the only actionable open issue is labeled `decision`, work the decision issue as the slice: record the decision and create exactly one implementable follow-up slice unless the decision explicitly defers follow-up work.
+3. Choose one narrow, high-leverage open issue. Prefer unblocked `slice` issues. If the only actionable open issue is labeled `decision`, work the decision issue as the slice. Record and merge the decision only when the issue or owner comments already contain explicit owner-approved direction. Otherwise open a proposal PR or comment with the recommended decision, keep the issue open, and stop for owner review.
 4. Assign required roles for the slice.
 5. Use bounded subagents for role work when useful.
 6. Integrate through the main agent.
@@ -28,6 +28,8 @@ Each daily run should:
 11. Post a concise daily report to the configured reporting channel.
 
 Stop or ask when work is blocked by credentials, external setup, product direction, destructive operations, or a decision that should not be guessed.
+
+Do not infer product direction from weak wording such as "expected", "default", "unless evidence favors", or local implementation convenience. Treat those as recommendation inputs, not approval. For product or architecture choices, create follow-up implementation slices only after the decision is merged or explicitly approved.
 
 Do not start or resume work for a closed issue unless the owner explicitly asks for a rerun. If local worktrees or workspaces exist for closed issues, report them as stale local state and ignore them for work selection. Do not let stale workspaces outrank the live GitHub issue backlog.
 
