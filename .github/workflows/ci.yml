@@ -20,6 +20,27 @@ jobs:
       - name: Validate public-safe repository hygiene
         run: bash scripts/validate-public-hygiene.sh
 
+      - name: Run public hygiene self-test
+        run: bash scripts/validate-public-hygiene.sh --self-test
+
+  smoke-scripts:
+    name: Smoke Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare JVM build
+        uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
+        with:
+          jvm-version: "25"
+
+      - name: Run mock runtime smoke
+        run: bash scripts/mock-runtime-smoke.sh
+
+      - name: Run mobile read-only smoke
+        run: bash scripts/mobile-read-only-smoke.sh
+
   formatting:
     name: Formatting
     runs-on: ubuntu-latest
