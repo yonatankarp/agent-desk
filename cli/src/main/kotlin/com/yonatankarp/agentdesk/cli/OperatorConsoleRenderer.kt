@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspection
@@ -79,10 +80,7 @@ class OperatorConsoleRenderer {
         }
 
         lines.forEach { line ->
-            appendLine(
-                "- ${line.occurredAt} ${line.type} ${line.workItemId} " +
-                    "from ${line.source} - ${line.detail}",
-            )
+            appendLine("- ${line.occurredAt} ${line.type} ${line.workItemId} from ${line.source} - ${line.describe()}")
         }
     }
 
@@ -94,10 +92,7 @@ class OperatorConsoleRenderer {
         }
 
         inspection.acceptedEvents.forEach { line ->
-            appendLine(
-                "- ${line.occurredAt} ${line.type} " +
-                    "from ${line.source} - ${line.detail}",
-            )
+            appendLine("- ${line.occurredAt} ${line.type} from ${line.source} - ${line.describe()}")
         }
     }
 
@@ -111,6 +106,17 @@ class OperatorConsoleRenderer {
         inspection.projectionWarnings.forEach { warning ->
             appendLine("- ignored event - ${warning.reason}")
         }
+    }
+
+    private fun EventLine.describe(): String {
+        if (evidenceReferences.isEmpty()) {
+            return detail
+        }
+
+        val evidence = evidenceReferences.joinToString("; ") { reference ->
+            "${reference.kind} ${reference.label} -> ${reference.target}"
+        }
+        return "$detail | evidence: $evidence"
     }
 
     private fun Boolean.toYesNo(): String = if (this) "yes" else "no"

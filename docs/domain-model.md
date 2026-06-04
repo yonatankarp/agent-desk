@@ -63,8 +63,11 @@ The default stale-work derivation marks non-terminal running or waiting work as 
 - `workItemId`: the work item the event describes.
 - `type`: stable event type derived from the payload.
 - `payload`: typed event-specific data.
+- `evidenceReferences`: optional compact links or references to public-safe evidence for the event.
 
 OpenClaw-specific runtime details belong in an adapter before they reach this model. The core event source should stay public-safe and adapter-neutral.
+
+Evidence references point operators at inspectable material without storing raw evidence in the event stream. Allowed evidence kinds are `commit`, `check-run`, `artifact`, `screenshot`, and `sanitized-note`. Evidence labels and targets must be single-line, compact, and public-safe; they reject private local paths, credentials, raw transcript markers, channel ids, and private runtime/session identifiers.
 
 ### Public-Safe Examples
 
@@ -112,6 +115,20 @@ workItemId: agent-task:42
 type: work.succeeded
 ```
 
+Work blocked with evidence:
+
+```text
+id: event:agent-task:42:blocked
+occurredAt: 2026-06-02T21:05:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.blocked
+payload.reason: CI failed on the core test task.
+evidenceReferences[0].kind: check-run
+evidenceReferences[0].label: Gradle Build
+evidenceReferences[0].target: https://github.com/yonatankarp/agent-desk/actions/runs/26937983933
+```
+
 These are illustrative public-safe examples. The stable JSON wire contract is described below.
 
 ## Event Serialization
@@ -140,6 +157,13 @@ Record fields:
 - `workItemId`: canonical `WorkItemId`.
 - `type`: stable event wire name such as `work.started` or `work.blocked`.
 - `payload`: event-specific sanitized text fields. Current fields are `title`, `summary`, and `reason`.
+- `evidenceReferences`: optional list of compact evidence records with `kind`, `label`, and `target`.
+
+Event with evidence:
+
+```json
+{"id":"event:agent-task:42:blocked","occurredAt":"2026-06-02T21:05:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.blocked","payload":{"reason":"CI failed on the core test task."},"evidenceReferences":[{"kind":"check-run","label":"Gradle Build","target":"https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"}]}
+```
 
 The JSON contract must stay public-safe. It must not include local paths, credentials, channel ids, raw transcripts, private runtime ids, or OpenClaw-specific internal fields.
 

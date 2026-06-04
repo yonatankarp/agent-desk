@@ -89,6 +89,10 @@ class ArchitectureKonsistTest :
             setOf(
                 "EventSource",
                 "EventTimestamp",
+                "EvidenceLabel",
+                "EvidenceReference",
+                "EvidenceReferenceKind",
+                "EvidenceTarget",
                 "WorkBlockedPayload",
                 "WorkCanceledPayload",
                 "WorkEvent",

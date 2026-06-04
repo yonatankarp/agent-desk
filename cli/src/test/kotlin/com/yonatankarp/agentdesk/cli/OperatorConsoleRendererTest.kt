@@ -5,6 +5,10 @@ import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
@@ -50,6 +54,13 @@ class OperatorConsoleRendererTest {
                             title = WorkItemTitle.parse("Run public hygiene check"),
                             summary = WorkSummary.parse("Agent accepted the task and started checks."),
                         ),
+                        evidenceReferences = listOf(
+                            EvidenceReference(
+                                kind = EvidenceReferenceKind.Commit,
+                                label = EvidenceLabel.parse("Implementation commit"),
+                                target = EvidenceTarget.parse("commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"),
+                            ),
+                        ),
                     ),
                 ),
                 staleAttention = listOf(
@@ -71,7 +82,8 @@ class OperatorConsoleRendererTest {
         assertContains(
             output,
             "- 2026-06-02T21:00:00Z work.started agent-task:42 from sample-agent - " +
-                "Agent accepted the task and started checks.",
+                "Agent accepted the task and started checks. | evidence: " +
+                "commit Implementation commit -> commit:80de32988617392e1f42e6c4c48c66a56aaae4c4",
         )
     }
 

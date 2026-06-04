@@ -25,6 +25,13 @@ object OperatorStatePresenter {
             workItemId = event.workItemId.toString(),
             source = event.source.toString(),
             detail = event.payload.describe(),
+            evidenceReferences = event.evidenceReferences.map { evidence ->
+                EvidenceLine(
+                    kind = evidence.kind.wireName,
+                    label = evidence.label.toString(),
+                    target = evidence.target.toString(),
+                )
+            },
         )
     }
 
