@@ -13,6 +13,7 @@ Protect `main` with:
   - `Repo Hygiene`
   - `Formatting`
   - `Gradle Build`
+  - `macOS Compose Build`
   - `Coverage`
   - `Coverage Comment` for same-repo pull requests
 - Keep required checks aligned with the current CI workflow as new product surfaces are added.

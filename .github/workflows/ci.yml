@@ -67,6 +67,21 @@ jobs:
         with:
           gradle-module: :mobile
 
+  macos-compose:
+    name: macOS Compose Build
+    runs-on: macos-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Prepare JVM build
+        uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
+        with:
+          jvm-version: "25"
+
+      - name: Build Compose desktop and mobile modules
+        run: ./gradlew :desktop:build :mobile:build
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
