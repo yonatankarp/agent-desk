@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
@@ -31,4 +33,9 @@ compose.desktop {
     application {
         mainClass = "com.yonatankarp.agentdesk.desktop.AgentDeskDesktopKt"
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
 }
