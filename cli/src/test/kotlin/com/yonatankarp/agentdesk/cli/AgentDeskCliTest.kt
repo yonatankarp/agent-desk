@@ -352,6 +352,65 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `mock resume action appends a sanitized result event`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$NEEDS_DECISION_EVENT\n")
+
+        val actionResult = runCli("act", "resume", "agent-task:42", "--event-store", eventFile.toString())
+        val inspectResult = runCli("inspect", "agent-task:42", "--events", eventFile.toString())
+
+        assertEquals(0, actionResult.exitCode)
+        assertContains(actionResult.output, "Recorded resume action for agent-task:42")
+        assertContains(actionResult.output, "event:agent-task:42:action-resume")
+        assertPublicSafe(actionResult.output)
+        assertEquals("", actionResult.error)
+        assertEquals(
+            listOf("work.started", "work.needs-decision", "work.started"),
+            eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") },
+        )
+        assertEquals(0, inspectResult.exitCode)
+        assertContains(inspectResult.output, "Status: Running")
+        assertContains(inspectResult.output, "mock-action-adapter")
+        assertPublicSafe(inspectResult.output)
+    }
+
+    @Test
+    fun `mock action rejects disallowed intent safely`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$NEEDS_DECISION_EVENT\n")
+
+        val result = runCli("act", "stop", "agent-task:42", "--event-store", eventFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Mock action adapter currently supports only resume.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `mock action rejects missing work item safely`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$NEEDS_DECISION_EVENT\n")
+
+        val result = runCli("act", "resume", "agent-task:99", "--event-store", eventFile.toString())
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Work item was not found.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `mock action rejects unsafe event store location`() {
+        val result = runCli("act", "resume", "agent-task:42", "--event-store", "/home/operator/private-token.ndjson")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid event store location:")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
     fun `inspect sample item renders item details`() {
         val result = runCli("inspect", "agent-task:43")
 
@@ -495,6 +554,9 @@ class AgentDeskCliTest {
 
         private const val BLOCKED_EVENT =
             """{"id":"event:agent-task:42:blocked","occurredAt":"2026-06-02T21:05:00.123Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.blocked","payload":{"reason":"CI failed on the core test task."}}"""
+
+        private const val NEEDS_DECISION_EVENT =
+            """{"id":"event:agent-task:42:needs-decision","occurredAt":"2026-06-02T21:03:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.needs-decision","payload":{"reason":"Operator decision needed."}}"""
 
         private const val SUCCEEDED_EVENT =
             """{"id":"event:agent-task:42:succeeded","occurredAt":"2026-06-02T21:10:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.succeeded","payload":{}}"""

@@ -66,3 +66,15 @@ eventStoreLocation=agent-desk-events.ndjson
 ```
 
 This mock import path is a public-safe fixture workflow for tests and demos. It is not the later local runtime adapter; private runtime details must still be stripped by a concrete adapter before creating sanitized observations.
+
+## Mock Operator Action
+
+The first operator action loop is also mock-only and local-store backed:
+
+```bash
+./gradlew :cli:run --args='act resume agent-task:45 --event-store agent-desk-events.ndjson'
+```
+
+The command reads the configured event store, projects current operator state, verifies that the selected work item exists and is resumable, then appends a sanitized `work.started` result event from `mock-action-adapter`. The mock adapter currently accepts only `resume`; unsupported intents such as `stop` are rejected with public-safe errors instead of touching any private runtime integration.
+
+Action result evidence uses sanitized note targets such as `mock-action:resume`. It must not include local paths, service identifiers, raw transcripts, channel ids, or private runtime details.
