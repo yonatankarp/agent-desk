@@ -5,10 +5,12 @@ import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class WorkEventJsonTest :
     BehaviorSpec({
@@ -148,6 +150,23 @@ class WorkEventJsonTest :
                     }
 
                     error.message shouldContain "Unknown evidence reference kind"
+                }
+            }
+
+            `when`("a renderer-facing payload contains unsafe text") {
+                then("decoding rejects it without echoing the raw value") {
+                    val unsafeTitle = listOf("Open", "Claw runtime context").joinToString("")
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"$unsafeTitle"}}""",
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Work item title")
+                        shouldNotContain(unsafeTitle)
+                    }
                 }
             }
         }

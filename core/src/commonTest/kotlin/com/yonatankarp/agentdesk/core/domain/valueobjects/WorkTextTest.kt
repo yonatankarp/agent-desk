@@ -3,6 +3,8 @@ package com.yonatankarp.agentdesk.core.domain.valueobjects
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class WorkTextTest :
     BehaviorSpec({
@@ -111,5 +113,41 @@ class WorkTextTest :
                     }
                 }
             }
+
+            `when`("title and summary input includes renderer-unsafe public boundary details") {
+                then("both wrappers reject the unsafe text without echoing it") {
+                    unsafeRendererTextExamples().forEach { unsafe ->
+                        val titleError = shouldThrow<IllegalArgumentException> {
+                            WorkItemTitle.parse("Review $unsafe")
+                        }
+                        val summaryError = shouldThrow<IllegalArgumentException> {
+                            WorkSummary.parse("Blocked by $unsafe")
+                        }
+
+                        titleError.message.orEmpty() shouldContain "Work item title"
+                        summaryError.message.orEmpty() shouldContain "Work summary"
+                        titleError.message.orEmpty() shouldNotContain unsafe
+                        summaryError.message.orEmpty() shouldNotContain unsafe
+                    }
+                }
+            }
         }
     })
+
+private fun unsafeRendererTextExamples(): List<String> {
+    val unixPath = "/" + listOf("home", "operator", "workspace", "private.log").joinToString("/")
+    val macPath = "/" + listOf("Users", "operator", "Library", "private.log").joinToString("/")
+    val windowsPath = listOf("C:", "Users", "operator", "AppData", "private.log").joinToString("\\")
+    val privateUrl = "https://" + listOf("localhost", "runtime").joinToString("/")
+
+    return listOf(
+        unixPath,
+        macPath,
+        windowsPath,
+        privateUrl,
+        "123456789012345678",
+        listOf("raw", "transcript excerpt").joinToString(" "),
+        listOf("bearer", "credential-marker").joinToString(" "),
+        listOf("Open", "Claw runtime context").joinToString(""),
+    )
+}

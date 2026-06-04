@@ -210,6 +210,30 @@ class SanitizedRuntimeObservationMapperTest :
                     error.message shouldContain "reason"
                 }
             }
+
+            `when`("renderer-facing observation text includes private boundary details") {
+                then("the mapper rejects it without echoing the unsafe value") {
+                    val unsafeReason = listOf("raw", "transcript marker").joinToString(" ")
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        mapper.toWorkEvent(
+                            RuntimeWorkObservation(
+                                eventId = "event:agent-task:99:failed",
+                                occurredAt = "2026-06-02T21:30:00Z",
+                                source = "mock-adapter",
+                                workItemId = "agent-task:99",
+                                kind = RuntimeWorkObservationKind.Failed,
+                                reason = unsafeReason,
+                            ),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Work summary")
+                        shouldNotContain(unsafeReason)
+                    }
+                }
+            }
         }
 
         given("mock runtime adapter fixtures") {
