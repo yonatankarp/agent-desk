@@ -79,7 +79,8 @@ jobs:
           ./gradlew \
             :core:koverXmlReport :core:koverHtmlReport \
             :app:koverXmlReport :app:koverHtmlReport \
-            :cli:koverXmlReport :cli:koverHtmlReport
+            :cli:koverXmlReport :cli:koverHtmlReport \
+            :desktop:koverXmlReport :desktop:koverHtmlReport
 
       - name: Upload core coverage report
         uses: actions/upload-artifact@v7
@@ -103,6 +104,14 @@ jobs:
           name: cli-coverage-report
           path: |
             cli/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Upload desktop coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-coverage-report
+          path: |
+            desktop/build/reports/kover/**
           if-no-files-found: error
 
       - name: Generate coverage summary
@@ -155,7 +164,7 @@ jobs:
                   *module_summary("core"),
                   *module_summary("app"),
                   *module_summary("cli"),
-                  "Excluded: `:desktop` has no meaningful coverage report yet because it currently has no desktop smoke tests or dedicated testable presentation logic.",
+                  *module_summary("desktop"),
                   "",
               ]
           )
