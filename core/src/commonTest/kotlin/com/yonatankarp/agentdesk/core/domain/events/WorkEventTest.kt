@@ -4,6 +4,7 @@ import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class WorkEventTest :
     BehaviorSpec({
@@ -71,6 +72,47 @@ class WorkEventTest :
                     shouldThrow<IllegalArgumentException> {
                         EventTimestamp.parse("2026-06-02T21:00:00+02:00")
                     }
+                }
+            }
+        }
+
+        given("evidence references") {
+            `when`("public-safe evidence is parsed") {
+                then("it preserves adapter-neutral kind, label, and target") {
+                    val reference = EvidenceReference(
+                        kind = EvidenceReferenceKind.CheckRun,
+                        label = EvidenceLabel.parse("Gradle Build"),
+                        target = EvidenceTarget.parse("https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"),
+                    )
+
+                    reference.kind.wireName shouldBe "check-run"
+                    reference.label.toString() shouldBe "Gradle Build"
+                    reference.target.toString() shouldBe
+                        "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"
+                }
+            }
+
+            `when`("evidence points at private or unsafe material") {
+                then("it rejects the reference text") {
+                    shouldThrow<IllegalArgumentException> {
+                        EvidenceTarget.parse("/" + "home/yonatan/.openclaw/private.log")
+                    }.message shouldContain "private local paths"
+
+                    shouldThrow<IllegalArgumentException> {
+                        EvidenceTarget.parse("channel:" + "151144681" + "8880225483")
+                    }.message shouldContain "private runtime"
+
+                    shouldThrow<IllegalArgumentException> {
+                        EvidenceLabel.parse("raw transcript excerpt")
+                    }.message shouldContain "private runtime"
+
+                    shouldThrow<IllegalArgumentException> {
+                        EvidenceTarget.parse("https://localhost:8080/report")
+                    }.message shouldContain "private hosts"
+
+                    shouldThrow<IllegalArgumentException> {
+                        EvidenceTarget.parse("github_pat_1234567890")
+                    }.message shouldContain "secrets"
                 }
             }
         }

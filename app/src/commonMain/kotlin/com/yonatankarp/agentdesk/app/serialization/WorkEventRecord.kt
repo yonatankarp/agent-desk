@@ -10,4 +10,5 @@ data class WorkEventRecord(
     val workItemId: String,
     val type: String,
     val payload: WorkEventPayloadRecord = WorkEventPayloadRecord(),
+    val evidenceReferences: List<EvidenceReferenceRecord> = emptyList(),
 )

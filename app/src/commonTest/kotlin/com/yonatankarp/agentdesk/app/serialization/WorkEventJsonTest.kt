@@ -1,6 +1,10 @@
 package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -31,6 +35,45 @@ class WorkEventJsonTest :
                     val event = AppFixtures.workBlockedEvent()
 
                     WorkEventJson.decode(WorkEventJson.encode(event)) shouldBe event
+                }
+            }
+        }
+
+        given("evidence references") {
+            `when`("an event with evidence is encoded and decoded") {
+                then("it preserves compact public-safe evidence records") {
+                    val event = AppFixtures.workStartedEvent().copy(
+                        evidenceReferences = listOf(
+                            EvidenceReference(
+                                kind = EvidenceReferenceKind.Commit,
+                                label = EvidenceLabel.parse("Implementation commit"),
+                                target = EvidenceTarget.parse("commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"),
+                            ),
+                            EvidenceReference(
+                                kind = EvidenceReferenceKind.CheckRun,
+                                label = EvidenceLabel.parse("Gradle Build"),
+                                target = EvidenceTarget.parse(
+                                    "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+                                ),
+                            ),
+                        ),
+                    )
+
+                    val encoded = WorkEventJson.encode(event)
+
+                    encoded shouldContain """"evidenceReferences":[{"kind":"commit","label":"Implementation commit","target":"commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"}"""
+                    WorkEventJson.decode(encoded) shouldBe event
+                }
+            }
+
+            `when`("an older event omits evidence references") {
+                then("it decodes with an empty evidence list") {
+                    val event =
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"}}""",
+                        )
+
+                    event.evidenceReferences shouldBe emptyList()
                 }
             }
         }
@@ -92,6 +135,19 @@ class WorkEventJsonTest :
                     }
 
                     error.message shouldContain "Unknown work event type"
+                }
+            }
+
+            `when`("the evidence kind is unknown") {
+                then("decoding rejects the record") {
+                    val unsafeTarget = "/" + "home/yonatan/run.log"
+                    val error = shouldThrow<IllegalArgumentException> {
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"evidenceReferences":[{"kind":"private-log","label":"Raw log","target":"$unsafeTarget"}]}""",
+                        )
+                    }
+
+                    error.message shouldContain "Unknown evidence reference kind"
                 }
             }
         }

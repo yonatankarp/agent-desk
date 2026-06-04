@@ -6,4 +6,5 @@ data class EventLine(
     val workItemId: String,
     val source: String,
     val detail: String,
+    val evidenceReferences: List<EvidenceLine> = emptyList(),
 )

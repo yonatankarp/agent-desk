@@ -2,6 +2,10 @@ package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
@@ -37,6 +41,7 @@ object WorkEventJson {
         workItemId = event.workItemId.toString(),
         type = event.type.wireName,
         payload = event.payload.toRecord(),
+        evidenceReferences = event.evidenceReferences.map { it.toRecord() },
     )
 
     fun fromRecord(record: WorkEventRecord): WorkEvent = record.toDomain()
@@ -47,6 +52,19 @@ object WorkEventJson {
         source = EventSource.parse(source),
         workItemId = WorkItemId.parse(workItemId),
         payload = payload.toDomainPayload(type.toEventType()),
+        evidenceReferences = evidenceReferences.map { it.toDomain() },
+    )
+
+    private fun EvidenceReference.toRecord(): EvidenceReferenceRecord = EvidenceReferenceRecord(
+        kind = kind.wireName,
+        label = label.toString(),
+        target = target.toString(),
+    )
+
+    private fun EvidenceReferenceRecord.toDomain(): EvidenceReference = EvidenceReference(
+        kind = EvidenceReferenceKind.fromWireName(kind),
+        label = EvidenceLabel.parse(label),
+        target = EvidenceTarget.parse(target),
     )
 
     private fun WorkEventPayload.toRecord(): WorkEventPayloadRecord = when (this) {
