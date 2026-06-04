@@ -43,6 +43,12 @@ Run the public-safe mock runtime/operator smoke:
 bash scripts/mock-runtime-smoke.sh
 ```
 
+Run the public-safe mobile read-only smoke:
+
+```bash
+bash scripts/mobile-read-only-smoke.sh
+```
+
 Check deterministic formatting:
 
 ```bash

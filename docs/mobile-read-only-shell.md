@@ -15,8 +15,8 @@ The module has a JVM target so CI and local agents can build and smoke-test the 
 Local verification:
 
 ```bash
+bash scripts/mobile-read-only-smoke.sh
 ./gradlew :mobile:build
 ```
 
 The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which should contain the `Current work` and `Attention queue` sections with sanitized sample work only.
-
