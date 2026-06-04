@@ -51,8 +51,11 @@ Every non-trivial issue or daily slice must account for these roles:
 - Manager: scope, priority, issue hygiene, and acceptance criteria.
 - Architect: boundaries, data model, platform choices, and migration risk.
 - Developer: implementation and local integration.
+- QA/Tester: verification evidence, failure modes, and regression checks.
+- Compliance: acceptance criteria, engineering style, architecture rules, public-safety rules, and user constraints.
+- Security: secrets, privacy, permissions, adapters, persistence, and public-safe boundaries.
 - Designer: UX and interaction quality for visible surfaces. Required for UI changes.
-- Reviewer/Tester: diff review, tests, failure modes, and regression checks.
+- Reviewer: code, design, or implementation review separate from QA evidence.
 - Docs/Operator: runbooks, decision log, daily report, and public-safe artifact hygiene.
 - Discovery: post-merge audit, CodeRabbit/review findings, codebase scan, and follow-up issue quality.
 
