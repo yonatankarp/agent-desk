@@ -25,7 +25,9 @@ class SanitizedRuntimeObservationMapperTest :
 
                     events.map { it.type.wireName }.shouldContainExactly(
                         "work.started",
+                        "work.started",
                         "work.blocked",
+                        "work.started",
                         "work.needs-decision",
                         "work.succeeded",
                     )
