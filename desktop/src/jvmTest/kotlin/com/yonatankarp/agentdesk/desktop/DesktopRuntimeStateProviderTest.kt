@@ -10,6 +10,8 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import java.nio.file.Files
+import java.nio.file.Path
+import java.util.Properties
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -19,17 +21,11 @@ import kotlin.test.assertIs
 class DesktopRuntimeStateProviderTest {
     @Test
     fun `loads stored event state from public-safe config`() {
-        val directory = Files.createTempDirectory("agent-desk-desktop-test")
+        val directory = Files.createTempDirectory(testRoot(), "agent-desk-desktop-test")
         val eventStore = directory.resolve("events.ndjson")
         val config = directory.resolve("agent-desk.config.properties")
         eventStore.writeText(WorkEventJson.encode(startedEvent()) + "\n")
-        config.writeText(
-            """
-            mode=stored-events
-            source=local-event-store
-            eventStoreLocation=$eventStore
-            """.trimIndent(),
-        )
+        writeStoredEventsConfig(config, eventStore)
 
         val screenState = DesktopRuntimeStateProvider.load(arrayOf("--config", config.toString()))
 
@@ -56,4 +52,24 @@ class DesktopRuntimeStateProviderTest {
             summary = WorkSummary.parse("Desktop loaded projected operator state."),
         ),
     )
+
+    private fun writeStoredEventsConfig(
+        config: Path,
+        eventStore: Path,
+    ) {
+        val properties = Properties().apply {
+            setProperty("mode", "stored-events")
+            setProperty("source", "local-event-store")
+            setProperty("eventStoreLocation", eventStore.toString())
+        }
+        Files.newBufferedWriter(config).use { writer ->
+            properties.store(writer, null)
+        }
+    }
+
+    private fun testRoot(): Path {
+        val root = Path.of("build", "tmp", "desktop-runtime-state-provider-test")
+        Files.createDirectories(root)
+        return root
+    }
 }
