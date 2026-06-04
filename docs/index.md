@@ -21,6 +21,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 
 - Keep quickstart commands and the public-safe rule in `README.md`.
 - Put architecture rationale, domain details, CI policy, role/process guidance, and longer examples in `docs/`.
+- Keep the GitHub Wiki as the human-facing operator handbook. When repo docs change operator-facing behavior, update the matching wiki page in the same slice or create a follow-up issue.
 - Keep docs public-safe: no private paths, tokens, channel IDs, raw transcripts, personal data, private URLs, or OpenClaw-internal secrets.
 - Prefer links between focused docs over copying the same explanation into multiple files.
 
