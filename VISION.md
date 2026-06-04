@@ -29,3 +29,6 @@ Prove the smallest useful product loop:
 4. Exercise one safe action loop against a mock or local adapter.
 5. Keep CI, docs, and issue state clean enough for daily autonomous work.
 
+## First Mobile Proof
+
+The first mobile client proof is an iOS native shell backed by shared Kotlin state from `:app`. Its first workflow is read-only: show current work and the attention queue from sanitized sample or stored events, including status presentation, stale-attention markers, compact evidence references, and projection warnings. Mobile action approvals stay deferred until that public-safe read model and screenshot evidence are stable.
