@@ -7,16 +7,27 @@ The product goal is simple: open the app after time away, understand what agents
 This repository is Kotlin/KMP-first:
 
 - Kotlin shared core for domain models, event schemas, reducers, and sync/state logic.
-- Compose Multiplatform desktop as the primary client target.
-- iOS support through a native shell backed by shared Kotlin logic, unless product evidence later favors Compose iOS.
+- Compose Multiplatform desktop and mobile clients backed by shared Kotlin logic.
 - A backend or local daemon can be Kotlin/Ktor when needed.
 - OpenClaw is treated as one integration source behind an adapter boundary.
 
 ## Current Status
 
-The repository is in bootstrap mode. Current slices establish shared core domain types, a sample CLI operator surface, a sample Compose desktop shell, and CI-backed checks.
+The repository is in bootstrap mode. Current slices establish shared core domain types, a sample CLI operator surface, sample Compose desktop/mobile shells, a public-safe mock runtime smoke, and CI-backed checks.
 
 Start with [docs/index.md](docs/index.md) for deeper architecture, style, process, and domain notes.
+
+## Operator Handbook
+
+The GitHub Wiki is the operator-facing handbook:
+
+- [Quickstart](https://github.com/yonatankarp/agent-desk/wiki/Quickstart)
+- [CLI usage](https://github.com/yonatankarp/agent-desk/wiki/CLI-usage)
+- [Runtime configuration](https://github.com/yonatankarp/agent-desk/wiki/Runtime-configuration)
+- [Local event stores](https://github.com/yonatankarp/agent-desk/wiki/Local-event-stores)
+- [Public-safe rules](https://github.com/yonatankarp/agent-desk/wiki/Public-safe-rules)
+- [Desktop status](https://github.com/yonatankarp/agent-desk/wiki/Desktop-status)
+- [Daily autonomous run reports](https://github.com/yonatankarp/agent-desk/wiki/Daily-autonomous-run-reports)
 
 ## Local Checks
 
@@ -26,49 +37,25 @@ Run the public-safe repository hygiene check:
 bash scripts/validate-public-hygiene.sh
 ```
 
-Run the Kotlin core build and tests:
+Run the public-safe mock runtime/operator smoke:
 
 ```bash
-./gradlew :core:build
+bash scripts/mock-runtime-smoke.sh
 ```
 
-Run the sample CLI operator surface:
+Check deterministic formatting:
 
 ```bash
-./gradlew :cli:run
+./gradlew spotlessCheck
 ```
 
-Run the CLI from sanitized newline-delimited event JSON:
+Build the current modules:
 
 ```bash
-printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}' | ./gradlew :cli:run --args='--stdin'
+./gradlew :core:build :app:build :cli:build :desktop:build :mobile:build
 ```
 
-Or write a public-safe event record to a file and read it back:
-
-```bash
-printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}' > agent-desk-events.ndjson
-./gradlew :cli:run --args='--events agent-desk-events.ndjson'
-```
-
-Inspect one sanitized work item from the same event input:
-
-```bash
-./gradlew :cli:run --args='inspect agent-task:42 --events agent-desk-events.ndjson'
-```
-
-Run the CLI from a public-safe runtime config:
-
-```bash
-printf '%s\n' 'mode=stored-events' 'source=local-event-store' 'eventStoreLocation=agent-desk-events.ndjson' > agent-desk.config.properties
-./gradlew :cli:run --args='--config agent-desk.config.properties'
-```
-
-Build and test the CLI module:
-
-```bash
-./gradlew :cli:build
-```
+For CLI examples, runtime configuration, desktop status, and local event store workflows, use the Wiki links above. Repo docs remain canonical for architecture and implementation details.
 
 Build the standalone executable CLI jar:
 
@@ -89,22 +76,14 @@ Build and test the desktop module:
 ./gradlew :desktop:build
 ```
 
-Check deterministic formatting:
-
-```bash
-./gradlew spotlessCheck
-```
-
-Run architecture convention checks:
-
-```bash
-./gradlew :core:jvmTest
-```
-
 Generate coverage reports:
 
 ```bash
 ./gradlew :core:koverXmlReport :core:koverHtmlReport
+./gradlew :app:koverXmlReport :app:koverHtmlReport
+./gradlew :cli:koverXmlReport :cli:koverHtmlReport
+./gradlew :desktop:koverXmlReport :desktop:koverHtmlReport
+./gradlew :mobile:koverXmlReport :mobile:koverHtmlReport
 ```
 
 Apply deterministic formatting:
@@ -118,7 +97,7 @@ Run both checks before opening a PR:
 ```bash
 bash scripts/validate-public-hygiene.sh
 ./gradlew spotlessCheck
-./gradlew :core:build :cli:build :desktop:build
+./gradlew :core:build :app:build :cli:build :desktop:build :mobile:build
 ```
 
 ## Releases
