@@ -25,6 +25,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    failOnNoDiscoveredTests = true
 }
 
 tasks.named<JavaExec>("run") {

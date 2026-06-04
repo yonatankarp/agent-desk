@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
@@ -24,4 +26,9 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    failOnNoDiscoveredTests = true
 }
