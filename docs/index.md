@@ -43,4 +43,4 @@ Local coverage commands:
 ./gradlew :mobile:koverXmlReport :mobile:koverHtmlReport
 ```
 
-CI still reuses `yonatankarp/github-actions` for JVM preparation and Gradle builds. The shared actions repository also has a test-report publishing action, but this repo keeps a small local Kover summary/comment script because it needs module-specific coverage parsing and same-repo PR comment updates.
+CI still reuses `yonatankarp/github-actions` for JVM preparation and Gradle builds. The Ubuntu jobs run hygiene, formatting, full module builds, report-only coverage, and same-repo PR coverage comments. A dedicated macOS job builds the Compose desktop and mobile modules so OS-specific Compose/JVM issues are caught before local macOS use. The shared actions repository also has a test-report publishing action, but this repo keeps a small local Kover summary/comment script because it needs module-specific coverage parsing and same-repo PR comment updates.
