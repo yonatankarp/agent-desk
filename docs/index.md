@@ -12,6 +12,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Decision log](decision-log.md): durable architecture and process decisions.
 - [Dependabot policy](dependabot-policy.md): dependency update policy, auto-merge gates, and coverage gate status.
 - [Public hygiene](public-hygiene.md): tracked-file public-safety scanner scope, allowlist policy, and local fixture smoke.
+- [Desktop verification](desktop-verification.md): headless desktop smoke verification for the current Compose shell.
 - [Branch protection](branch-protection.md): recommended `main` protection and required checks.
 - [Role contract](roles.md): role coverage expectations for autonomous slice work, including post-merge Discovery.
 - [Daily report template](daily-report-template.md): reporting shape for daily implementation loops and discovery output.
