@@ -24,9 +24,25 @@ Each daily run should:
 7. Run available checks.
 8. Commit and push coherent changes.
 9. Update or close issues with evidence.
-10. Post a concise daily report to the configured reporting channel.
+10. Run a post-merge or post-review discovery audit before selecting the next slice or stopping.
+11. Post a concise daily report to the configured reporting channel.
 
 Stop or ask when work is blocked by credentials, external setup, product direction, destructive operations, or a decision that should not be guessed.
+
+## Post-Merge Discovery Audit
+
+After every merged or reviewed slice, run a short discovery audit before moving on. The audit should inspect:
+
+- the original issue acceptance criteria and whether any gap remains
+- the final PR diff, tests, CI checks, docs impact, and user-facing behavior
+- CodeRabbit findings or review comments when available
+- package/module boundaries, suspicious dependencies, TODO/FIXME notes, and recently touched areas
+- docs claims compared with the code shape
+- tests that are skipped, thin, missing around new behavior, or newly expensive
+
+If CodeRabbit is unavailable, rate-limited, skipped, or silent, record that explicitly and continue using local and GitHub evidence. Create follow-up issues only for real gaps, product opportunities, missing verification, docs drift, architecture risks, or process failures. Each follow-up issue should include Goal, Acceptance Criteria, and Verification. Do not create noisy issues for every thought.
+
+Every final loop report must include discovery output: either the new issues created or a short reason why no follow-up issues were warranted. If the backlog is empty or blocked, spend remaining time on this discovery/codebase scan instead of idling.
 
 ## Required Role Review
 
@@ -35,9 +51,13 @@ Every non-trivial issue or daily slice must account for these roles:
 - Manager: scope, priority, issue hygiene, and acceptance criteria.
 - Architect: boundaries, data model, platform choices, and migration risk.
 - Developer: implementation and local integration.
+- QA/Tester: verification evidence, failure modes, and regression checks.
+- Compliance: acceptance criteria, engineering style, architecture rules, public-safety rules, and user constraints.
+- Security: secrets, privacy, permissions, adapters, persistence, and public-safe boundaries.
 - Designer: UX and interaction quality for visible surfaces. Required for UI changes.
-- Reviewer/Tester: diff review, tests, failure modes, and regression checks.
+- Reviewer: code, design, or implementation review separate from QA evidence.
 - Docs/Operator: runbooks, decision log, daily report, and public-safe artifact hygiene.
+- Discovery: post-merge audit, CodeRabbit/review findings, codebase scan, and follow-up issue quality.
 
 Not every role needs a separate agent every day. The orchestrator must decide which roles are required and record the decision.
 

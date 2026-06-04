@@ -28,6 +28,7 @@ Why is this worth doing now?
 - [ ] Security
 - [ ] Designer, or not applicable
 - [ ] Reviewer, or not applicable
+- [ ] Discovery
 - [ ] Docs/Operator
 
 If a role is not applicable, explain why in the slice report.
@@ -44,3 +45,7 @@ Threat, secret, permission, or public-repo exposure concerns for this slice.
 ## Evidence
 
 Checks, screenshots, logs, commits, or other proof to attach when done.
+
+## Discovery
+
+Post-merge follow-up issues created, or why no follow-up issues were warranted.
