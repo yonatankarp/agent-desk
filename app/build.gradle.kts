@@ -3,6 +3,7 @@ import org.gradle.api.tasks.testing.Test
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kover)
 }
 
 kotlin {
