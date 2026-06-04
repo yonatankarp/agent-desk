@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
@@ -49,6 +52,7 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
@@ -65,6 +69,13 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                         MobileEmptyLine("No items need attention")
                     } else {
                         state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
+                    }
+                }
+                MobileSection(title = "Recent events") {
+                    if (state.recentEvents.isEmpty()) {
+                        MobileEmptyRow("No recent accepted events")
+                    } else {
+                        state.recentEvents.forEach { event -> MobileEventRow(event) }
                     }
                 }
                 if (state.projectionWarnings.isNotEmpty()) {
@@ -198,6 +209,57 @@ private fun MobileWorkRow(
 }
 
 @Composable
+private fun MobileEventRow(event: MobileEventLine) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(MobilePalette.Row)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = event.occurredAt,
+                color = MobilePalette.TextMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            )
+            Text(
+                text = event.type,
+                color = MobilePalette.Accent,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        Text(
+            text = event.workItemId,
+            color = MobilePalette.TextMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+        Text(
+            text = event.detail,
+            color = MobilePalette.TextSecondary,
+            fontSize = 12.sp,
+            lineHeight = 17.sp,
+        )
+        if (event.evidenceReferences.isNotEmpty()) {
+            Text(
+                text = event.evidenceReferences.joinToString { evidence -> "${evidence.kind}: ${evidence.label}" },
+                color = MobilePalette.TextMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            )
+        }
+    }
+}
+
+@Composable
 private fun MobileWarningRow(warning: MobileProjectionWarning) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
@@ -213,6 +275,20 @@ private fun MobileWarningRow(warning: MobileProjectionWarning) {
             lineHeight = 17.sp,
         )
     }
+}
+
+@Composable
+private fun MobileEmptyRow(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(MobilePalette.Row)
+            .padding(12.dp),
+        color = MobilePalette.TextMuted,
+        fontSize = 12.sp,
+    )
 }
 
 @Composable
