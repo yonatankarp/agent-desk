@@ -18,6 +18,7 @@
 - [ ] Security
 - [ ] Designer, or not applicable
 - [ ] Reviewer, or not applicable
+- [ ] Discovery, or not applicable before merge
 - [ ] Docs/Operator
 
 If a role is not applicable, explain why in the PR body.
@@ -43,6 +44,12 @@ If a role is not applicable, explain why in the PR body.
 - [ ] Verification evidence listed
 - [ ] Regression risk considered
 - [ ] Anything not run is explicitly documented
+
+## Discovery Review
+
+- [ ] Post-merge or post-review discovery audit planned or completed
+- [ ] CodeRabbit/review findings checked, or unavailable/rate-limited/skipped status documented
+- [ ] Follow-up issues linked, or "none warranted" rationale documented
 
 ## Public-Safe Review
 

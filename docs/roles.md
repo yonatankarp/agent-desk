@@ -95,6 +95,20 @@ Outputs:
 - behavioral or design concerns
 - requested changes or approval
 
+## Discovery
+
+Owns follow-up discovery after merged or reviewed slices.
+
+Outputs:
+
+- post-merge acceptance-criteria audit
+- CodeRabbit/review findings, or an explicit note that they were unavailable, skipped, or rate-limited
+- codebase-scan findings from package/module boundaries, TODO/FIXME notes, recently touched areas, public APIs, docs drift, and thin or skipped tests
+- follow-up issues with Goal, Acceptance Criteria, and Verification when real gaps exist
+- explicit "no follow-up issues warranted" note when the audit finds no implementable follow-up
+
+Discovery should not create noisy issues for every idea. It should favor small, implementable issues tied to evidence from the slice, codebase scan, docs, tests, or review comments.
+
 ## Docs/Operator
 
 Owns operational continuity.
@@ -111,3 +125,5 @@ Outputs:
 Every slice completion report should list QA/Tester and Compliance explicitly. If a role is not applicable, the report must say why.
 
 Compliance entries in slice reports should include `Architecture boundary check:` with the result or a clear not-applicable reason.
+
+Every loop report should include Discovery output. The report must list new follow-up issues or state why no follow-up issues were warranted.
