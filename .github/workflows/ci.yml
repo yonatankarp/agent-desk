@@ -52,6 +52,11 @@ jobs:
         with:
           gradle-module: :core
 
+      - name: Build app module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :app
+
       - name: Build CLI module
         uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
         with:
