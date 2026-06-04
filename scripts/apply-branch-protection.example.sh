@@ -19,7 +19,7 @@ curl -fsS -X PUT \
   -d '{
     "required_status_checks": {
       "strict": true,
-      "contexts": ["Repo Hygiene", "Formatting", "Gradle Build", "Coverage"]
+      "contexts": ["Repo Hygiene", "Formatting", "Gradle Build", "Coverage", "Coverage Comment"]
     },
     "enforce_admins": true,
     "required_pull_request_reviews": {
