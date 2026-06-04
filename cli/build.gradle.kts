@@ -3,6 +3,7 @@ import org.gradle.api.tasks.JavaExec
 
 plugins {
     application
+    alias(libs.plugins.kover)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.shadow)
 }

@@ -74,8 +74,12 @@ jobs:
         with:
           jvm-version: "25"
 
-      - name: Generate core coverage reports
-        run: ./gradlew :core:koverXmlReport :core:koverHtmlReport
+      - name: Generate module coverage reports
+        run: |
+          ./gradlew \
+            :core:koverXmlReport :core:koverHtmlReport \
+            :app:koverXmlReport :app:koverHtmlReport \
+            :cli:koverXmlReport :cli:koverHtmlReport
 
       - name: Upload core coverage report
         uses: actions/upload-artifact@v7
@@ -85,21 +89,27 @@ jobs:
             core/build/reports/kover/**
           if-no-files-found: error
 
+      - name: Upload app coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-coverage-report
+          path: |
+            app/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Upload cli coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: cli-coverage-report
+          path: |
+            cli/build/reports/kover/**
+          if-no-files-found: error
+
       - name: Generate coverage summary
         run: |
           python3 <<'PY'
           from pathlib import Path
           import xml.etree.ElementTree as ET
-
-          report_path = Path("core/build/reports/kover/report.xml")
-          root = ET.parse(report_path).getroot()
-          counters = {
-              counter.attrib["type"]: (
-                  int(counter.attrib["covered"]),
-                  int(counter.attrib["missed"]),
-              )
-              for counter in root.findall("counter")
-          }
 
           def percentage(covered, missed):
               total = covered + missed
@@ -107,24 +117,45 @@ jobs:
                   return "n/a"
               return f"{covered / total * 100:.2f}%"
 
-          rows = []
-          for counter_type in ("LINE", "BRANCH", "INSTRUCTION", "METHOD", "CLASS"):
-              covered, missed = counters[counter_type]
-              rows.append(
-                  f"| {counter_type.title()} | {percentage(covered, missed)} | {covered} | {missed} |"
-              )
-
-          summary = "\n".join(
-              [
-                  "<!-- agent-desk:core-coverage-summary -->",
-                  "## Core Coverage",
+          def module_summary(module):
+              report_path = Path(module) / "build/reports/kover/report.xml"
+              root = ET.parse(report_path).getroot()
+              counters = {
+                  counter.attrib["type"]: (
+                      int(counter.attrib["covered"]),
+                      int(counter.attrib["missed"]),
+                  )
+                  for counter in root.findall("counter")
+              }
+              rows = []
+              for counter_type in ("LINE", "BRANCH", "INSTRUCTION", "METHOD", "CLASS"):
+                  covered, missed = counters[counter_type]
+                  rows.append(
+                      f"| {counter_type.title()} | {percentage(covered, missed)} | {covered} | {missed} |"
+                  )
+              return [
+                  f"### :{module}",
                   "",
                   "| Metric | Coverage | Covered | Missed |",
                   "| --- | ---: | ---: | ---: |",
                   *rows,
                   "",
-                  "Artifact: `core-coverage-report`",
-                  "Local command: `./gradlew :core:koverXmlReport :core:koverHtmlReport`",
+                  f"Artifact: `{module}-coverage-report`",
+                  f"Local command: `./gradlew :{module}:koverXmlReport :{module}:koverHtmlReport`",
+                  "",
+              ]
+
+          summary = "\n".join(
+              [
+                  "<!-- agent-desk:coverage-summary -->",
+                  "## Coverage",
+                  "",
+                  "Report-only coverage for testable modules.",
+                  "",
+                  *module_summary("core"),
+                  *module_summary("app"),
+                  *module_summary("cli"),
+                  "Excluded: `:desktop` has no meaningful coverage report yet because it currently has no desktop smoke tests or dedicated testable presentation logic.",
                   "",
               ]
           )
@@ -135,11 +166,11 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: cat coverage-summary.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload core coverage summary
+      - name: Upload coverage summary
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/upload-artifact@v7
         with:
-          name: core-coverage-summary
+          name: coverage-summary
           path: coverage-summary.md
           if-no-files-found: error
 
@@ -155,10 +186,10 @@ jobs:
       group: coverage-comment-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     steps:
-      - name: Download core coverage summary
+      - name: Download coverage summary
         uses: actions/download-artifact@v8
         with:
-          name: core-coverage-summary
+          name: coverage-summary
 
       - name: Comment coverage summary on pull request
         uses: actions/github-script@v9
@@ -166,7 +197,7 @@ jobs:
           script: |
             const fs = require('fs');
 
-            const marker = '<!-- agent-desk:core-coverage-summary -->';
+            const marker = '<!-- agent-desk:coverage-summary -->';
             const body = fs.readFileSync('coverage-summary.md', 'utf8');
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
