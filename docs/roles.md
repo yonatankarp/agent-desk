@@ -4,12 +4,14 @@ Daily autonomous work uses role coverage to avoid one-dimensional changes.
 
 ## Manager
 
-Owns scope, priority, issue quality, and acceptance criteria.
+Owns scope, priority, issue quality, acceptance criteria, and Product-style backlog shaping when the issue list is empty or exhausted.
 
 Outputs:
 
 - selected issue or slice
 - backlog triage, including why closed issues, blocked issues, stale worktrees, or decision issues were skipped or selected
+- no-issue triage from `VISION.md`, recent commits, CI state, docs drift, roadmap gaps, and operator pain when no open issues exist
+- newly created or proposed issues, with Goal, Acceptance Criteria, Verification, and Notes
 - scope boundaries
 - acceptance criteria
 - issue updates
@@ -111,6 +113,8 @@ Outputs:
 Discovery should not create noisy issues for every idea. It should favor small, implementable issues tied to evidence from the slice, codebase scan, docs, tests, or review comments.
 
 Discovery must not revive closed issues or stale local workspaces as new work unless the owner explicitly asks for a rerun. When the open backlog contains only decision issues, Discovery should report that no independent follow-up issue was warranted yet and hand control back to Manager to resolve the decision issue next.
+
+In a timeboxed run, Discovery is the handoff back to Manager, not the end of the run by default. If it creates or identifies a new unblocked slice and meaningful time remains, the orchestrator should return to Manager selection.
 
 ## Docs/Operator
 
