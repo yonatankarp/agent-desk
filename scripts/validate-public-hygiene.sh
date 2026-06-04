@@ -32,16 +32,36 @@ run_self_test() {
   fi
 
   rm "$tmpdir/docs/leak.md"
-  printf 'private path: /Users/jane/.ssh/id_ed25519\n' >"$tmpdir/docs/leak-alternation.md"
+  printf 'private path: /home/alex/.config/agent-desk/private.properties\n' >"$tmpdir/docs/leak-alternation.md"
   git -C "$tmpdir" add -A
 
   if AGENT_DESK_HYGIENE_ROOT="$tmpdir" "$script_dir/validate-public-hygiene.sh" >"$tmpdir/alternation.out" 2>&1; then
-    echo "Expected later regex alternative to be detected." >&2
+    echo "Expected non-owner Linux home path to be detected." >&2
     cat "$tmpdir/alternation.out" >&2
     return 1
   fi
 
   rm "$tmpdir/docs/leak-alternation.md"
+  printf 'private path: /Users/jane/Documents/agent-desk/private.log\n' >"$tmpdir/docs/leak-macos.md"
+  git -C "$tmpdir" add -A
+
+  if AGENT_DESK_HYGIENE_ROOT="$tmpdir" "$script_dir/validate-public-hygiene.sh" >"$tmpdir/macos.out" 2>&1; then
+    echo "Expected macOS user document path to be detected." >&2
+    cat "$tmpdir/macos.out" >&2
+    return 1
+  fi
+
+  rm "$tmpdir/docs/leak-macos.md"
+  printf 'private path: C:\\Users\\jane\\.ssh\\id_ed25519\n' >"$tmpdir/docs/leak-windows.md"
+  git -C "$tmpdir" add -A
+
+  if AGENT_DESK_HYGIENE_ROOT="$tmpdir" "$script_dir/validate-public-hygiene.sh" >"$tmpdir/windows.out" 2>&1; then
+    echo "Expected Windows user config path to be detected." >&2
+    cat "$tmpdir/windows.out" >&2
+    return 1
+  fi
+
+  rm "$tmpdir/docs/leak-windows.md"
   printf 'Policy examples here are intentionally allowlisted: AUTH_TOKEN=example\n' >"$tmpdir/docs/public-hygiene.md"
   git -C "$tmpdir" add -A
 
@@ -101,7 +121,7 @@ allowlisted_pathspecs=(
 )
 
 blocked_checks=(
-  "private absolute path|/home/yonatan/|/Users/[A-Za-z0-9._-]+/\\.(openclaw|ssh|config)|/home/[A-Za-z0-9._-]+/\\.(openclaw|ssh|config)"
+  "private absolute path|/home/yonatan/|/home/[A-Za-z0-9._-]+/\\.(openclaw|ssh|config)|/home/[A-Za-z0-9._-]+/(Desktop|Documents|Downloads|Workspace|workspace)/|/Users/[A-Za-z0-9._-]+/\\.(openclaw|ssh|config)|/Users/[A-Za-z0-9._-]+/(Desktop|Documents|Downloads|Library)/|[A-Za-z]:\\\\Users\\\\[A-Za-z0-9._-]+\\\\(\\.(openclaw|ssh|config)|Desktop|Documents|Downloads|AppData)\\\\"
   "webhook url|(https?://)?(discord(app)?\\.com|hooks\\.slack\\.com)/api/webhooks/[A-Za-z0-9_./-]+"
   "raw token assignment|(^|[^A-Z0-9_])(AUTH_TOKEN|CT0|OPENAI_API_KEY|ANTHROPIC_API_KEY|SLACK_BOT_TOKEN|DISCORD_TOKEN|GITHUB_TOKEN)=[^ .<][^[:space:]]{3,}"
   "private key block|BEGIN (OPENSSH|RSA|EC|DSA) PRIVATE KEY"
