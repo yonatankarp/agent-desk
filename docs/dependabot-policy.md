@@ -18,7 +18,7 @@ Dependabot PRs may auto-merge when all of these are true:
 - The PR is opened by `dependabot[bot]`.
 - The update is patch or minor.
 - The update is for GitHub Actions, Gradle plugins, or Gradle libraries already used by the repository.
-- Required checks are green: `Repo Hygiene`, `Formatting`, `Gradle Build`, and `Coverage`.
+- Required checks are green: `Repo Hygiene`, `Formatting`, `Gradle Build`, `macOS Compose Build`, `Windows Compose Build`, and `Coverage`.
 - The PR does not change source code, scripts with side effects, repository permissions, or workflow permissions beyond the dependency version bump.
 
 ## Review Required
