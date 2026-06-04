@@ -41,11 +41,16 @@ import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 @Composable
 @Preview
 fun previewAgentDeskApp() {
-    AgentDeskApp(SampleOperatorState.current())
+    AgentDeskApp(DesktopScreenState.Ready(SampleOperatorState.current(), modeLabel = "Sample state"))
 }
 
 @Composable
 fun AgentDeskApp(state: OperatorState) {
+    AgentDeskApp(DesktopScreenState.Ready(state, modeLabel = "Sample state"))
+}
+
+@Composable
+fun AgentDeskApp(screenState: DesktopScreenState) {
     MaterialTheme(
         colorScheme = lightColorScheme(
             background = Palette.Background,
@@ -65,7 +70,7 @@ fun AgentDeskApp(state: OperatorState) {
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                Header(state)
+                Header(screenState)
 
                 Row(
                     modifier = Modifier.fillMaxSize(),
@@ -83,7 +88,7 @@ fun AgentDeskApp(state: OperatorState) {
                                 .weight(1f)
                                 .fillMaxWidth(),
                         ) {
-                            WorkList(state.workItems)
+                            WorkList(screenState.readyState()?.workItems.orEmpty())
                         }
 
                         SectionPanel(
@@ -92,7 +97,7 @@ fun AgentDeskApp(state: OperatorState) {
                                 .weight(1f)
                                 .fillMaxWidth(),
                         ) {
-                            EventTimeline(OperatorStatePresenter.eventLines(state))
+                            EventTimeline(screenState.eventLines())
                         }
                     }
 
@@ -102,7 +107,7 @@ fun AgentDeskApp(state: OperatorState) {
                             .weight(1f)
                             .fillMaxHeight(),
                     ) {
-                        AttentionList(OperatorStatePresenter.attentionItems(state))
+                        AttentionList(screenState.attentionItems(), screenState.message())
                     }
                 }
             }
@@ -111,7 +116,7 @@ fun AgentDeskApp(state: OperatorState) {
 }
 
 @Composable
-private fun Header(state: OperatorState) {
+private fun Header(screenState: DesktopScreenState) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -130,16 +135,15 @@ private fun Header(state: OperatorState) {
                 fontSize = 14.sp,
             )
             Text(
-                text = "Sample state",
+                text = screenState.modeLabel,
                 color = Palette.TextMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 12.sp,
             )
         }
 
-        val attentionCount = OperatorStatePresenter.attentionItems(state).size
         Text(
-            text = "${OperatorStatePresenter.activeCount(state)} active / $attentionCount attention",
+            text = screenState.summaryText(),
             color = Palette.TextMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
@@ -189,7 +193,14 @@ private fun WorkList(items: List<WorkItem>) {
 }
 
 @Composable
-private fun AttentionList(items: List<WorkItem>) {
+private fun AttentionList(
+    items: List<WorkItem>,
+    message: String?,
+) {
+    if (message != null) {
+        EmptyLine(message)
+        return
+    }
     if (items.isEmpty()) {
         EmptyLine("No items need a decision")
         return
@@ -318,6 +329,23 @@ private fun colorFor(tone: StatusTone): Color = when (tone) {
     StatusTone.Blocked -> Palette.Blocked
     StatusTone.Success -> Palette.Success
     StatusTone.Failure -> Palette.Failure
+}
+
+private fun DesktopScreenState.readyState(): OperatorState? = (this as? DesktopScreenState.Ready)?.state
+
+private fun DesktopScreenState.attentionItems(): List<WorkItem> = readyState()?.let(OperatorStatePresenter::attentionItems).orEmpty()
+
+private fun DesktopScreenState.eventLines(): List<EventLine> = readyState()?.let(OperatorStatePresenter::eventLines).orEmpty()
+
+private fun DesktopScreenState.message(): String? = when (this) {
+    DesktopScreenState.Loading -> "Loading operator state"
+    is DesktopScreenState.Error -> message
+    is DesktopScreenState.Ready -> null
+}
+
+private fun DesktopScreenState.summaryText(): String {
+    val state = readyState() ?: return "0 active / 0 attention"
+    return "${OperatorStatePresenter.activeCount(state)} active / ${OperatorStatePresenter.attentionItems(state).size} attention"
 }
 
 private object Palette {
