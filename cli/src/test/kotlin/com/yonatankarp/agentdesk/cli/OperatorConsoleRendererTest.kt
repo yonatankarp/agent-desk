@@ -8,6 +8,7 @@ import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
+import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
@@ -23,6 +24,7 @@ class OperatorConsoleRendererTest {
     @Test
     fun `renders current work, attention queue, and event timeline`() {
         val workItemId = WorkItemId.parse("agent-task:42")
+        val staleWorkItemId = WorkItemId.parse("agent-task:45")
         val output = renderer.render(
             OperatorState(
                 workItems = listOf(
@@ -31,6 +33,11 @@ class OperatorConsoleRendererTest {
                         title = WorkItemTitle.parse("Run public hygiene check"),
                         status = WorkStatus.NeedsDecision,
                         summary = WorkSummary.parse("Operator decision needed before continuing."),
+                    ),
+                    WorkItem(
+                        id = staleWorkItemId,
+                        title = WorkItemTitle.parse("Watch long-running import"),
+                        status = WorkStatus.Running,
                     ),
                 ),
                 events = listOf(
@@ -45,6 +52,14 @@ class OperatorConsoleRendererTest {
                         ),
                     ),
                 ),
+                staleAttention = listOf(
+                    StaleWorkAttention(
+                        workItemId = staleWorkItemId,
+                        status = WorkStatus.Running,
+                        lastEventAt = EventTimestamp.parse("2026-06-02T21:00:00Z"),
+                        staleForMinutes = 90,
+                    ),
+                ),
             ),
         )
 
@@ -52,6 +67,7 @@ class OperatorConsoleRendererTest {
         assertContains(output, "- [NeedsDecision] agent-task:42 Run public hygiene check")
         assertContains(output, "Attention queue")
         assertContains(output, "- agent-task:42 Run public hygiene check (NeedsDecision)")
+        assertContains(output, "- agent-task:45 Watch long-running import (Stale Running, last event 90m before latest event)")
         assertContains(
             output,
             "- 2026-06-02T21:00:00Z work.started agent-task:42 from sample-agent - " +

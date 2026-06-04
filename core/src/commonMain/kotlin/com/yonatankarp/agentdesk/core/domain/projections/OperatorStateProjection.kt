@@ -7,4 +7,5 @@ data class OperatorStateProjection(
     val workItems: List<WorkItem>,
     val recentEvents: List<WorkEvent>,
     val ignoredEvents: List<ProjectionIssue>,
+    val staleAttention: List<StaleWorkAttention> = emptyList(),
 )

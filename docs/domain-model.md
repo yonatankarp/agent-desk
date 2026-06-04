@@ -51,6 +51,8 @@ Terminal statuses are `Succeeded`, `Failed`, and `Canceled`; they do not transit
 
 `Stale` is not a lifecycle status. It should be derived from event timestamps, heartbeats, or runtime health checks so the durable lifecycle state remains stable.
 
+The default stale-work derivation marks non-terminal running or waiting work as attention-worthy when its latest accepted event is at least 60 minutes older than the latest accepted event in the same projection. This deterministic default keeps CLI and tests clock-free; future runtime adapters may provide heartbeat or wall-clock inputs without persisting `Stale` as a `WorkStatus`.
+
 ## Event Envelope
 
 `WorkEvent` is the first storage-independent event envelope for deriving current operational state.
