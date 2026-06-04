@@ -2,6 +2,7 @@ package com.yonatankarp.agentdesk.cli
 
 import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfigParser
 import com.yonatankarp.agentdesk.app.config.ConfigValidationException
+import com.yonatankarp.agentdesk.app.config.EventStoreLocation
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
@@ -10,6 +11,10 @@ import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoad
 import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredWorkEventLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
+import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
+import com.yonatankarp.agentdesk.app.runtime.MockRuntimeWorkEventSource
+import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
+import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
@@ -49,6 +54,16 @@ object AgentDeskCli {
                 output.println(renderer.render(state))
             }
 
+            is CliCommand.ImportMockRuntime -> {
+                val eventStorePath = command.eventStorePath
+                    ?: throw CliUsageException("Missing value for --event-store.")
+                val result = importMockRuntime(eventStorePath)
+                output.println(
+                    "Imported ${result.importedCount} mock runtime event(s); " +
+                        "skipped ${result.skippedDuplicateCount} duplicate event(s).",
+                )
+            }
+
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
                 val events = options.toWorkEvents(input)
@@ -65,6 +80,22 @@ object AgentDeskCli {
     } catch (exception: CliInputException) {
         error.println("Error: ${exception.publicMessage}")
         1
+    }
+
+    private fun importMockRuntime(path: String) = try {
+        val location = EventStoreLocation.parse(path)
+        RuntimeWorkEventImporter(
+            source = MockRuntimeWorkEventSource(),
+            repository = LocalFileWorkEventRepository(Path.of(location.value)),
+        ).importEvents()
+    } catch (exception: ConfigValidationException) {
+        throw CliInputException("Invalid event store location: ${exception.message}")
+    } catch (exception: InvalidPathException) {
+        throw CliInputException("Configured event store could not be written.")
+    } catch (exception: SecurityException) {
+        throw CliInputException("Configured event store could not be written.")
+    } catch (exception: RuntimeWorkEventImportException) {
+        throw CliInputException(exception.message ?: "Runtime events could not be imported.")
     }
 
     private fun CliOptions.toOperatorState(input: InputStream): OperatorState = when (mode) {
@@ -210,6 +241,7 @@ object AgentDeskCli {
 
         Usage:
           agent-desk [--sample]
+          agent-desk import-mock-runtime --event-store <file>
           agent-desk inspect <work-item-id> [--sample]
           agent-desk inspect <work-item-id> --events <file>
           agent-desk inspect <work-item-id> --stdin
@@ -219,7 +251,11 @@ object AgentDeskCli {
           agent-desk --config <file>
 
         Options:
+          import-mock-runtime
+                          Import public-safe mock runtime events into a local event store.
           inspect        Render one sanitized work item by id.
+          --event-store <file>
+                          Local event store target for import-mock-runtime.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
@@ -260,6 +296,28 @@ private data class CliOptions(
                         index += 1
                     }
 
+                    "import-mock-runtime" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        command = CliCommand.ImportMockRuntime()
+                    }
+
+                    "--event-store" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --event-store.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --event-store.")
+                        }
+                        val importCommand = command as? CliCommand.ImportMockRuntime
+                            ?: throw CliUsageException("--event-store is only valid with import-mock-runtime.")
+                        if (importCommand.eventStorePath != null) {
+                            throw CliUsageException("Choose only one event store.")
+                        }
+                        command = importCommand.copy(eventStorePath = path)
+                        index += 1
+                    }
+
                     "--sample" -> mode = mode.assign(CliInputMode.Sample)
 
                     "--stdin" -> mode = mode.assign(CliInputMode.Stdin)
@@ -289,6 +347,13 @@ private data class CliOptions(
                 index += 1
             }
 
+            if (command is CliCommand.ImportMockRuntime && command.eventStorePath == null) {
+                throw CliUsageException("Missing value for --event-store.")
+            }
+            if (command is CliCommand.ImportMockRuntime && mode != null) {
+                throw CliUsageException("Choose only one input mode.")
+            }
+
             return CliOptions(
                 mode = mode ?: CliInputMode.Sample,
                 command = command,
@@ -309,6 +374,8 @@ private sealed interface CliCommand {
     data object Dashboard : CliCommand
 
     data class Inspect(val rawWorkItemId: String) : CliCommand
+
+    data class ImportMockRuntime(val eventStorePath: String? = null) : CliCommand
 }
 
 private sealed interface CliInputMode {

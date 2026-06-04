@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
+import kotlin.io.path.readLines
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -274,6 +275,79 @@ class AgentDeskCliTest {
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Configured event store contains a duplicate work event id at line 2.")
         assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `mock runtime import writes canonical events that render through config`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+
+        val importResult = runCli("import-mock-runtime", "--event-store", eventFile.toString())
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+        val renderResult = runCli("--config", configFile.toString())
+
+        assertEquals(0, importResult.exitCode)
+        assertContains(importResult.output, "Imported 6 mock runtime event(s); skipped 0 duplicate event(s).")
+        assertPublicSafe(importResult.output)
+        assertEquals("", importResult.error)
+        assertEquals(
+            listOf(
+                "work.started",
+                "work.started",
+                "work.blocked",
+                "work.started",
+                "work.needs-decision",
+                "work.succeeded",
+            ),
+            eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") },
+        )
+        assertEquals(0, renderResult.exitCode)
+        assertContains(renderResult.output, "- [Succeeded] agent-task:42 Run public hygiene check")
+        assertContains(renderResult.output, "- [Blocked] agent-task:44 Investigate core test failure")
+        assertContains(renderResult.output, "- [NeedsDecision] agent-task:45 Choose retry strategy")
+        assertContains(renderResult.output, "work.needs-decision agent-task:45 from mock-adapter")
+        assertPublicSafe(renderResult.output)
+        assertEquals("", renderResult.error)
+    }
+
+    @Test
+    fun `mock runtime import skips existing duplicate events`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+
+        val firstResult = runCli("import-mock-runtime", "--event-store", eventFile.toString())
+        val secondResult = runCli("import-mock-runtime", "--event-store", eventFile.toString())
+
+        assertEquals(0, firstResult.exitCode)
+        assertEquals(0, secondResult.exitCode)
+        assertContains(secondResult.output, "Imported 0 mock runtime event(s); skipped 6 duplicate event(s).")
+        assertPublicSafe(secondResult.output)
+        assertEquals(6, eventFile.readLines().size)
+    }
+
+    @Test
+    fun `mock runtime import rejects unsafe event store locations`() {
+        val result = runCli("import-mock-runtime", "--event-store", "/home/operator/private-token.ndjson")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid event store location:")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `mock runtime import requires an event store option`() {
+        val result = runCli("import-mock-runtime")
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Missing value for --event-store.")
         assertEquals("", result.output)
     }
 

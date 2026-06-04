@@ -33,3 +33,20 @@ val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"
 This is a local-first newline-delimited event file, not a transactional database. The locking behavior is intended for cooperating Agent Desk CLI, desktop, and runtime adapter processes that use the same repository implementation or otherwise honor JVM file locks. Tools that bypass locks and write directly to the file can still corrupt records; the repository rejects corrupt partial records before appending more data.
 
 The store accepts sanitized event records only. Private paths, credentials, channel ids, raw transcripts, and runtime-specific local identifiers must be stripped before events are appended.
+
+## Mock Import Smoke
+
+Use the public-safe mock runtime source to create a local store:
+
+```bash
+./gradlew :cli:run --args='import-mock-runtime --event-store agent-desk-events.ndjson'
+```
+
+Then render it through runtime config:
+
+```bash
+printf 'mode=stored-events\nsource=local-event-store\neventStoreLocation=agent-desk-events.ndjson\n' > agent-desk.config.properties
+./gradlew :cli:run --args='--config agent-desk.config.properties'
+```
+
+Keep smoke files out of commits unless they are sanitized fixtures. The command writes canonical newline-delimited JSON records and skips event ids that already exist in the target store.
