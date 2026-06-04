@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.runtime
 
+import com.yonatankarp.agentdesk.app.persistence.PublicSafeWorkEventStoreMessage
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
@@ -53,14 +54,8 @@ class RuntimeWorkEventImporter(
         }
     }
 
-    private fun WorkEventStoreException.publicSafeImportMessage(): String {
-        val text = message.orEmpty()
-        if (text.startsWith("Duplicate work event id ")) {
-            return "Configured event store contains a duplicate work event id."
-        }
-        if (text.startsWith("Corrupt work event record at line ")) {
-            return text
-        }
-        return "Runtime events could not be imported into configured event store."
-    }
+    private fun WorkEventStoreException.publicSafeImportMessage(): String = PublicSafeWorkEventStoreMessage.from(
+        error = this,
+        unreadableMessage = "Runtime events could not be imported into configured event store.",
+    )
 }
