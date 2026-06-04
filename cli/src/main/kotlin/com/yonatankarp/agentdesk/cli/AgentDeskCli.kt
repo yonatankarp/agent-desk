@@ -3,6 +3,9 @@ package com.yonatankarp.agentdesk.cli
 import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfigParser
 import com.yonatankarp.agentdesk.app.config.ConfigValidationException
 import com.yonatankarp.agentdesk.app.config.EventStoreLocation
+import com.yonatankarp.agentdesk.app.operator.MockOperatorActionAdapter
+import com.yonatankarp.agentdesk.app.operator.OperatorActionException
+import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
@@ -12,6 +15,7 @@ import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredWorkEventLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
+import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.runtime.MockRuntimeWorkEventSource
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
@@ -71,6 +75,16 @@ object AgentDeskCli {
                     ?: throw CliInputException("Work item was not found.")
                 output.println(renderer.render(inspection))
             }
+
+            is CliCommand.Act -> {
+                val eventStorePath = command.eventStorePath
+                    ?: throw CliUsageException("Missing value for --event-store.")
+                val event = performMockAction(command, eventStorePath)
+                output.println(
+                    "Recorded ${command.intent.wireName} action for ${event.workItemId} " +
+                        "as ${event.id}.",
+                )
+            }
         }
         0
     } catch (exception: CliUsageException) {
@@ -96,6 +110,33 @@ object AgentDeskCli {
         throw CliInputException("Configured event store could not be written.")
     } catch (exception: RuntimeWorkEventImportException) {
         throw CliInputException(exception.message ?: "Runtime events could not be imported.")
+    }
+
+    private fun performMockAction(
+        command: CliCommand.Act,
+        path: String,
+    ): WorkEvent = try {
+        val location = EventStoreLocation.parse(path)
+        val repository = LocalFileWorkEventRepository(Path.of(location.value))
+        val event = MockOperatorActionAdapter().perform(
+            intent = command.intent,
+            workItemId = parseWorkItemId(command.rawWorkItemId),
+            events = repository.readAll(),
+        )
+        repository.append(event)
+        event
+    } catch (exception: ConfigValidationException) {
+        throw CliInputException("Invalid event store location: ${exception.message}")
+    } catch (exception: InvalidPathException) {
+        throw CliInputException("Configured event store could not be updated.")
+    } catch (exception: SecurityException) {
+        throw CliInputException("Configured event store could not be updated.")
+    } catch (exception: WorkEventStoreException) {
+        throw CliInputException(exception.message ?: "Configured event store could not be updated.")
+    } catch (exception: OperatorActionException) {
+        throw CliInputException(exception.message ?: "Mock operator action could not be applied.")
+    } catch (exception: OperatorStateProjectionException) {
+        throw CliInputException(exception.message ?: "Mock operator action could not read operator state.")
     }
 
     private fun CliOptions.toOperatorState(input: InputStream): OperatorState = when (mode) {
@@ -242,6 +283,7 @@ object AgentDeskCli {
         Usage:
           agent-desk [--sample]
           agent-desk import-mock-runtime --event-store <file>
+          agent-desk act resume <work-item-id> --event-store <file>
           agent-desk inspect <work-item-id> [--sample]
           agent-desk inspect <work-item-id> --events <file>
           agent-desk inspect <work-item-id> --stdin
@@ -253,9 +295,11 @@ object AgentDeskCli {
         Options:
           import-mock-runtime
                           Import public-safe mock runtime events into a local event store.
+          act resume <work-item-id>
+                          Append a public-safe mock resume action event to a local event store.
           inspect        Render one sanitized work item by id.
           --event-store <file>
-                          Local event store target for import-mock-runtime.
+                          Local event store target for import-mock-runtime or act.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
@@ -303,18 +347,52 @@ private data class CliOptions(
                         command = CliCommand.ImportMockRuntime()
                     }
 
+                    "act" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        val rawIntent = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing action intent for act.")
+                        val workItemId = args.getOrNull(index + 2)
+                            ?: throw CliUsageException("Missing work item id for act.")
+                        if (rawIntent.startsWith("-")) {
+                            throw CliUsageException("Missing action intent for act.")
+                        }
+                        if (workItemId.startsWith("-")) {
+                            throw CliUsageException("Missing work item id for act.")
+                        }
+                        command = CliCommand.Act(
+                            intent = parseActionIntent(rawIntent),
+                            rawWorkItemId = workItemId,
+                        )
+                        index += 2
+                    }
+
                     "--event-store" -> {
                         val path = args.getOrNull(index + 1)
                             ?: throw CliUsageException("Missing value for --event-store.")
                         if (path.startsWith("-")) {
                             throw CliUsageException("Missing value for --event-store.")
                         }
-                        val importCommand = command as? CliCommand.ImportMockRuntime
-                            ?: throw CliUsageException("--event-store is only valid with import-mock-runtime.")
-                        if (importCommand.eventStorePath != null) {
-                            throw CliUsageException("Choose only one event store.")
+                        command = when (val selectedCommand = command) {
+                            is CliCommand.ImportMockRuntime -> {
+                                if (selectedCommand.eventStorePath != null) {
+                                    throw CliUsageException("Choose only one event store.")
+                                }
+                                selectedCommand.copy(eventStorePath = path)
+                            }
+
+                            is CliCommand.Act -> {
+                                if (selectedCommand.eventStorePath != null) {
+                                    throw CliUsageException("Choose only one event store.")
+                                }
+                                selectedCommand.copy(eventStorePath = path)
+                            }
+
+                            else -> throw CliUsageException(
+                                "--event-store is only valid with import-mock-runtime or act.",
+                            )
                         }
-                        command = importCommand.copy(eventStorePath = path)
                         index += 1
                     }
 
@@ -350,7 +428,10 @@ private data class CliOptions(
             if (command is CliCommand.ImportMockRuntime && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
-            if (command is CliCommand.ImportMockRuntime && mode != null) {
+            if (command is CliCommand.Act && command.eventStorePath == null) {
+                throw CliUsageException("Missing value for --event-store.")
+            }
+            if ((command is CliCommand.ImportMockRuntime || command is CliCommand.Act) && mode != null) {
                 throw CliUsageException("Choose only one input mode.")
             }
 
@@ -367,6 +448,12 @@ private data class CliOptions(
             }
             return next
         }
+
+        private fun parseActionIntent(raw: String): OperatorActionIntent = try {
+            OperatorActionIntent.fromWireName(raw)
+        } catch (exception: OperatorActionException) {
+            throw CliUsageException(exception.message ?: "Unsupported operator action.")
+        }
     }
 }
 
@@ -376,6 +463,12 @@ private sealed interface CliCommand {
     data class Inspect(val rawWorkItemId: String) : CliCommand
 
     data class ImportMockRuntime(val eventStorePath: String? = null) : CliCommand
+
+    data class Act(
+        val intent: OperatorActionIntent,
+        val rawWorkItemId: String,
+        val eventStorePath: String? = null,
+    ) : CliCommand
 }
 
 private sealed interface CliInputMode {
