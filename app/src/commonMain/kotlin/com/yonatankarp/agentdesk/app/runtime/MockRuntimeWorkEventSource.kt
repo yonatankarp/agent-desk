@@ -27,6 +27,21 @@ class MockRuntimeWorkEventSource(
                     kind = RuntimeWorkObservationKind.Blocked,
                     reason = "CI failed on the core test task.",
                 ),
+                RuntimeWorkObservation(
+                    eventId = "event:agent-task:45:needs-decision",
+                    occurredAt = "2026-06-02T21:10:00Z",
+                    source = "mock-adapter",
+                    workItemId = "agent-task:45",
+                    kind = RuntimeWorkObservationKind.NeedsDecision,
+                    reason = "Operator must choose whether to retry the failed check.",
+                ),
+                RuntimeWorkObservation(
+                    eventId = "event:agent-task:42:succeeded",
+                    occurredAt = "2026-06-02T21:15:00Z",
+                    source = "mock-adapter",
+                    workItemId = "agent-task:42",
+                    kind = RuntimeWorkObservationKind.Succeeded,
+                ),
             )
     }
 }

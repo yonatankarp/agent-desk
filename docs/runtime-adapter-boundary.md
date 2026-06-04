@@ -8,11 +8,18 @@ The shared `:app` module owns the first runtime import contract:
 
 - `RuntimeWorkEventSource`: port implemented by runtime adapters that can load canonical `WorkEvent` records.
 - `RuntimeWorkObservation`: sanitized observation DTO accepted by the mapper.
-- `RuntimeWorkObservationKind`: supported observation kinds, currently `Started` and `Blocked`.
+- `RuntimeWorkObservationKind`: supported observation kinds for the canonical lifecycle: `Started`, `NeedsDecision`, `Blocked`, `Succeeded`, `Failed`, and `Canceled`.
 - `SanitizedRuntimeObservationMapper`: validates sanitized observations and maps them into canonical `WorkEvent` records.
 - `MockRuntimeWorkEventSource`: public-safe fixture source for tests, CLI smoke work, and future demos.
 
 Adapters should strip or hash private runtime identifiers before creating `RuntimeWorkObservation`. The observation fields should already use public-safe ids and text that are suitable for docs, CI logs, and screenshots.
+
+Payload requirements stay explicit at the boundary:
+
+- `Started` requires `title`; `summary` is optional.
+- `NeedsDecision`, `Blocked`, and `Failed` require `reason`.
+- `Succeeded` has no payload text.
+- `Canceled` accepts an optional `reason`.
 
 ## Private Fields
 
