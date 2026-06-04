@@ -14,6 +14,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Dependabot policy](dependabot-policy.md): dependency update policy, auto-merge gates, and coverage gate status.
 - [Public hygiene](public-hygiene.md): tracked-file public-safety scanner scope, allowlist policy, and local fixture smoke.
 - [Desktop verification](desktop-verification.md): headless desktop smoke verification for the current Compose shell.
+- [Mobile read-only shell](mobile-read-only-shell.md): first Compose Multiplatform mobile proof and smoke verification.
 - [Branch protection](branch-protection.md): recommended `main` protection and required checks.
 - [Role contract](roles.md): role coverage expectations for autonomous slice work, including post-merge Discovery.
 - [Daily report template](daily-report-template.md): reporting shape for daily implementation loops and discovery output.
@@ -30,7 +31,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 
 Konsist rules currently keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, keep shared `:app` common code under `com.yonatankarp.agentdesk.app`, and prevent core/app production files from importing adapter, CLI, desktop, or UI packages.
 
-Coverage is report-only for now. CI uploads generated `:core`, `:app`, `:cli`, and `:desktop` Kover reports as separate artifacts and comments one parsed module summary on same-repo pull requests, but it does not enforce a threshold until the test surface is larger.
+Coverage is report-only for now. CI uploads generated `:core`, `:app`, `:cli`, `:desktop`, and `:mobile` Kover reports as separate artifacts and comments one parsed module summary on same-repo pull requests, but it does not enforce a threshold until the test surface is larger.
 
 Local coverage commands:
 
@@ -39,6 +40,7 @@ Local coverage commands:
 ./gradlew :app:koverXmlReport :app:koverHtmlReport
 ./gradlew :cli:koverXmlReport :cli:koverHtmlReport
 ./gradlew :desktop:koverXmlReport :desktop:koverHtmlReport
+./gradlew :mobile:koverXmlReport :mobile:koverHtmlReport
 ```
 
 CI still reuses `yonatankarp/github-actions` for JVM preparation and Gradle builds. The shared actions repository also has a test-report publishing action, but this repo keeps a small local Kover summary/comment script because it needs module-specific coverage parsing and same-repo PR comment updates.

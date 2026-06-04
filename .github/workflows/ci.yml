@@ -62,6 +62,11 @@ jobs:
         with:
           gradle-module: :desktop
 
+      - name: Build mobile module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :mobile
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
@@ -80,7 +85,8 @@ jobs:
             :core:koverXmlReport :core:koverHtmlReport \
             :app:koverXmlReport :app:koverHtmlReport \
             :cli:koverXmlReport :cli:koverHtmlReport \
-            :desktop:koverXmlReport :desktop:koverHtmlReport
+            :desktop:koverXmlReport :desktop:koverHtmlReport \
+            :mobile:koverXmlReport :mobile:koverHtmlReport
 
       - name: Upload core coverage report
         uses: actions/upload-artifact@v7
@@ -112,6 +118,14 @@ jobs:
           name: desktop-coverage-report
           path: |
             desktop/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Upload mobile coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-coverage-report
+          path: |
+            mobile/build/reports/kover/**
           if-no-files-found: error
 
       - name: Generate coverage summary
@@ -165,6 +179,7 @@ jobs:
                   *module_summary("app"),
                   *module_summary("cli"),
                   *module_summary("desktop"),
+                  *module_summary("mobile"),
                   "",
               ]
           )
