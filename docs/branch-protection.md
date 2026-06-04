@@ -58,4 +58,4 @@ The token must have repository administration permission. Do not commit or paste
 
 Until protection is enabled, the agent may push directly to `main` for bootstrap work if explicitly allowed.
 
-After protection is enabled, the agent should work through branches named `ororo/<short-slice-name>` and use PRs.
+After protection is enabled, the agent should work through PRs from release-note-aware branches that follow the Branch Policy in `AGENTS.md`, such as `docs/<short-slice-name>`, `tooling/<short-slice-name>`, `ci/<short-slice-name>`, `feat/<short-slice-name>`, or `fix/<short-slice-name>`.
