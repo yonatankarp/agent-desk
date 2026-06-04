@@ -51,6 +51,12 @@ printf '%s\n' '{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:0
 ./gradlew :cli:run --args='--events agent-desk-events.ndjson'
 ```
 
+Inspect one sanitized work item from the same event input:
+
+```bash
+./gradlew :cli:run --args='inspect agent-task:42 --events agent-desk-events.ndjson'
+```
+
 Run the CLI from a public-safe runtime config:
 
 ```bash

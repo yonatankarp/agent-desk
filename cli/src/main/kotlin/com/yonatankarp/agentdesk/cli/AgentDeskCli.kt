@@ -7,9 +7,12 @@ import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoadException
 import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredOperatorStateLoader
+import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredWorkEventLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import java.io.IOException
 import java.io.InputStream
 import java.io.PrintStream
@@ -39,8 +42,21 @@ object AgentDeskCli {
             return 0
         }
 
-        val state = options.toOperatorState(input)
-        output.println(OperatorConsoleRenderer().render(state))
+        val renderer = OperatorConsoleRenderer()
+        when (val command = options.command) {
+            CliCommand.Dashboard -> {
+                val state = options.toOperatorState(input)
+                output.println(renderer.render(state))
+            }
+
+            is CliCommand.Inspect -> {
+                val workItemId = parseWorkItemId(command.rawWorkItemId)
+                val events = options.toWorkEvents(input)
+                val inspection = WorkItemInspector.inspect(events, workItemId)
+                    ?: throw CliInputException("Work item was not found.")
+                output.println(renderer.render(inspection))
+            }
+        }
         0
     } catch (exception: CliUsageException) {
         error.println("Error: ${exception.publicMessage}")
@@ -58,6 +74,13 @@ object AgentDeskCli {
         is CliInputMode.Config -> readConfiguredState(mode.path)
     }
 
+    private fun CliOptions.toWorkEvents(input: InputStream): List<WorkEvent> = when (mode) {
+        CliInputMode.Sample -> SampleOperatorState.current().events
+        is CliInputMode.File -> readEventsFromFile(mode.path)
+        CliInputMode.Stdin -> readEventsFromInput(input)
+        is CliInputMode.Config -> readConfiguredEvents(mode.path)
+    }
+
     private fun readConfiguredState(path: String): OperatorState {
         val values = readConfig(path)
         val config =
@@ -72,6 +95,28 @@ object AgentDeskCli {
         } catch (exception: RuntimeConfiguredOperatorStateLoadException) {
             throw CliInputException(exception.message ?: "Configured runtime state could not be loaded.")
         }
+    }
+
+    private fun readConfiguredEvents(path: String): List<WorkEvent> {
+        val values = readConfig(path)
+        val config =
+            try {
+                AgentDeskRuntimeConfigParser.parse(values)
+            } catch (exception: ConfigValidationException) {
+                throw CliInputException("Invalid runtime config: ${exception.message}")
+            }
+
+        return try {
+            RuntimeConfiguredWorkEventLoader.load(config)
+        } catch (exception: RuntimeConfiguredOperatorStateLoadException) {
+            throw CliInputException(exception.message ?: "Configured runtime state could not be loaded.")
+        }
+    }
+
+    private fun parseWorkItemId(raw: String): WorkItemId = try {
+        WorkItemId.parse(raw)
+    } catch (exception: IllegalArgumentException) {
+        throw CliUsageException("Invalid work item id.")
     }
 
     private fun readConfig(path: String): Map<String, String> {
@@ -165,11 +210,16 @@ object AgentDeskCli {
 
         Usage:
           agent-desk [--sample]
+          agent-desk inspect <work-item-id> [--sample]
+          agent-desk inspect <work-item-id> --events <file>
+          agent-desk inspect <work-item-id> --stdin
+          agent-desk inspect <work-item-id> --config <file>
           agent-desk --events <file>
           agent-desk --stdin
           agent-desk --config <file>
 
         Options:
+          inspect        Render one sanitized work item by id.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
@@ -180,6 +230,7 @@ object AgentDeskCli {
 
 private data class CliOptions(
     val mode: CliInputMode,
+    val command: CliCommand = CliCommand.Dashboard,
     val showHelp: Boolean = false,
 ) {
     companion object {
@@ -189,11 +240,25 @@ private data class CliOptions(
             }
 
             var mode: CliInputMode? = null
+            var command: CliCommand = CliCommand.Dashboard
             var showHelp = false
             var index = 0
             while (index < args.size) {
                 when (val arg = args[index]) {
                     "--help", "-h" -> showHelp = true
+
+                    "inspect" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        val workItemId = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing work item id for inspect.")
+                        if (workItemId.startsWith("-")) {
+                            throw CliUsageException("Missing work item id for inspect.")
+                        }
+                        command = CliCommand.Inspect(workItemId)
+                        index += 1
+                    }
 
                     "--sample" -> mode = mode.assign(CliInputMode.Sample)
 
@@ -226,6 +291,7 @@ private data class CliOptions(
 
             return CliOptions(
                 mode = mode ?: CliInputMode.Sample,
+                command = command,
                 showHelp = showHelp,
             )
         }
@@ -237,6 +303,12 @@ private data class CliOptions(
             return next
         }
     }
+}
+
+private sealed interface CliCommand {
+    data object Dashboard : CliCommand
+
+    data class Inspect(val rawWorkItemId: String) : CliCommand
 }
 
 private sealed interface CliInputMode {
