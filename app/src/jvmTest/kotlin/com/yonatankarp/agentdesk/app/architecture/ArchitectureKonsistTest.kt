@@ -1,8 +1,10 @@
 package com.yonatankarp.agentdesk.app.architecture
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 
 class ArchitectureKonsistTest :
     FunSpec({
@@ -15,15 +17,41 @@ class ArchitectureKonsistTest :
                 }
         }
 
+        test("app JVM production declarations stay under the shared app package") {
+            Konsist
+                .scopeFromProject(moduleName = "app", sourceSetName = "jvmMain")
+                .classes()
+                .assertTrue {
+                    it.resideInPackage("com.yonatankarp.agentdesk.app..")
+                }
+        }
+
         test("app production files do not import adapter or private runtime packages") {
             Konsist
                 .scopeFromProject(moduleName = "app", sourceSetName = "commonMain")
                 .files
                 .assertTrue { file ->
-                    !file.hasImport { import ->
-                        blockedImportPrefixes.any { import.name.startsWith(it) }
-                    }
+                    !file.hasBlockedImport()
                 }
+        }
+
+        test("app JVM production files do not import client or private runtime packages") {
+            Konsist
+                .scopeFromProject(moduleName = "app", sourceSetName = "jvmMain")
+                .files
+                .assertTrue { file ->
+                    !file.hasBlockedImport()
+                }
+        }
+
+        test("forbidden app JVM import guard catches client fixtures") {
+            val fixture =
+                Konsist
+                    .scopeFromFile("app/src/jvmTest/resources/architecture/ForbiddenAppJvmImportFixture.kt")
+                    .files
+                    .single()
+
+            fixture.hasBlockedImport().shouldBeTrue()
         }
     }) {
     companion object {
@@ -36,5 +64,9 @@ class ArchitectureKonsistTest :
                 "com.yonatankarp.agentdesk.runtime.",
                 "com.yonatankarp.agentdesk.ui.",
             )
+
+        private fun KoFileDeclaration.hasBlockedImport(): Boolean = hasImport { import ->
+            blockedImportPrefixes.any { import.name.startsWith(it) }
+        }
     }
 }
