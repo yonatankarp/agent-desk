@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.mobile
 
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
@@ -25,6 +26,8 @@ class MobileSmokeSnapshotTest {
         assertContains(text, "Attention queue")
         assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
         assertContains(text, "[Blocked] agent-task:44 Review build failure")
+        assertContains(text, "Recent events")
+        assertContains(text, "agent-task:42")
         assertFalse(text.contains("Resume"))
         assertFalse(text.contains("Approve"))
         assertFalse(text.contains("Stop"))
@@ -70,7 +73,21 @@ class MobileSmokeSnapshotTest {
                     ),
                 ),
             ),
-            recentEvents = emptyList(),
+            recentEvents = listOf(
+                MobileEventLine(
+                    occurredAt = "2026-06-02T21:03:00Z",
+                    type = "Evidence attached",
+                    workItemId = "agent-task:91",
+                    detail = "Accepted event includes mobile smoke evidence.",
+                    evidenceReferences = listOf(
+                        MobileEvidenceReference(
+                            kind = "check-run",
+                            label = "Mobile smoke",
+                            target = "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+                        ),
+                    ),
+                ),
+            ),
             projectionWarnings = listOf(
                 MobileProjectionWarning(
                     eventId = "event:agent-task:91:blocked-after-success",
@@ -83,6 +100,9 @@ class MobileSmokeSnapshotTest {
 
         assertContains(text, "Evidence: check-run:Mobile smoke")
         assertContains(text, "Stale 90m since 2026-06-02T21:00:00Z")
+        assertContains(text, "Recent events")
+        assertContains(text, "2026-06-02T21:03:00Z [Evidence attached] agent-task:91")
+        assertContains(text, "Accepted event includes mobile smoke evidence.")
         assertContains(text, "Projection warnings")
         assertContains(text, "event:agent-task:91:blocked-after-success")
     }
@@ -99,6 +119,7 @@ class MobileSmokeSnapshotTest {
 
         assertEquals(listOf("No current work"), snapshot.sectionRows("Current work"))
         assertEquals(listOf("No items need attention"), snapshot.sectionRows("Attention queue"))
+        assertEquals(listOf("No recent accepted events"), snapshot.sectionRows("Recent events"))
     }
 
     private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows
