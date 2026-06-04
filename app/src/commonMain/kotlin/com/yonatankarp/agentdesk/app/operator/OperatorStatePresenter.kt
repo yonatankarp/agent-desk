@@ -8,12 +8,15 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
 object OperatorStatePresenter {
     fun activeCount(state: OperatorState): Int = state.workItems.count { !it.status.isTerminal }
 
     fun attentionItems(state: OperatorState): List<WorkItem> = state.workItems.filter { it.status.requiresHumanAttention }
+
+    fun staleAttentionItems(state: OperatorState): List<StaleWorkAttention> = state.staleAttention
 
     fun eventLines(state: OperatorState): List<EventLine> = state.events.map { event ->
         EventLine(

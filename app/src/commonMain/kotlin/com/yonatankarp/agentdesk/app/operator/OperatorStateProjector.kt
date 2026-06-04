@@ -14,6 +14,7 @@ object OperatorStateProjector {
         return OperatorState(
             workItems = projection.workItems,
             events = projection.recentEvents,
+            staleAttention = projection.staleAttention,
         )
     }
 }

@@ -1,6 +1,8 @@
 package com.yonatankarp.agentdesk.core.domain.projections
 
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
 import io.kotest.core.spec.style.BehaviorSpec
@@ -67,6 +69,93 @@ class WorkEventProjectorTest :
 
                     projection.workItems.single().status shouldBe WorkStatus.Succeeded
                     projection.workItems.single().status.isTerminal shouldBe true
+                }
+            }
+        }
+
+        given("stale work derivation") {
+            `when`("running work has no newer event within the stale threshold") {
+                then("it is marked as stale attention without changing lifecycle status") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T22:01:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Running
+                    projection.staleAttention.single().workItemId.toString() shouldBe "agent-task:42"
+                    projection.staleAttention.single().status shouldBe WorkStatus.Running
+                    projection.staleAttention.single().lastEventAt shouldBe CoreFixtures.startedAt
+                    projection.staleAttention.single().staleForMinutes shouldBe 61
+                }
+            }
+
+            `when`("running work is newer than the stale threshold") {
+                then("it is not marked stale") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T21:30:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.staleAttention shouldBe emptyList()
+                }
+            }
+
+            `when`("a custom stale threshold is provided") {
+                then("it uses that threshold instead of the default") {
+                    val projection =
+                        WorkEventProjector.project(
+                            events =
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T21:30:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                            staleThreshold = StaleWorkThreshold.parseMinutes(30),
+                        )
+
+                    projection.staleAttention.single().staleForMinutes shouldBe 30
+                }
+            }
+
+            `when`("work is terminal even though its last event is old") {
+                then("it is not marked stale") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workSucceededEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T22:30:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.staleAttention shouldBe emptyList()
+                }
+            }
+
+            `when`("there are no accepted events") {
+                then("stale attention is empty") {
+                    WorkEventProjector.project(emptyList()).staleAttention shouldBe emptyList()
                 }
             }
         }

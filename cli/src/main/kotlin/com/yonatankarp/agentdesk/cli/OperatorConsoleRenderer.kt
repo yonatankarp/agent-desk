@@ -52,13 +52,21 @@ class OperatorConsoleRenderer {
     private fun StringBuilder.appendAttentionQueue(state: OperatorState) {
         appendLine("Attention queue")
         val attentionItems = OperatorStatePresenter.attentionItems(state)
-        if (attentionItems.isEmpty()) {
+        val staleItems = OperatorStatePresenter.staleAttentionItems(state)
+        if (attentionItems.isEmpty() && staleItems.isEmpty()) {
             appendLine("- none")
             return
         }
 
         attentionItems.forEach { item ->
             appendLine("- ${item.id} ${item.title} (${item.status})")
+        }
+        staleItems.forEach { stale ->
+            val item = state.workItems.firstOrNull { it.id == stale.workItemId }
+            appendLine(
+                "- ${stale.workItemId} ${item?.title ?: "Unknown work"} " +
+                    "(Stale ${stale.status}, last event ${stale.staleForMinutes}m before latest event)",
+            )
         }
     }
 
