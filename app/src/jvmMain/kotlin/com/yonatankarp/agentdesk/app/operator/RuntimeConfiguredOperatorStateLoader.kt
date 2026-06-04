@@ -9,12 +9,10 @@ object RuntimeConfiguredOperatorStateLoader {
         AgentDeskMode.StoredEvents -> loadStoredEvents(config)
     }
 
-    private fun loadStoredEvents(config: AgentDeskRuntimeConfig): OperatorState {
-        return try {
-            val events = RuntimeConfiguredWorkEventLoader.load(config)
-            OperatorStateProjector.project(events)
-        } catch (error: OperatorStateProjectionException) {
-            throw RuntimeConfiguredOperatorStateLoadException(error.message ?: "Configured event store could not be projected.", error)
-        }
+    private fun loadStoredEvents(config: AgentDeskRuntimeConfig): OperatorState = try {
+        val events = RuntimeConfiguredWorkEventLoader.load(config)
+        OperatorStateProjector.project(events)
+    } catch (error: OperatorStateProjectionException) {
+        throw RuntimeConfiguredOperatorStateLoadException(error.message ?: "Configured event store could not be projected.", error)
     }
 }
