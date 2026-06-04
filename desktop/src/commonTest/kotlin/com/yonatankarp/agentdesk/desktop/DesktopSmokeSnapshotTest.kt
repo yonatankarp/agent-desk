@@ -31,8 +31,15 @@ class DesktopSmokeSnapshotTest {
 
     @Test
     fun `empty state exposes explicit empty rows`() {
-        val snapshot = DesktopSmokeSnapshotBuilder.from(OperatorState(workItems = emptyList(), events = emptyList()))
+        val snapshot =
+            DesktopSmokeSnapshotBuilder.from(
+                DesktopScreenState.Ready(
+                    state = OperatorState(workItems = emptyList(), events = emptyList()),
+                    modeLabel = "Loaded state",
+                ),
+            )
 
+        assertEquals("Loaded state", snapshot.modeLabel)
         assertEquals("0 active / 0 attention", snapshot.summary)
         assertEquals(listOf("No current work"), snapshot.sectionRows("Current work"))
         assertEquals(listOf("No recent events"), snapshot.sectionRows("Recent events"))
@@ -49,7 +56,13 @@ class DesktopSmokeSnapshotTest {
                 summary = WorkSummary.parse("Operator must choose whether to retry."),
             )
 
-        val snapshot = DesktopSmokeSnapshotBuilder.from(OperatorState(workItems = listOf(item), events = emptyList()))
+        val snapshot =
+            DesktopSmokeSnapshotBuilder.from(
+                DesktopScreenState.Ready(
+                    state = OperatorState(workItems = listOf(item), events = emptyList()),
+                    modeLabel = "Loaded state",
+                ),
+            )
 
         assertEquals("1 active / 1 attention", snapshot.summary)
         assertEquals(

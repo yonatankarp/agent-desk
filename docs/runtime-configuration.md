@@ -43,6 +43,22 @@ The CLI adapter reads the `.properties` file and passes the string map into shar
 
 `--config` is an input mode and cannot be combined with `--sample`, `--stdin`, or `--events`.
 
+## Desktop Wiring
+
+The desktop shell uses sample mode when launched without arguments:
+
+```bash
+./gradlew :desktop:run
+```
+
+To render derived state from a sanitized local event store, pass the same config file shape:
+
+```bash
+./gradlew :desktop:run --args='--config agent-desk.config.properties'
+```
+
+The desktop UI labels sample data as `Sample state` and stored event data as `Loaded state`. Invalid config or unreadable event stores render a public-safe error state without echoing private local paths or raw adapter details.
+
 ## Mock Runtime Import
 
 The first runtime import smoke command uses only the checked-in mock source:

@@ -27,29 +27,47 @@ data class DesktopSmokeSection(
 )
 
 object DesktopSmokeSnapshotBuilder {
-    fun from(state: OperatorState): DesktopSmokeSnapshot {
-        val attentionItems = OperatorStatePresenter.attentionItems(state)
+    fun from(state: OperatorState): DesktopSmokeSnapshot = from(DesktopScreenState.Ready(state, modeLabel = "Sample state"))
+
+    fun from(screenState: DesktopScreenState): DesktopSmokeSnapshot {
+        val state = (screenState as? DesktopScreenState.Ready)?.state
+        val message = screenState.message()
+        val workItems = state?.workItems.orEmpty()
+        val events = state?.let(OperatorStatePresenter::eventLines).orEmpty()
+        val attentionItems = state?.let(OperatorStatePresenter::attentionItems).orEmpty()
         return DesktopSmokeSnapshot(
             title = "Agent Desk",
-            modeLabel = "Sample state",
-            summary = "${OperatorStatePresenter.activeCount(state)} active / ${attentionItems.size} attention",
+            modeLabel = screenState.modeLabel,
+            summary = screenState.summaryText(),
             sections = listOf(
                 DesktopSmokeSection(
                     title = "Current work",
-                    rows = state.workItems.toWorkRows(emptyText = "No current work"),
+                    rows = workItems.toWorkRows(emptyText = "No current work"),
                 ),
                 DesktopSmokeSection(
                     title = "Recent events",
-                    rows = OperatorStatePresenter.eventLines(state).map { line ->
+                    rows = events.map { line ->
                         "${line.type} ${line.workItemId} from ${line.source} - ${line.detail}"
                     }.ifEmpty { listOf("No recent events") },
                 ),
                 DesktopSmokeSection(
                     title = "Attention queue",
-                    rows = attentionItems.toWorkRows(emptyText = "No items need a decision"),
+                    rows = message?.let(::listOf) ?: attentionItems.toWorkRows(emptyText = "No items need a decision"),
                 ),
             ),
         )
+    }
+
+    private fun DesktopScreenState.summaryText(): String {
+        val state = (this as? DesktopScreenState.Ready)?.state ?: return "0 active / 0 attention"
+        val attentionItems = OperatorStatePresenter.attentionItems(state)
+        return "${OperatorStatePresenter.activeCount(state)} active / ${attentionItems.size} attention"
+    }
+
+    private fun DesktopScreenState.message(): String? = when (this) {
+        DesktopScreenState.Loading -> "Loading operator state"
+        is DesktopScreenState.Error -> message
+        is DesktopScreenState.Ready -> null
     }
 
     private fun List<WorkItem>.toWorkRows(emptyText: String): List<String> {
