@@ -126,7 +126,7 @@ class RuntimeWorkEventImporterTest :
                     }
 
                     assertSoftly(error.message.orEmpty()) {
-                        shouldContain("Configured event store contains a duplicate work event id.")
+                        shouldContain("Configured event store contains a duplicate work event id at line 12.")
                         shouldNotContain("private-token")
                     }
                 }
@@ -143,7 +143,7 @@ private class InMemoryWorkEventRepository(
 
     override fun append(event: WorkEvent) {
         if (appendFailure) {
-            throw WorkEventStoreException("Duplicate work event id ${event.id} in configured event store")
+            throw WorkEventStoreException("Duplicate work event id ${event.id} at line 12 in configured event store")
         }
         events.add(event)
     }
