@@ -6,6 +6,11 @@
 Status: shipped | blocked | no meaningful work | failed checks
 Focus: issue or slice
 
+Selection:
+- Open backlog reviewed: yes | no
+- Closed/stale workspace guard: no stale workspace used | ignored stale workspace for #... | not applicable
+- Decision issue handling: selected #... | none open | deferred because ...
+
 Changed:
 - ...
 

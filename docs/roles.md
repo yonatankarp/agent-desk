@@ -9,6 +9,7 @@ Owns scope, priority, issue quality, and acceptance criteria.
 Outputs:
 
 - selected issue or slice
+- backlog triage, including why closed issues, blocked issues, stale worktrees, or decision issues were skipped or selected
 - scope boundaries
 - acceptance criteria
 - issue updates
@@ -108,6 +109,8 @@ Outputs:
 - explicit "no follow-up issues warranted" note when the audit finds no implementable follow-up
 
 Discovery should not create noisy issues for every idea. It should favor small, implementable issues tied to evidence from the slice, codebase scan, docs, tests, or review comments.
+
+Discovery must not revive closed issues or stale local workspaces as new work unless the owner explicitly asks for a rerun. When the open backlog contains only decision issues, Discovery should report that no independent follow-up issue was warranted yet and hand control back to Manager to resolve the decision issue next.
 
 ## Docs/Operator
 
