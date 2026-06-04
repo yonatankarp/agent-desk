@@ -277,6 +277,110 @@ class AgentDeskCliTest {
         assertEquals("", result.output)
     }
 
+    @Test
+    fun `inspect sample item renders item details`() {
+        val result = runCli("inspect", "agent-task:43")
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Work item agent-task:43")
+        assertContains(result.output, "Status: Needs decision")
+        assertContains(result.output, "Title: Choose adapter boundary")
+        assertContains(result.output, "Attention: yes")
+        assertContains(result.output, "Accepted recent events")
+        assertContains(result.output, "Projection warnings\n- none")
+        assertContains(result.output, "Evidence references\n- none")
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
+    fun `inspect event file renders only selected work item events`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$BLOCKED_EVENT\n$OTHER_STARTED_EVENT\n")
+
+        val result = runCli("inspect", "agent-task:42", "--events", eventFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Work item agent-task:42")
+        assertContains(result.output, "Status: Blocked")
+        assertContains(result.output, "Summary: CI failed on the core test task.")
+        assertContains(result.output, "work.started from mock-adapter")
+        assertContains(result.output, "work.blocked from mock-adapter")
+        assertFalse(result.output.contains("Prepare release checklist"))
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
+    fun `inspect stdin renders terminal item and projection warnings`() {
+        val result = runCli(
+            "inspect",
+            "agent-task:42",
+            "--stdin",
+            input = "$STARTED_EVENT\n$SUCCEEDED_EVENT\n$BLOCKED_EVENT\n",
+        )
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Status: Succeeded")
+        assertContains(result.output, "Terminal: yes")
+        assertContains(result.output, "Projection warnings")
+        assertContains(result.output, "ignored event - Cannot transition work item agent-task:42")
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
+    fun `inspect stored event config uses configured input mode`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(eventFile, "$STARTED_EVENT\n")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+
+        val result = runCli("inspect", "agent-task:42", "--config", configFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Work item agent-task:42")
+        assertContains(result.output, "Status: Running")
+        assertPublicSafe(result.output)
+        assertEquals("", result.error)
+    }
+
+    @Test
+    fun `inspect missing work item fails safely`() {
+        val result = runCli("inspect", "agent-task:99", "--stdin", input = "$STARTED_EVENT\n")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Work item was not found.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `inspect invalid work item id fails without echoing the argument`() {
+        val result = runCli("inspect", "/home/operator/private-token.txt", "--stdin", input = "$STARTED_EVENT\n")
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Invalid work item id.")
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `inspect empty stdin fails with existing empty input error`() {
+        val result = runCli("inspect", "agent-task:42", "--stdin", input = " \n")
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "No event input provided.")
+        assertEquals("", result.output)
+    }
+
     private fun runCli(
         vararg args: String,
         input: String = "",
@@ -317,6 +421,12 @@ class AgentDeskCliTest {
 
         private const val BLOCKED_EVENT =
             """{"id":"event:agent-task:42:blocked","occurredAt":"2026-06-02T21:05:00.123Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.blocked","payload":{"reason":"CI failed on the core test task."}}"""
+
+        private const val SUCCEEDED_EVENT =
+            """{"id":"event:agent-task:42:succeeded","occurredAt":"2026-06-02T21:10:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.succeeded","payload":{}}"""
+
+        private const val OTHER_STARTED_EVENT =
+            """{"id":"event:agent-task:43:started","occurredAt":"2026-06-02T21:01:00Z","source":"mock-adapter","workItemId":"agent-task:43","type":"work.started","payload":{"title":"Prepare release checklist","summary":"Agent started release preparation."}}"""
 
         private const val UNSUPPORTED_EVENT =
             """{"id":"event:agent-task:42:paused","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.paused","payload":{}}"""
