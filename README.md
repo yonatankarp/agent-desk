@@ -58,7 +58,7 @@ Run the local CI-adjacent check set:
 make ci-local
 ```
 
-Generate coverage reports:
+Verify coverage thresholds and generate reports:
 
 ```bash
 make coverage

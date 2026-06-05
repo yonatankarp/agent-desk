@@ -23,6 +23,16 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+kover {
+    reports {
+        verify {
+            rule("minimum line coverage") {
+                minBound(80)
+            }
+        }
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
     failOnNoDiscoveredTests = true

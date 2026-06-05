@@ -32,16 +32,12 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 
 Konsist rules currently keep production declarations under `com.yonatankarp.agentdesk`, keep `:core` common code under `com.yonatankarp.agentdesk.core.domain`, keep shared `:app` common code under `com.yonatankarp.agentdesk.app`, and prevent core/app production files from importing adapter, CLI, desktop, or UI packages.
 
-Coverage is report-only for now. CI uploads generated `:core`, `:app`, `:cli`, `:desktop`, and `:mobile` Kover reports as separate artifacts and comments one parsed module summary on same-repo pull requests, but it does not enforce a threshold until the test surface is larger.
+Coverage is enforced by module-level Kover line thresholds and still publishes reports. Initial thresholds are intentionally conservative relative to the June 2026 baseline: `:core`, `:app`, `:desktop`, and `:mobile` require 90% line coverage; `:cli` requires 80% line coverage. Raise thresholds only when a merged slice lifts the real baseline, and lower them only with an explicit PR note that explains the coverage loss and recovery plan.
 
 Local coverage commands:
 
 ```bash
-./gradlew :core:koverXmlReport :core:koverHtmlReport
-./gradlew :app:koverXmlReport :app:koverHtmlReport
-./gradlew :cli:koverXmlReport :cli:koverHtmlReport
-./gradlew :desktop:koverXmlReport :desktop:koverHtmlReport
-./gradlew :mobile:koverXmlReport :mobile:koverHtmlReport
+make coverage
 ```
 
-CI still reuses `yonatankarp/github-actions` for JVM preparation and Gradle builds. The Ubuntu jobs run hygiene, formatting, full module builds, report-only coverage, and same-repo PR coverage comments. Dedicated macOS and Windows jobs build the Compose desktop and mobile modules so OS-specific Compose/JVM issues are caught before local desktop use. The shared actions repository also has a test-report publishing action, but this repo keeps a small local Kover summary/comment script because it needs module-specific coverage parsing and same-repo PR comment updates.
+CI still reuses `yonatankarp/github-actions` for JVM preparation and Gradle builds. The Ubuntu jobs run hygiene, formatting, full module builds, coverage threshold verification, coverage report publishing, and same-repo PR coverage comments. Dedicated macOS and Windows jobs build the Compose desktop and mobile modules so OS-specific Compose/JVM issues are caught before local desktop use. The shared actions repository also has a test-report publishing action, but this repo keeps a small local Kover summary/comment script because it needs module-specific coverage parsing and same-repo PR comment updates.
