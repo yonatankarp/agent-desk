@@ -27,6 +27,7 @@ The GitHub Wiki is the operator-facing handbook:
 - [Local event stores](https://github.com/yonatankarp/agent-desk/wiki/Local-event-stores)
 - [Public-safe rules](https://github.com/yonatankarp/agent-desk/wiki/Public-safe-rules)
 - [Desktop status](https://github.com/yonatankarp/agent-desk/wiki/Desktop-status)
+- [Mobile status](https://github.com/yonatankarp/agent-desk/wiki/Mobile-status)
 - [Daily autonomous run reports](https://github.com/yonatankarp/agent-desk/wiki/Daily-autonomous-run-reports)
 
 ## Local Checks
