@@ -51,9 +51,9 @@ EOF
 render_output="$(run_cli --config "$CONFIG_FILE")"
 assert_contains "$render_output" "Current work"
 assert_contains "$render_output" "- [Blocked] agent-task:44 Investigate core test failure"
-assert_contains "$render_output" "- [NeedsDecision] agent-task:45 Choose retry strategy"
+assert_contains "$render_output" "- [Needs decision] agent-task:45 Choose retry strategy"
 assert_contains "$render_output" "Attention queue"
-assert_contains "$render_output" "agent-task:45 Choose retry strategy (NeedsDecision)"
+assert_contains "$render_output" "agent-task:45 Choose retry strategy (Needs decision)"
 
 inspect_output="$(run_cli inspect agent-task:45 --config "$CONFIG_FILE")"
 assert_contains "$inspect_output" "Work item agent-task:45"

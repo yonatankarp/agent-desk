@@ -336,7 +336,7 @@ class AgentDeskCliTest {
         assertEquals(0, renderResult.exitCode)
         assertContains(renderResult.output, "- [Succeeded] agent-task:42 Run public hygiene check")
         assertContains(renderResult.output, "- [Blocked] agent-task:44 Investigate core test failure")
-        assertContains(renderResult.output, "- [NeedsDecision] agent-task:45 Choose retry strategy")
+        assertContains(renderResult.output, "- [Needs decision] agent-task:45 Choose retry strategy")
         assertContains(renderResult.output, "work.needs-decision agent-task:45 from mock-adapter")
         assertPublicSafe(renderResult.output)
         assertEquals("", renderResult.error)
