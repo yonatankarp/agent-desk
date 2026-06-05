@@ -118,6 +118,9 @@ class LocalFileWorkEventRepositoryTest :
                         repository.append(event)
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.DuplicateEventId(
+                        eventId = "event:agent-task:42:started",
+                    )
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Duplicate work event id event:agent-task:42:started")
                         shouldNotContain(storePath.toString())
@@ -138,6 +141,9 @@ class LocalFileWorkEventRepositoryTest :
                         firstRepository.append(event)
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.DuplicateEventId(
+                        eventId = "event:agent-task:42:started",
+                    )
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Duplicate work event id event:agent-task:42:started")
                         shouldNotContain(storePath.toString())
@@ -158,6 +164,10 @@ class LocalFileWorkEventRepositoryTest :
                         LocalFileWorkEventRepository(storePath).readAll()
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.DuplicateEventId(
+                        eventId = "event:agent-task:42:started",
+                        lineNumber = 2,
+                    )
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Duplicate work event id event:agent-task:42:started")
                         shouldContain("line 2")
@@ -177,6 +187,7 @@ class LocalFileWorkEventRepositoryTest :
                         LocalFileWorkEventRepository(storePath).readAll()
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.CorruptRecord(lineNumber = 1)
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Corrupt work event record at line 1")
                         shouldNotContain(storePath.toString())
@@ -196,6 +207,7 @@ class LocalFileWorkEventRepositoryTest :
                         )
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.CorruptRecord(lineNumber = 1)
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Corrupt work event record at line 1")
                         shouldNotContain(storePath.toString())
@@ -214,8 +226,27 @@ class LocalFileWorkEventRepositoryTest :
                         LocalFileWorkEventRepository(storePath).append(workStartedEvent())
                     }
 
+                    error.reason shouldBe WorkEventStoreFailure.AppendFailed
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Unable to append work event to configured event store")
+                        shouldNotContain(storePath.toString())
+                    }
+                }
+            }
+        }
+
+        given("an unreadable event store target") {
+            `when`("events are read") {
+                then("it fails with a path-free public-safe error") {
+                    val storePath = Files.createTempDirectory("agent-desk-store-test")
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath).readAll()
+                    }
+
+                    error.reason shouldBe WorkEventStoreFailure.Unreadable
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unable to read configured event store")
                         shouldNotContain(storePath.toString())
                     }
                 }
