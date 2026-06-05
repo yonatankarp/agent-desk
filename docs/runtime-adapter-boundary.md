@@ -6,12 +6,13 @@ Agent Desk imports delegated-work events through a sanitized application boundar
 
 The shared `:app` module owns the first runtime import contract:
 
-- `RuntimeWorkEventSource`: port implemented by runtime adapters that can load canonical `WorkEvent` records.
+- `RuntimeWorkEventSource`: port implemented by runtime adapters that can load sanitized `RuntimeWorkObservation` records.
 - `RuntimeWorkObservation`: sanitized observation DTO accepted by the mapper.
 - `RuntimeWorkObservationKind`: supported observation kinds for the canonical lifecycle: `Started`, `NeedsDecision`, `Blocked`, `Succeeded`, `Failed`, and `Canceled`.
 - `SanitizedRuntimeObservationMapper`: validates sanitized observations and maps them into canonical `WorkEvent` records.
 - `RuntimeWorkEventImporter`: imports mapped runtime events into a `WorkEventRepository` and skips event ids already present in the target store.
 - `MockRuntimeWorkEventSource`: public-safe fixture source for tests, CLI smoke work, and future demos.
+- `OpenClawRuntimeObservationFileSource`: JVM-local source for operator-provided sanitized observation exports.
 
 Adapters should strip or hash private runtime identifiers before creating `RuntimeWorkObservation`. The observation fields should already use public-safe ids and text that are suitable for docs, CI logs, and screenshots.
 

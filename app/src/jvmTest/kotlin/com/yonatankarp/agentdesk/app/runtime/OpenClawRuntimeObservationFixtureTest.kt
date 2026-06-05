@@ -25,14 +25,18 @@ class OpenClawRuntimeObservationFixtureTest :
                         repository = repository,
                     ).importEvents()
 
-                    result.importedCount shouldBe 6
+                    result.importedCount shouldBe 10
                     result.skippedDuplicateCount shouldBe 0
                     repository.readAll().map { it.type.wireName }.shouldContainExactly(
                         "work.started",
-                        "work.needs-decision",
                         "work.blocked",
+                        "work.started",
+                        "work.needs-decision",
+                        "work.started",
                         "work.succeeded",
+                        "work.started",
                         "work.failed",
+                        "work.started",
                         "work.canceled",
                     )
                     assertSoftly(repository.readAll().first()) {

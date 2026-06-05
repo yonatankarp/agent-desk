@@ -20,12 +20,12 @@ class OpenClawRuntimeObservationFileSource(
         Files.readString(exportPath)
     } catch (error: IOException) {
         throw OpenClawRuntimeObservationFileSourceException(
-            message = "Sanitized OpenClaw observation export could not be read.",
+            message = "Sanitized observation export could not be read.",
             cause = error,
         )
     } catch (error: SecurityException) {
         throw OpenClawRuntimeObservationFileSourceException(
-            message = "Sanitized OpenClaw observation export could not be read.",
+            message = "Sanitized observation export could not be read.",
             cause = error,
         )
     }
@@ -33,19 +33,19 @@ class OpenClawRuntimeObservationFileSource(
     private fun decodeExport(rawExport: String): List<RuntimeWorkObservation> = try {
         val export = json.decodeFromString<OpenClawObservationExportRecord>(rawExport)
         require(export.schemaVersion == SUPPORTED_SCHEMA_VERSION) {
-            "Sanitized OpenClaw observation export schema version is not supported."
+            "Sanitized observation export schema version is not supported."
         }
         export.observations.mapIndexed { index, record ->
             record.toObservation(index)
         }
     } catch (error: IllegalArgumentException) {
         throw OpenClawRuntimeObservationFileSourceException(
-            message = "Sanitized OpenClaw observation export is invalid.",
+            message = "Sanitized observation export is invalid.",
             cause = error,
         )
     } catch (error: SerializationException) {
         throw OpenClawRuntimeObservationFileSourceException(
-            message = "Sanitized OpenClaw observation export is invalid.",
+            message = "Sanitized observation export is invalid.",
             cause = error,
         )
     }

@@ -357,6 +357,105 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `sanitized observation import writes canonical events that render through config`() {
+        val observationsFile = Files.createTempFile("agent-desk-cli-observations", ".json")
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(observationsFile, SANITIZED_OBSERVATION_EXPORT)
+
+        val importResult = runCli(
+            "import-openclaw-observations",
+            "--observations",
+            observationsFile.toString(),
+            "--event-store",
+            eventFile.toString(),
+        )
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+        val renderResult = runCli("--config", configFile.toString())
+
+        assertEquals(0, importResult.exitCode)
+        assertContains(importResult.output, "Imported 2 sanitized observation event(s); skipped 0 duplicate event(s).")
+        assertPublicSafe(importResult.output)
+        assertEquals("", importResult.error)
+        assertEquals(
+            listOf("work.started", "work.blocked"),
+            eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") },
+        )
+        assertEquals(0, renderResult.exitCode)
+        assertContains(renderResult.output, "- [Blocked] agent-task:212 Run sanitized import smoke")
+        assertContains(renderResult.output, "sanitized-note Runtime adapter decision")
+        assertPublicSafe(renderResult.output)
+        assertEquals("", renderResult.error)
+    }
+
+    @Test
+    fun `sanitized observation import skips existing duplicate events`() {
+        val observationsFile = Files.createTempFile("agent-desk-cli-observations", ".json")
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(observationsFile, SANITIZED_OBSERVATION_EXPORT)
+
+        val firstResult = runCli(
+            "import-openclaw-observations",
+            "--observations",
+            observationsFile.toString(),
+            "--event-store",
+            eventFile.toString(),
+        )
+        val secondResult = runCli(
+            "import-openclaw-observations",
+            "--observations",
+            observationsFile.toString(),
+            "--event-store",
+            eventFile.toString(),
+        )
+
+        assertEquals(0, firstResult.exitCode)
+        assertEquals(0, secondResult.exitCode)
+        assertContains(secondResult.output, "Imported 0 sanitized observation event(s); skipped 2 duplicate event(s).")
+        assertPublicSafe(secondResult.output)
+        assertEquals(2, eventFile.readLines().size)
+    }
+
+    @Test
+    fun `sanitized observation import requires an observations option`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+
+        val result = runCli("import-openclaw-observations", "--event-store", eventFile.toString())
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Missing value for --observations.")
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `sanitized observation import rejects invalid exports without echoing paths`() {
+        val observationsFile = Files.createTempFile("agent-desk-cli-observations", ".json")
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        Files.writeString(observationsFile, """{"rawTranscript":"${privateLinuxPath("private-token.txt")}"}""")
+
+        val result = runCli(
+            "import-openclaw-observations",
+            "--observations",
+            observationsFile.toString(),
+            "--event-store",
+            eventFile.toString(),
+        )
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Runtime observations could not be imported.")
+        assertFalse(result.error.contains(observationsFile.toString()))
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
     fun `mock runtime import rejects unsafe event store locations`() {
         val result = runCli("import-mock-runtime", "--event-store", privateLinuxPath("private-token.ndjson"))
 
@@ -586,7 +685,6 @@ class AgentDeskCliTest {
         assertFalse(text.contains("session:", ignoreCase = true))
         assertFalse(text.contains("thread:", ignoreCase = true))
         assertFalse(text.contains("raw transcript", ignoreCase = true))
-        assertFalse(text.contains("OpenClaw", ignoreCase = true))
         assertFalse(text.contains("bearer", ignoreCase = true))
         assertFalse(text.contains("auth_token", ignoreCase = true))
         assertFalse(text.contains("github_pat_", ignoreCase = true))
@@ -624,5 +722,38 @@ class AgentDeskCliTest {
 
         private const val UNSUPPORTED_EVENT =
             """{"id":"event:agent-task:42:paused","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.paused","payload":{}}"""
+
+        private const val SANITIZED_OBSERVATION_EXPORT =
+            """
+            {
+              "schemaVersion": 1,
+              "observations": [
+                {
+                  "eventId": "event:agent-task:212:started",
+                  "occurredAt": "2026-06-05T18:40:00Z",
+                  "source": "openclaw-local",
+                  "workItemId": "agent-task:212",
+                  "kind": "started",
+                  "title": "Run sanitized import smoke",
+                  "summary": "Agent started a public-safe smoke command.",
+                  "evidenceReferences": [
+                    {
+                      "kind": "sanitized-note",
+                      "label": "Runtime adapter decision",
+                      "target": "docs/runtime-adapter-scope-decision.md"
+                    }
+                  ]
+                },
+                {
+                  "eventId": "event:agent-task:212:blocked",
+                  "occurredAt": "2026-06-05T18:41:00Z",
+                  "source": "openclaw-local",
+                  "workItemId": "agent-task:212",
+                  "kind": "blocked",
+                  "reason": "Waiting for smoke command evidence."
+                }
+              ]
+            }
+            """
     }
 }

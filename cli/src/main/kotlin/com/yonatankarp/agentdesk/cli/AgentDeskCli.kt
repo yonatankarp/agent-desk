@@ -17,6 +17,8 @@ import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.runtime.MockRuntimeWorkEventSource
+import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSource
+import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSourceException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
@@ -68,6 +70,21 @@ object AgentDeskCli {
                 )
             }
 
+            is CliCommand.ImportOpenClawObservations -> {
+                val observationsPath = command.observationsPath
+                    ?: throw CliUsageException("Missing value for --observations.")
+                val eventStorePath = command.eventStorePath
+                    ?: throw CliUsageException("Missing value for --event-store.")
+                val result = importOpenClawObservations(
+                    observationsPath = observationsPath,
+                    eventStorePath = eventStorePath,
+                )
+                output.println(
+                    "Imported ${result.importedCount} sanitized observation event(s); " +
+                        "skipped ${result.skippedDuplicateCount} duplicate event(s).",
+                )
+            }
+
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
                 val events = options.toWorkEvents(input)
@@ -108,6 +125,27 @@ object AgentDeskCli {
         throw CliInputException("Configured event store could not be written.")
     } catch (exception: SecurityException) {
         throw CliInputException("Configured event store could not be written.")
+    } catch (exception: RuntimeWorkEventImportException) {
+        throw CliInputException(exception.message ?: "Runtime events could not be imported.")
+    }
+
+    private fun importOpenClawObservations(
+        observationsPath: String,
+        eventStorePath: String,
+    ) = try {
+        val location = EventStoreLocation.parse(eventStorePath)
+        RuntimeWorkEventImporter(
+            source = OpenClawRuntimeObservationFileSource(Path.of(observationsPath)),
+            repository = LocalFileWorkEventRepository(Path.of(location.value)),
+        ).importEvents()
+    } catch (exception: ConfigValidationException) {
+        throw CliInputException("Invalid event store location: ${exception.message}")
+    } catch (exception: InvalidPathException) {
+        throw CliInputException("Sanitized observation export could not be imported.")
+    } catch (exception: SecurityException) {
+        throw CliInputException("Sanitized observation export could not be imported.")
+    } catch (exception: OpenClawRuntimeObservationFileSourceException) {
+        throw CliInputException(exception.message ?: "Sanitized observation export could not be imported.")
     } catch (exception: RuntimeWorkEventImportException) {
         throw CliInputException(exception.message ?: "Runtime events could not be imported.")
     }
@@ -283,6 +321,7 @@ object AgentDeskCli {
         Usage:
           agent-desk [--sample]
           agent-desk import-mock-runtime --event-store <file>
+          agent-desk import-openclaw-observations --observations <file> --event-store <file>
           agent-desk act resume <work-item-id> --event-store <file>
           agent-desk inspect <work-item-id> [--sample]
           agent-desk inspect <work-item-id> --events <file>
@@ -295,11 +334,15 @@ object AgentDeskCli {
         Options:
           import-mock-runtime
                           Import public-safe mock runtime events into a local event store.
+          import-openclaw-observations
+                          Import a sanitized observation export into a local event store.
           act resume <work-item-id>
                           Append a public-safe mock resume action event to a local event store.
           inspect        Render one sanitized work item by id.
           --event-store <file>
-                          Local event store target for import-mock-runtime or act.
+                          Local event store target for import commands or act.
+          --observations <file>
+                          Sanitized observation export for import-openclaw-observations.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
@@ -347,6 +390,13 @@ private data class CliOptions(
                         command = CliCommand.ImportMockRuntime()
                     }
 
+                    "import-openclaw-observations" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        command = CliCommand.ImportOpenClawObservations()
+                    }
+
                     "act" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -389,8 +439,36 @@ private data class CliOptions(
                                 selectedCommand.copy(eventStorePath = path)
                             }
 
+                            is CliCommand.ImportOpenClawObservations -> {
+                                if (selectedCommand.eventStorePath != null) {
+                                    throw CliUsageException("Choose only one event store.")
+                                }
+                                selectedCommand.copy(eventStorePath = path)
+                            }
+
                             else -> throw CliUsageException(
-                                "--event-store is only valid with import-mock-runtime or act.",
+                                "--event-store is only valid with import commands or act.",
+                            )
+                        }
+                        index += 1
+                    }
+
+                    "--observations" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --observations.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --observations.")
+                        }
+                        command = when (val selectedCommand = command) {
+                            is CliCommand.ImportOpenClawObservations -> {
+                                if (selectedCommand.observationsPath != null) {
+                                    throw CliUsageException("Choose only one observations export.")
+                                }
+                                selectedCommand.copy(observationsPath = path)
+                            }
+
+                            else -> throw CliUsageException(
+                                "--observations is only valid with import-openclaw-observations.",
                             )
                         }
                         index += 1
@@ -428,10 +506,23 @@ private data class CliOptions(
             if (command is CliCommand.ImportMockRuntime && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
+            if (command is CliCommand.ImportOpenClawObservations && command.observationsPath == null) {
+                throw CliUsageException("Missing value for --observations.")
+            }
+            if (command is CliCommand.ImportOpenClawObservations && command.eventStorePath == null) {
+                throw CliUsageException("Missing value for --event-store.")
+            }
             if (command is CliCommand.Act && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
-            if ((command is CliCommand.ImportMockRuntime || command is CliCommand.Act) && mode != null) {
+            if (
+                (
+                    command is CliCommand.ImportMockRuntime ||
+                        command is CliCommand.ImportOpenClawObservations ||
+                        command is CliCommand.Act
+                    ) &&
+                mode != null
+            ) {
                 throw CliUsageException("Choose only one input mode.")
             }
 
@@ -463,6 +554,11 @@ private sealed interface CliCommand {
     data class Inspect(val rawWorkItemId: String) : CliCommand
 
     data class ImportMockRuntime(val eventStorePath: String? = null) : CliCommand
+
+    data class ImportOpenClawObservations(
+        val observationsPath: String? = null,
+        val eventStorePath: String? = null,
+    ) : CliCommand
 
     data class Act(
         val intent: OperatorActionIntent,
