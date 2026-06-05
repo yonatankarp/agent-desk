@@ -9,6 +9,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 class RuntimeWorkEventImporter(
     private val source: RuntimeWorkEventSource,
     private val repository: WorkEventRepository,
+    private val mapper: SanitizedRuntimeObservationMapper = SanitizedRuntimeObservationMapper(),
 ) {
     fun importEvents(): RuntimeWorkEventImportResult {
         val existingIds = readExistingIds()
@@ -39,7 +40,7 @@ class RuntimeWorkEventImporter(
     }
 
     private fun loadSourceEvents(): List<WorkEvent> = try {
-        source.loadEvents()
+        source.loadObservations().map(mapper::toWorkEvent)
     } catch (error: IllegalArgumentException) {
         throw RuntimeWorkEventImportException("Runtime observations could not be imported.", error)
     } catch (error: RuntimeException) {
