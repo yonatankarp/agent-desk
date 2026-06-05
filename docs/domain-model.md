@@ -12,11 +12,12 @@ The `:core` module keeps domain concepts under `com.yonatankarp.agentdesk.core.d
 
 The `:app` module keeps reusable application and presentation behavior under `com.yonatankarp.agentdesk.app`:
 
-- `app.operator`: adapter-neutral operator state, projections, sample state, event lines, and status presentations shared by CLI and desktop.
+- `app.operator`: adapter-neutral operator state, projections, sample state, event lines, and status presentations shared by CLI, desktop, and mobile read-model contracts.
+- `app.operator.mobile`: mobile-facing read-only contract types such as `MobileOperatorStateContract`, derived from the shared operator projection without importing CLI, desktop, runtime adapters, persistence internals, or UI mapping.
 
-CLI input/output and Compose UI mapping stay adapter-specific. OpenClaw-specific runtime details still belong behind adapters before they reach these shared packages.
+CLI input/output, desktop Compose mapping, and mobile Compose mapping stay client-specific. OpenClaw-specific runtime details still belong behind adapters before they reach these shared packages.
 
-Runtime observation imports are described in [Runtime adapter boundary](runtime-adapter-boundary.md).
+Runtime observation imports are described in [Runtime adapter boundary](runtime-adapter-boundary.md). The mobile read model is described in [Mobile read-only contract](mobile-read-only-contract.md).
 
 ## Work Item
 
