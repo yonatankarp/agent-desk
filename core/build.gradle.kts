@@ -13,6 +13,7 @@ kotlin {
 
     sourceSets {
         commonTest.dependencies {
+            implementation(project(":test-fixtures"))
             implementation(libs.kotest.assertions.core)
             implementation(libs.kotest.framework.engine)
         }
