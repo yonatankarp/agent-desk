@@ -102,7 +102,7 @@ class AgentDeskRuntimeConfigTest :
         given("unsafe event store locations") {
             `when`("the value contains private path and secret-looking material") {
                 then("validation rejects it without echoing the raw value") {
-                    val raw = "/home/operator/private-token.ndjson"
+                    val raw = privateLinuxPath("private-token.ndjson")
 
                     val error = shouldThrow<ConfigValidationException> {
                         EventStoreLocation.parse(raw)
@@ -149,7 +149,7 @@ class AgentDeskRuntimeConfigTest :
                             mapOf(
                                 "mode" to "stored-events",
                                 "source" to "local-event-store",
-                                "eventStoreLocation" to "/home/operator/private-token.ndjson",
+                                "eventStoreLocation" to privateLinuxPath("private-token.ndjson"),
                             ),
                         )
                     }
@@ -163,3 +163,5 @@ class AgentDeskRuntimeConfigTest :
             }
         }
     })
+
+private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"

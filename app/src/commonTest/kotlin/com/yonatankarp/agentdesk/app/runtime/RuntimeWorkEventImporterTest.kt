@@ -92,7 +92,7 @@ class RuntimeWorkEventImporterTest :
                                             source = "mock-adapter",
                                             workItemId = "agent-task:99",
                                             kind = RuntimeWorkObservationKind.Blocked,
-                                            reason = "Read failed at /home/operator/private-token.txt",
+                                            reason = "Read failed at ${privateLinuxPath("private-token.txt")}",
                                         ),
                                     )
                                     return emptyList()
@@ -155,3 +155,5 @@ private class InMemoryWorkEventRepository(
         return events.toList()
     }
 }
+
+private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"

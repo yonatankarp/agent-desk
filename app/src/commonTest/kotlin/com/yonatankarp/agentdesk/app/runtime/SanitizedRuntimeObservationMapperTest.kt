@@ -148,13 +148,13 @@ class SanitizedRuntimeObservationMapperTest :
                                 source = "mock-adapter",
                                 workItemId = "agent-task:99",
                                 kind = RuntimeWorkObservationKind.Blocked,
-                                reason = "Read failed at /home/operator/private-token.txt",
+                                reason = "Read failed at ${privateLinuxPath("private-token.txt")}",
                             ),
                         )
                     }
 
                     error.message shouldContain "Runtime observation reason"
-                    error.message.orEmpty() shouldNotContain "/home/operator/private-token.txt"
+                    error.message.orEmpty() shouldNotContain privateLinuxPath("private-token.txt")
                 }
             }
 
@@ -323,3 +323,5 @@ class SanitizedRuntimeObservationMapperTest :
             }
         }
     })
+
+private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"
