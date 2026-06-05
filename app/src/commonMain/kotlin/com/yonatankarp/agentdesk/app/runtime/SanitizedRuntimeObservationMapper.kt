@@ -74,7 +74,6 @@ class SanitizedRuntimeObservationMapper {
 
     private fun String.requirePublicSafeRuntimeField(label: String) {
         val fieldName = "Runtime observation $label"
-        val normalized = PublicSafeTextPolicy.normalize(this, fieldName = fieldName, maxLength = 512)
-        PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = fieldName)
+        PublicSafeTextPolicy.normalizeAndRequirePublicSafe(this, fieldName = fieldName, maxLength = 512)
     }
 }

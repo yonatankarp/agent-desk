@@ -125,6 +125,22 @@ class AgentDeskRuntimeConfigTest :
                     error.message shouldContain "single public-safe value"
                 }
             }
+
+            `when`("the value contains private public-safety markers") {
+                then("shared validation rejects each marker without echoing the raw value") {
+                    unsafeEventStoreLocations().forEach { unsafe ->
+                        val error = shouldThrow<ConfigValidationException> {
+                            EventStoreLocation.parse(unsafe)
+                        }
+
+                        assertSoftly(error.message.orEmpty()) {
+                            shouldContain("eventStoreLocation")
+                            shouldNotContain(unsafe)
+                            shouldNotContain(rawIdentifier())
+                        }
+                    }
+                }
+            }
         }
 
         given("unknown external configuration values") {
@@ -165,3 +181,16 @@ class AgentDeskRuntimeConfigTest :
     })
 
 private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"
+
+private fun privateMacPath(fileName: String): String = "/Users/" + "operator/$fileName"
+
+private fun rawIdentifier(): String = "123456789" + "012345678"
+
+private fun unsafeEventStoreLocations(): List<String> = listOf(
+    rawIdentifier(),
+    "channel:${rawIdentifier()}",
+    "session:local-agent-events.ndjson",
+    privateMacPath("secret-events.ndjson"),
+    "op://agent-desk/event-store",
+    listOf("Open", "Claw runtime context").joinToString(""),
+)

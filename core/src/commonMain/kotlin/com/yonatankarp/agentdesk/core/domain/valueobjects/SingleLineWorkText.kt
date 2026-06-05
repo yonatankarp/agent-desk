@@ -7,9 +7,7 @@ internal class SingleLineWorkText private constructor(val value: String) {
             fieldName: String,
             maxLength: Int,
         ): SingleLineWorkText {
-            val normalized = PublicSafeTextPolicy.normalize(raw, fieldName, maxLength)
-            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName)
-            PublicSafeTextPolicy.requirePublicUrlIfUrl(normalized, fieldName)
+            val normalized = PublicSafeTextPolicy.normalizeAndRequirePublicSafeText(raw, fieldName, maxLength)
             return SingleLineWorkText(normalized)
         }
     }
