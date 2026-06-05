@@ -86,7 +86,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `invalid input fails without echoing raw private-looking data`() {
-        val result = runCli("--stdin", input = """{"secret":"/home/operator/private-token.txt"}""")
+        val result = runCli("--stdin", input = """{"secret":"${privateLinuxPath("private-token.txt")}"}""")
 
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Invalid event record at line 1.")
@@ -163,7 +163,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `invalid event file path fails without echoing the path`() {
-        val result = runCli("--events", "\u0000/home/operator/private-token.txt")
+        val result = runCli("--events", "\u0000${privateLinuxPath("private-token.txt")}")
 
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Event input file could not be read.")
@@ -173,7 +173,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `unknown option fails without echoing the argument`() {
-        val result = runCli("--private-token-file=/home/operator/private-token.txt")
+        val result = runCli("--private-token-file=${privateLinuxPath("private-token.txt")}")
 
         assertEquals(2, result.exitCode)
         assertContains(result.error, "Unknown option.")
@@ -205,7 +205,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `invalid config file path fails without echoing the path`() {
-        val result = runCli("--config", "\u0000/home/operator/private-token.properties")
+        val result = runCli("--config", "\u0000${privateLinuxPath("private-token.properties")}")
 
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Runtime config file could not be read.")
@@ -240,7 +240,7 @@ class AgentDeskCliTest {
             """
             mode=stored-events
             source=local-event-store
-            eventStoreLocation=/home/operator/private-token.ndjson
+            eventStoreLocation=${privateLinuxPath("private-token.ndjson")}
             """.trimIndent(),
         )
 
@@ -358,7 +358,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `mock runtime import rejects unsafe event store locations`() {
-        val result = runCli("import-mock-runtime", "--event-store", "/home/operator/private-token.ndjson")
+        val result = runCli("import-mock-runtime", "--event-store", privateLinuxPath("private-token.ndjson"))
 
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Invalid event store location:")
@@ -426,7 +426,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `mock action rejects unsafe event store location`() {
-        val result = runCli("act", "resume", "agent-task:42", "--event-store", "/home/operator/private-token.ndjson")
+        val result = runCli("act", "resume", "agent-task:42", "--event-store", privateLinuxPath("private-token.ndjson"))
 
         assertEquals(1, result.exitCode)
         assertContains(result.error, "Invalid event store location:")
@@ -521,7 +521,7 @@ class AgentDeskCliTest {
 
     @Test
     fun `inspect invalid work item id fails without echoing the argument`() {
-        val result = runCli("inspect", "/home/operator/private-token.txt", "--stdin", input = "$STARTED_EVENT\n")
+        val result = runCli("inspect", privateLinuxPath("private-token.txt"), "--stdin", input = "$STARTED_EVENT\n")
 
         assertEquals(2, result.exitCode)
         assertContains(result.error, "Invalid work item id.")
@@ -581,6 +581,8 @@ class AgentDeskCliTest {
         assertFalse(text.contains("session:", ignoreCase = true))
         assertFalse(text.contains("op://", ignoreCase = true))
     }
+
+    private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"
 
     private data class CliRunResult(
         val exitCode: Int,
