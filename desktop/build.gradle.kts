@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.Test
+import org.jetbrains.compose.ExperimentalComposeLibrary
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -27,6 +28,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
         }
         jvmTest.dependencies {
+            @OptIn(ExperimentalComposeLibrary::class)
+            implementation(compose.uiTest)
             implementation(libs.konsist)
         }
     }
