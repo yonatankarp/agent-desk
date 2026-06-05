@@ -10,6 +10,8 @@ Current scope:
 - show projection warnings when stored events contain ignored records
 - keep stop, resume, retry, and approval actions out of the mobile UI
 
+The shared mobile read model can represent projection warnings from stored events, and the smoke snapshot covers that read-only contract. The runnable JVM dev host is sample-only today: `./gradlew :mobile:run` starts `AgentDeskMobileApp()` with built-in public-safe sample state and does not accept `--config` yet.
+
 The module has a JVM target so CI and local agents can build and smoke-test the shared Compose surface before Android or iOS packaging is introduced. Android/iOS target wiring should be a later slice with explicit toolchain and artifact expectations.
 
 Local verification:
@@ -19,7 +21,7 @@ bash scripts/mobile-read-only-smoke.sh
 ./gradlew :mobile:build
 ```
 
-Run the shell in a phone-sized desktop window:
+Run the sample-only shell in a phone-sized desktop window:
 
 ```bash
 ./gradlew :mobile:run

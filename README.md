@@ -79,6 +79,12 @@ Run the sample Compose desktop shell:
 ./gradlew :desktop:run
 ```
 
+Run the sample-only Compose mobile shell:
+
+```bash
+./gradlew :mobile:run
+```
+
 Build and test the desktop module:
 
 ```bash
