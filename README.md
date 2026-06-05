@@ -34,40 +34,46 @@ The GitHub Wiki is the operator-facing handbook:
 
 Install a local Java/JDK first. The Gradle wrapper needs a launcher JVM available through `JAVA_HOME` or `java` on `PATH` before it can start and use the repository's configured JVM toolchain for builds and run tasks.
 
-Run the public-safe repository hygiene check:
+Use the root `Makefile` as the preferred local command index:
 
 ```bash
-bash scripts/validate-public-hygiene.sh
+make help
 ```
 
-Run the public-safe mock runtime/operator smoke:
+Run the default local pre-PR checks:
 
 ```bash
-bash scripts/mock-runtime-smoke.sh
+make check
 ```
 
-Run the public-safe mobile read-only smoke:
+Run all public-safe smoke workflows:
 
 ```bash
-bash scripts/mobile-read-only-smoke.sh
+make smoke
 ```
 
-Run the non-interactive Compose run-task smoke:
+Run the local CI-adjacent check set:
 
 ```bash
-bash scripts/compose-run-smoke.sh
+make ci-local
 ```
 
-Check deterministic formatting:
+Generate coverage reports:
 
 ```bash
-./gradlew spotlessCheck
+make coverage
 ```
 
-Build the current modules:
+The lower-level shell scripts and Gradle invocations remain available when a target needs a narrower command. Common direct targets include:
 
 ```bash
-./gradlew :core:build :app:build :cli:build :desktop:build :mobile:build
+make hygiene
+make format-check
+make build
+make smoke-mock
+make smoke-mobile
+make smoke-compose
+make smoke-sanitized-runtime
 ```
 
 For CLI examples, runtime configuration, desktop status, and local event store workflows, use the Wiki links above. Repo docs remain canonical for architecture and implementation details.
@@ -75,20 +81,20 @@ For CLI examples, runtime configuration, desktop status, and local event store w
 Build the standalone executable CLI jar:
 
 ```bash
-./gradlew :cli:executableJar
+make cli-jar
 java -jar cli/build/libs/agent-desk-cli-all.jar
 ```
 
 Run the sample Compose desktop shell:
 
 ```bash
-./gradlew :desktop:run
+make desktop-run
 ```
 
 Run the sample-only Compose mobile shell:
 
 ```bash
-./gradlew :mobile:run
+make mobile-run
 ```
 
 Build and test the desktop module:
@@ -97,29 +103,16 @@ Build and test the desktop module:
 ./gradlew :desktop:build
 ```
 
-Generate coverage reports:
-
-```bash
-./gradlew :core:koverXmlReport :core:koverHtmlReport
-./gradlew :app:koverXmlReport :app:koverHtmlReport
-./gradlew :cli:koverXmlReport :cli:koverHtmlReport
-./gradlew :desktop:koverXmlReport :desktop:koverHtmlReport
-./gradlew :mobile:koverXmlReport :mobile:koverHtmlReport
-```
-
 Apply deterministic formatting:
 
 ```bash
-./gradlew spotlessApply
+make format
 ```
 
-Run both checks before opening a PR:
+Run release gates locally without tagging, publishing, or requiring secrets:
 
 ```bash
-bash scripts/validate-public-hygiene.sh
-bash scripts/compose-run-smoke.sh
-./gradlew spotlessCheck
-./gradlew :core:build :app:build :cli:build :desktop:build :mobile:build
+make release-gate
 ```
 
 ## Releases
