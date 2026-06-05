@@ -24,6 +24,16 @@ kotlin {
     }
 }
 
+kover {
+    reports {
+        verify {
+            rule("minimum line coverage") {
+                minBound(90)
+            }
+        }
+    }
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     failOnNoDiscoveredTests = true

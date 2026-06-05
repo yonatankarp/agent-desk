@@ -126,14 +126,14 @@ jobs:
         with:
           jvm-version: "25"
 
-      - name: Generate module coverage reports
+      - name: Verify coverage thresholds and generate module coverage reports
         run: |
           ./gradlew \
-            :core:koverXmlReport :core:koverHtmlReport \
-            :app:koverXmlReport :app:koverHtmlReport \
-            :cli:koverXmlReport :cli:koverHtmlReport \
-            :desktop:koverXmlReport :desktop:koverHtmlReport \
-            :mobile:koverXmlReport :mobile:koverHtmlReport
+            :core:koverVerify :core:koverXmlReport :core:koverHtmlReport \
+            :app:koverVerify :app:koverXmlReport :app:koverHtmlReport \
+            :cli:koverVerify :cli:koverXmlReport :cli:koverHtmlReport \
+            :desktop:koverVerify :desktop:koverXmlReport :desktop:koverHtmlReport \
+            :mobile:koverVerify :mobile:koverXmlReport :mobile:koverHtmlReport
 
       - name: Upload core coverage report
         uses: actions/upload-artifact@v7
@@ -220,7 +220,7 @@ jobs:
                   "<!-- agent-desk:coverage-summary -->",
                   "## Coverage",
                   "",
-                  "Report-only coverage for testable modules.",
+                  "Coverage threshold verification and reports for testable modules.",
                   "",
                   *module_summary("core"),
                   *module_summary("app"),

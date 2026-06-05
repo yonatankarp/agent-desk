@@ -56,13 +56,13 @@ smoke-sanitized-runtime: ## Run the sanitized runtime observation import smoke.
 	bash scripts/sanitized-runtime-import-smoke.sh
 
 .PHONY: coverage
-coverage: ## Generate Kover XML and HTML reports for testable modules.
+coverage: ## Verify Kover thresholds and generate XML/HTML reports for testable modules.
 	$(GRADLE) \
-		:core:koverXmlReport :core:koverHtmlReport \
-		:app:koverXmlReport :app:koverHtmlReport \
-		:cli:koverXmlReport :cli:koverHtmlReport \
-		:desktop:koverXmlReport :desktop:koverHtmlReport \
-		:mobile:koverXmlReport :mobile:koverHtmlReport
+		:core:koverVerify :core:koverXmlReport :core:koverHtmlReport \
+		:app:koverVerify :app:koverXmlReport :app:koverHtmlReport \
+		:cli:koverVerify :cli:koverXmlReport :cli:koverHtmlReport \
+		:desktop:koverVerify :desktop:koverXmlReport :desktop:koverHtmlReport \
+		:mobile:koverVerify :mobile:koverXmlReport :mobile:koverHtmlReport
 
 .PHONY: ci-local
 ci-local: hygiene hygiene-self-test format-check build smoke ## Run the local equivalent of CI-adjacent checks.
