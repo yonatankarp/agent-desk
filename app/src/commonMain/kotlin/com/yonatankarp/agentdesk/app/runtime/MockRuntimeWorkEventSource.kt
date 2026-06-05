@@ -1,11 +1,7 @@
 package com.yonatankarp.agentdesk.app.runtime
 
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-
-class MockRuntimeWorkEventSource(
-    private val mapper: SanitizedRuntimeObservationMapper = SanitizedRuntimeObservationMapper(),
-) : RuntimeWorkEventSource {
-    override fun loadEvents(): List<WorkEvent> = observations.map(mapper::toWorkEvent)
+class MockRuntimeWorkEventSource : RuntimeWorkEventSource {
+    override fun loadObservations(): List<RuntimeWorkObservation> = observations
 
     companion object {
         val observations =

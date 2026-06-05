@@ -21,7 +21,7 @@ class SanitizedRuntimeObservationMapperTest :
         given("sanitized runtime observations") {
             `when`("mock lifecycle observations are mapped") {
                 then("they become canonical work events") {
-                    val events = MockRuntimeWorkEventSource(mapper).loadEvents()
+                    val events = MockRuntimeWorkEventSource().loadObservations().map(mapper::toWorkEvent)
 
                     events.map { it.type.wireName }.shouldContainExactly(
                         "work.started",
@@ -307,8 +307,10 @@ class SanitizedRuntimeObservationMapperTest :
         given("mock runtime adapter fixtures") {
             `when`("the source emits example events") {
                 then("fixture output stays public-safe") {
-                    val text = MockRuntimeWorkEventSource().loadEvents().joinToString("\n") { event ->
-                        "${event.id} ${event.occurredAt} ${event.source} ${event.workItemId} ${event.payload}"
+                    val text = MockRuntimeWorkEventSource().loadObservations().joinToString("\n") { observation ->
+                        "${observation.eventId} ${observation.occurredAt} ${observation.source} " +
+                            "${observation.workItemId} ${observation.kind} " +
+                            "${observation.title} ${observation.summary} ${observation.reason}"
                     }
 
                     assertSoftly {

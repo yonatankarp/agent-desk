@@ -5,7 +5,6 @@ import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreFailure
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -85,19 +84,16 @@ class RuntimeWorkEventImporterTest :
                     val error = shouldThrow<RuntimeWorkEventImportException> {
                         RuntimeWorkEventImporter(
                             source = object : RuntimeWorkEventSource {
-                                override fun loadEvents(): List<WorkEvent> {
-                                    SanitizedRuntimeObservationMapper().toWorkEvent(
-                                        RuntimeWorkObservation(
-                                            eventId = "event:agent-task:99:blocked",
-                                            occurredAt = "2026-06-02T21:30:00Z",
-                                            source = "mock-adapter",
-                                            workItemId = "agent-task:99",
-                                            kind = RuntimeWorkObservationKind.Blocked,
-                                            reason = "Read failed at ${privateLinuxPath("private-token.txt")}",
-                                        ),
-                                    )
-                                    return emptyList()
-                                }
+                                override fun loadObservations(): List<RuntimeWorkObservation> = listOf(
+                                    RuntimeWorkObservation(
+                                        eventId = "event:agent-task:99:blocked",
+                                        occurredAt = "2026-06-02T21:30:00Z",
+                                        source = "mock-adapter",
+                                        workItemId = "agent-task:99",
+                                        kind = RuntimeWorkObservationKind.Blocked,
+                                        reason = "Read failed at ${privateLinuxPath("private-token.txt")}",
+                                    ),
+                                )
                             },
                             repository = InMemoryWorkEventRepository(),
                         ).importEvents()
@@ -116,9 +112,14 @@ class RuntimeWorkEventImporterTest :
                     val error = shouldThrow<RuntimeWorkEventImportException> {
                         RuntimeWorkEventImporter(
                             source = object : RuntimeWorkEventSource {
-                                override fun loadEvents(): List<WorkEvent> = listOf(
-                                    workStartedEvent(
-                                        id = WorkEventId.parse("event:agent-task:99:started"),
+                                override fun loadObservations(): List<RuntimeWorkObservation> = listOf(
+                                    RuntimeWorkObservation(
+                                        eventId = "event:agent-task:99:started",
+                                        occurredAt = "2026-06-02T21:30:00Z",
+                                        source = "mock-adapter",
+                                        workItemId = "agent-task:99",
+                                        kind = RuntimeWorkObservationKind.Started,
+                                        title = "Run public hygiene check",
                                     ),
                                 )
                             },
