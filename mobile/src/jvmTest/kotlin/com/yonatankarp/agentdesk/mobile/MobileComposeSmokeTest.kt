@@ -19,7 +19,7 @@ import kotlin.test.Test
 class MobileComposeSmokeTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun sampleStateRendersVisibleShellText() = runComposeUiTest {
+    fun `sample state renders visible shell text`() = runComposeUiTest {
         setContent {
             AgentDeskMobileApp(MobileOperatorStateContract.sample())
         }
@@ -36,7 +36,7 @@ class MobileComposeSmokeTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun emptyStateRendersVisibleEmptyRows() = runComposeUiTest {
+    fun `empty state renders visible empty rows`() = runComposeUiTest {
         setContent {
             AgentDeskMobileApp(
                 MobileOperatorState(
@@ -55,7 +55,7 @@ class MobileComposeSmokeTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun staleEvidenceAndWarningsRenderVisibleText() = runComposeUiTest {
+    fun `stale evidence and warnings render visible text`() = runComposeUiTest {
         val evidence = MobileEvidenceReference(
             kind = "check-run",
             label = "Mobile smoke",

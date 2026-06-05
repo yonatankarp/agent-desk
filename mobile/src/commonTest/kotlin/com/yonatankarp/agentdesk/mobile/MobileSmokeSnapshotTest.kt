@@ -16,7 +16,7 @@ import kotlin.test.assertFalse
 
 class MobileSmokeSnapshotTest {
     @Test
-    fun sampleSnapshotShowsReadOnlyCurrentWorkAndAttentionQueue() {
+    fun `sample snapshot shows read-only current work and attention queue`() {
         val snapshot = MobileSmokeSnapshotBuilder.sample()
         val text = snapshot.flattenedText()
 
@@ -35,7 +35,7 @@ class MobileSmokeSnapshotTest {
     }
 
     @Test
-    fun snapshotIncludesStaleMarkersEvidenceReferencesAndProjectionWarnings() {
+    fun `snapshot includes stale markers evidence references and projection warnings`() {
         val state = MobileOperatorState(
             currentWork = listOf(
                 MobileWorkItem(
@@ -109,7 +109,7 @@ class MobileSmokeSnapshotTest {
     }
 
     @Test
-    fun emptySnapshotKeepsReadOnlySectionsVisible() {
+    fun `empty snapshot keeps read-only sections visible`() {
         val snapshot = MobileSmokeSnapshotBuilder.from(
             MobileOperatorState(
                 currentWork = emptyList(),
@@ -124,7 +124,7 @@ class MobileSmokeSnapshotTest {
     }
 
     @Test
-    fun mobileStatusToneColorsAreExhaustiveForOperatorTones() {
+    fun `mobile status tone colors are exhaustive for operator tones`() {
         assertEquals(MobilePalette.Accent, colorFor(StatusTone.Active))
         assertEquals(MobilePalette.Attention, colorFor(StatusTone.Attention))
         assertEquals(MobilePalette.Blocked, colorFor(StatusTone.Blocked))

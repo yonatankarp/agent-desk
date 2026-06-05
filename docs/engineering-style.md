@@ -33,6 +33,7 @@ Agent Desk code should stay small, explicit, and easy to move across adapters. T
 - Use Kotest assertions in Kotest tests. Do not use JUnit assertions unless a test is specifically exercising JUnit integration.
 - Use Kotest `given` / `when` / `then` style for behavior tests where it improves readability.
 - Architecture tests such as Konsist may stay rule-oriented instead of forcing given/when/then.
+- Client and adapter smoke tests may use `kotlin.test`/JUnit-style `@Test` when they directly exercise CLI process behavior, Compose UI test APIs, runtime argument handling, or Konsist architecture rules. Keep this exception narrow, keep assertions from one style within a file, and prefer readable backtick test names.
 - Avoid duplicated test data. Prefer fixtures and a small test DSL for common domain objects, events, and projections.
 - Keep fixtures public-safe and deterministic.
 
