@@ -19,4 +19,10 @@ bash scripts/mobile-read-only-smoke.sh
 ./gradlew :mobile:build
 ```
 
+Run the shell in a phone-sized desktop window:
+
+```bash
+./gradlew :mobile:run
+```
+
 The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which should contain the `Current work` and `Attention queue` sections with sanitized sample work only.

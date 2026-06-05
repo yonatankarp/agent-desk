@@ -31,6 +31,17 @@ kotlin {
     }
 }
 
+compose.desktop {
+    application {
+        mainClass = "com.yonatankarp.agentdesk.mobile.AgentDeskMobileKt"
+        // Launch with the toolchain JDK instead of the Gradle daemon JVM,
+        // which may be older than the class files produced by the toolchain.
+        javaHome = javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(25)
+        }.get().metadata.installationPath.asFile.absolutePath
+    }
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     failOnNoDiscoveredTests = true
