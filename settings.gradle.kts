@@ -16,6 +16,7 @@ dependencyResolutionManagement {
 rootProject.name = "agent-desk"
 
 include(":core")
+include(":test-fixtures")
 include(":app")
 include(":cli")
 include(":desktop")
