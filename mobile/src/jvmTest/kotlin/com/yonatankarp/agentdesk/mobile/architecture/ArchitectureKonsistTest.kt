@@ -4,6 +4,7 @@ import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 class ArchitectureKonsistTest {
     @Test
@@ -30,8 +31,19 @@ class ArchitectureKonsistTest {
         }
     }
 
+    @Test
+    fun `forbidden mobile JVM import guard catches client fixtures`() {
+        val fixture =
+            Konsist
+                .scopeFromFile("mobile/src/jvmTest/resources/architecture/ForbiddenMobileJvmImportFixture.kt")
+                .files
+                .single()
+
+        assertTrue(fixture.hasBlockedImport())
+    }
+
     companion object {
-        private val mobileProductionSourceSets = listOf("commonMain")
+        private val mobileProductionSourceSets = listOf("commonMain", "jvmMain")
 
         private val blockedImportPrefixes =
             listOf(
