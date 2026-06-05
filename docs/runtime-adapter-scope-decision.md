@@ -1,8 +1,8 @@
-# Runtime Adapter Scope Proposal
+# Runtime Adapter Scope Decision
 
-Status: Proposed for issue [#124](https://github.com/yonatankarp/agent-desk/issues/124). Do not treat this as an approved implementation scope until the issue or pull request has explicit owner approval.
+Status: Accepted for issue [#124](https://github.com/yonatankarp/agent-desk/issues/124) on 2026-06-05.
 
-## Proposed Decision
+## Decision
 
 The first concrete non-mock runtime adapter should be an OpenClaw sanitized observation-file adapter.
 
@@ -42,6 +42,12 @@ The first implementation slice should provide public-safe evidence only:
 - a local smoke command that imports the fixture into a temporary event store and renders operator state
 - PR evidence based on test output and sanitized fixture snippets, not private logs, screenshots, or transcripts
 
-## Follow-Up Gate
+## Follow-Up Slices
 
-Implementation issues should be created only after this proposal is explicitly approved or replaced. If the owner chooses not to build a concrete adapter yet, record that decision in `docs/decision-log.md` instead.
+The accepted decision unlocks small implementation slices. Follow-up issues should stay public-safe and should not broaden the first adapter into private runtime reads or action approval loops.
+
+Recommended first slices:
+
+- implement the sanitized OpenClaw observation-file adapter
+- add a checked-in sanitized fixture export and importer tests
+- add a local smoke command that imports the fixture into a temporary event store and renders operator state

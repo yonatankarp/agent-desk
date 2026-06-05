@@ -1,5 +1,17 @@
 # Decision Log
 
+## 2026-06-05: First runtime adapter scope
+
+Decision: The first concrete non-mock runtime adapter is an OpenClaw sanitized observation-file adapter, not a direct private runtime database/chat-log adapter or a control/action adapter.
+
+Rationale: Agent Desk can validate real runtime integration without importing private transcripts, channel ids, session ids, local paths, process details, screenshots, credentials, or workspace-specific state into public artifacts. A sanitized observation file keeps the first adapter local-only, observation-only, testable with checked-in fixtures, and compatible with the existing `RuntimeWorkObservation` to `WorkEvent` importer boundary.
+
+Smallest workflow: The adapter reads an operator-provided sanitized export file, validates public-safe fields, maps accepted records to `RuntimeWorkObservation`, and lets the existing importer emit canonical `WorkEvent` records. It may represent `Started`, `NeedsDecision`, `Blocked`, `Succeeded`, `Failed`, and `Canceled` lifecycle observations. It does not stop, resume, retry, cancel, approve, or otherwise control runtime work.
+
+Translation rule: Stable aliases should come from explicit local alias mapping. Do not hash private ids into public artifacts by default. If a field cannot satisfy existing value-object validation, reject or drop it instead of weakening public-safe domain checks.
+
+Consequence: The first implementation follow-ups should add the sanitized observation-file adapter, a checked-in sanitized fixture export, importer tests, and a local smoke command that imports the fixture into a temporary event store and renders operator state. Full scope details live in [Runtime adapter scope decision](runtime-adapter-scope-decision.md).
+
 ## 2026-06-04: First mobile client scope
 
 Decision: The first mobile proof is a Compose Multiplatform mobile surface backed by shared Kotlin state from `:app`, not a native iOS-only shell, Android-only shell, or deferred mobile shell.
