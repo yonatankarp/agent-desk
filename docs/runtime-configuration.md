@@ -59,6 +59,16 @@ To render derived state from a sanitized local event store, pass the same config
 
 The desktop UI labels sample data as `Sample state` and stored event data as `Loaded state`. Invalid config or unreadable event stores render a public-safe error state without echoing private local paths or raw adapter details.
 
+## Mobile Wiring
+
+The runnable mobile JVM dev host is sample-only today:
+
+```bash
+./gradlew :mobile:run
+```
+
+It starts the read-only mobile shell with built-in public-safe sample state and does not accept `--config` yet. Stored-event runtime configuration is currently wired through CLI and desktop only; add mobile config support in a later slice if mobile needs to demonstrate loaded stored-event state directly.
+
 ## Mock Runtime Import
 
 The first runtime import smoke command uses only the checked-in mock source:
