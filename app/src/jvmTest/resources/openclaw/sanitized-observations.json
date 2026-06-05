@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "observations": [
+    {
+      "eventId": "event:agent-task:211:started",
+      "occurredAt": "2026-06-05T18:40:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "started",
+      "title": "Add sanitized export fixture",
+      "summary": "Agent started creating public-safe runtime adapter fixture coverage.",
+      "evidenceReferences": [
+        {
+          "kind": "sanitized-note",
+          "label": "Runtime adapter decision",
+          "target": "docs/runtime-adapter-scope-decision.md"
+        }
+      ]
+    },
+    {
+      "eventId": "event:agent-task:211:needs-decision",
+      "occurredAt": "2026-06-05T18:41:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "needs-decision",
+      "reason": "Operator must choose whether to keep the fixture in app test resources."
+    },
+    {
+      "eventId": "event:agent-task:211:blocked",
+      "occurredAt": "2026-06-05T18:42:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "blocked",
+      "reason": "Fixture import is waiting for CI evidence."
+    },
+    {
+      "eventId": "event:agent-task:211:succeeded",
+      "occurredAt": "2026-06-05T18:43:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "succeeded"
+    },
+    {
+      "eventId": "event:agent-task:211:failed",
+      "occurredAt": "2026-06-05T18:44:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "failed",
+      "reason": "Fixture validation failed after local checks."
+    },
+    {
+      "eventId": "event:agent-task:211:canceled",
+      "occurredAt": "2026-06-05T18:45:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:211",
+      "kind": "canceled",
+      "reason": "Operator canceled the fixture slice."
+    }
+  ]
+}
