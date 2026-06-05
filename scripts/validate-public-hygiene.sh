@@ -156,10 +156,6 @@ scan_pathspecs=(
   ":(glob)**/*.toml"
 )
 
-allowlisted_pathspecs=(
-  ":(exclude)scripts/validate-public-hygiene.sh"
-)
-
 openclaw_instructions_pattern="OpenClaw Workspace"
 openclaw_instructions_pattern="${openclaw_instructions_pattern} Instructions"
 openclaw_meta_pattern="openclaw"
@@ -183,7 +179,7 @@ blocked_checks=(
 for check in "${blocked_checks[@]}"; do
   label="${check%%|*}"
   pattern="${check#*|}"
-  if git grep -nIE "$pattern" -- "${scan_pathspecs[@]}" "${allowlisted_pathspecs[@]}"; then
+  if git grep -nIE "$pattern" -- "${scan_pathspecs[@]}"; then
     echo "Blocked public-safety pattern found: $label" >&2
     exit 1
   fi
