@@ -81,6 +81,9 @@ jobs:
       - name: Run mobile read-only smoke
         run: bash scripts/mobile-read-only-smoke.sh
 
+      - name: Run Compose run task smoke
+        run: bash scripts/compose-run-smoke.sh
+
   macos-compose:
     name: macOS Compose Build
     runs-on: macos-latest
