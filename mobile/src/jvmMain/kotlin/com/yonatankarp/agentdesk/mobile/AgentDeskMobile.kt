@@ -10,6 +10,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         state = rememberWindowState(width = 412.dp, height = 915.dp),
         title = "Agent Desk Mobile",
+        resizable = false,
     ) {
         AgentDeskMobileApp()
     }
