@@ -13,7 +13,7 @@ import kotlin.test.Test
 class DesktopComposeSmokeTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun sampleStateRendersVisibleShellText() = runComposeUiTest {
+    fun `sample state renders visible shell text`() = runComposeUiTest {
         setContent {
             AgentDeskApp(DesktopScreenState.Ready(SampleOperatorState.current(), modeLabel = "Sample state"))
         }
@@ -30,7 +30,7 @@ class DesktopComposeSmokeTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun emptyStateRendersVisibleEmptyRows() = runComposeUiTest {
+    fun `empty state renders visible empty rows`() = runComposeUiTest {
         setContent {
             AgentDeskApp(
                 DesktopScreenState.Ready(
@@ -48,7 +48,7 @@ class DesktopComposeSmokeTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun errorStateRendersPublicSafeMessage() = runComposeUiTest {
+    fun `error state renders public-safe message`() = runComposeUiTest {
         setContent {
             AgentDeskApp(DesktopScreenState.Error("Configured operator state could not be loaded."))
         }
