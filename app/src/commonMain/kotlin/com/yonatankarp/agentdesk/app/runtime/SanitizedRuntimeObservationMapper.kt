@@ -10,6 +10,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
@@ -72,22 +73,8 @@ class SanitizedRuntimeObservationMapper {
     }
 
     private fun String.requirePublicSafeRuntimeField(label: String) {
-        val normalized = lowercase()
-        require(blockedFragments.none { fragment -> normalized.contains(fragment) }) {
-            "Runtime observation $label must be public-safe before crossing the adapter boundary"
-        }
-    }
-
-    companion object {
-        private val blockedFragments =
-            listOf(
-                "/home/",
-                "\\users\\",
-                "op://",
-                "token",
-                "secret",
-                "discord",
-                "openclaw",
-            )
+        val fieldName = "Runtime observation $label"
+        val normalized = PublicSafeTextPolicy.normalize(this, fieldName = fieldName, maxLength = 512)
+        PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = fieldName)
     }
 }

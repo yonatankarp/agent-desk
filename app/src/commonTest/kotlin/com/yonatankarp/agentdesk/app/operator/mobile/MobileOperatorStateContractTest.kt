@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.mobile
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
@@ -12,9 +13,12 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class MobileOperatorStateContractTest :
     BehaviorSpec({
@@ -118,6 +122,34 @@ class MobileOperatorStateContractTest :
                                 eventId = "event:agent-task:42:blocked-after-success",
                                 reason = "Cannot transition work item agent-task:42 from Succeeded to Blocked",
                             )
+                    }
+                }
+            }
+        }
+
+        given("stored events with unsafe runtime identifiers") {
+            `when`("the mobile contract input is decoded") {
+                then("message-like ids are rejected before mobile projection without echoing them") {
+                    val rawIdentifier = "123456789" + "012345678"
+                    val unsafeEventId = "event:message:$rawIdentifier:started"
+                    val unsafeEvent =
+                        """{"id":"$unsafeEventId","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter",""" +
+                            "\"workItemId\":\"agent-task:42\",\"type\":\"work.started\"," +
+                            "\"payload\":{\"title\":\"Run public hygiene check\"}}"
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        MobileOperatorStateContract.fromEvents(
+                            listOf(
+                                WorkEventJson.decode(unsafeEvent),
+                            ),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Work event id")
+                        shouldContain("private runtime")
+                        shouldNotContain(unsafeEventId)
+                        shouldNotContain(rawIdentifier)
                     }
                 }
             }

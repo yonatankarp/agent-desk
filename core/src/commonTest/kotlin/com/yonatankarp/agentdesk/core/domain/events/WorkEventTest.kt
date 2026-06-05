@@ -1,10 +1,12 @@
 package com.yonatankarp.agentdesk.core.domain.events
 
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class WorkEventTest :
     BehaviorSpec({
@@ -57,6 +59,53 @@ class WorkEventTest :
                     }
                     shouldThrow<IllegalArgumentException> {
                         EventSource.parse("mock adapter")
+                    }
+                }
+            }
+
+            `when`("event ids include raw runtime identifiers") {
+                then("they reject them without echoing unsafe values") {
+                    val rawIdentifier = "123456789" + "012345678"
+                    val messageEventId = "event:message:$rawIdentifier:started"
+                    val channelSource = "channel:$rawIdentifier"
+                    val messageSource = "message:$rawIdentifier"
+                    val sessionSource = "session:local-agent"
+                    val threadSource = "thread:public-review"
+
+                    val rawError = shouldThrow<IllegalArgumentException> {
+                        WorkEventId.parse("event:agent-task:$rawIdentifier:started")
+                    }
+                    val messageError = shouldThrow<IllegalArgumentException> {
+                        WorkEventId.parse(messageEventId)
+                    }
+                    val channelSourceError = shouldThrow<IllegalArgumentException> {
+                        EventSource.parse(channelSource)
+                    }
+                    val messageSourceError = shouldThrow<IllegalArgumentException> {
+                        EventSource.parse(messageSource)
+                    }
+                    val sessionSourceError = shouldThrow<IllegalArgumentException> {
+                        EventSource.parse(sessionSource)
+                    }
+                    val threadSourceError = shouldThrow<IllegalArgumentException> {
+                        EventSource.parse(threadSource)
+                    }
+
+                    assertSoftly {
+                        rawError.message shouldContain "raw channel or message identifiers"
+                        rawError.message.orEmpty() shouldNotContain rawIdentifier
+                        messageError.message shouldContain "private runtime"
+                        messageError.message.orEmpty() shouldNotContain messageEventId
+                        channelSourceError.message shouldContain "private runtime"
+                        channelSourceError.message.orEmpty() shouldNotContain channelSource
+                        channelSourceError.message.orEmpty() shouldNotContain rawIdentifier
+                        messageSourceError.message shouldContain "private runtime"
+                        messageSourceError.message.orEmpty() shouldNotContain messageSource
+                        messageSourceError.message.orEmpty() shouldNotContain rawIdentifier
+                        sessionSourceError.message shouldContain "private runtime"
+                        sessionSourceError.message.orEmpty() shouldNotContain sessionSource
+                        threadSourceError.message shouldContain "private runtime"
+                        threadSourceError.message.orEmpty() shouldNotContain threadSource
                     }
                 }
             }

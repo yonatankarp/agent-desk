@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.core.domain.events
 
+import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
@@ -26,6 +27,7 @@ value class WorkEventId private constructor(val value: String) {
             require(validPattern.matches(normalized)) {
                 "Work event id must be 1-96 chars using lowercase letters, numbers, '.', '_', ':', or '-'"
             }
+            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Work event id")
             return WorkEventId(normalized)
         }
     }
@@ -61,6 +63,7 @@ value class EventSource private constructor(val value: String) {
             require(validPattern.matches(normalized)) {
                 "Event source must be a lowercase adapter-neutral identifier"
             }
+            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Event source")
             return EventSource(normalized)
         }
     }

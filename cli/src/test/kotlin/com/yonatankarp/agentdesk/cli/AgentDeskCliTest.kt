@@ -95,6 +95,25 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `stdin input rejects channel-like work item ids without echoing them`() {
+        val rawIdentifier = "123456789" + "012345678"
+        val unsafeWorkItemId = "channel:$rawIdentifier"
+        val unsafeEvent =
+            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter",""" +
+                "\"workItemId\":\"$unsafeWorkItemId\",\"type\":\"work.started\"," +
+                "\"payload\":{\"title\":\"Run public hygiene check\"}}"
+
+        val result = runCli("--stdin", input = unsafeEvent)
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.error, "Invalid event record at line 1.")
+        assertFalse(result.error.contains(unsafeWorkItemId))
+        assertFalse(result.error.contains(rawIdentifier))
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
     fun `duplicate event ids fail with a clear line-numbered error`() {
         val result = runCli("--stdin", input = "$STARTED_EVENT\n$STARTED_EVENT\n")
 
@@ -255,12 +274,16 @@ class AgentDeskCliTest {
     }
 
     @Test
-    fun `stored event config duplicate private-looking event ids fail safely`() {
+    fun `stored event config unsafe event ids fail safely`() {
         val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
         val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
-        val privateLookingEvent =
-            """{"id":"event:private-token:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}"""
-        Files.writeString(eventFile, "$privateLookingEvent\n$privateLookingEvent\n")
+        val unsafeEventId = "event:private-token:started"
+        val unsafeEvent =
+            """{"id":"$unsafeEventId","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter",""" +
+                "\"workItemId\":\"agent-task:42\",\"type\":\"work.started\"," +
+                "\"payload\":{\"title\":\"Run public hygiene check\"," +
+                "\"summary\":\"Agent accepted the task and started local checks.\"}}"
+        Files.writeString(eventFile, "$unsafeEvent\n")
         Files.writeString(
             configFile,
             """
@@ -273,7 +296,8 @@ class AgentDeskCliTest {
         val result = runCli("--config", configFile.toString())
 
         assertEquals(1, result.exitCode)
-        assertContains(result.error, "Configured event store contains a duplicate work event id at line 2.")
+        assertContains(result.error, "Corrupt work event record at line 1 in configured event store")
+        assertFalse(result.error.contains(unsafeEventId))
         assertPublicSafe(result.error)
         assertEquals("", result.output)
     }
@@ -506,6 +530,19 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `inspect rejects session-like work item ids without echoing the argument`() {
+        val unsafeWorkItemId = "session:local-agent"
+
+        val result = runCli("inspect", unsafeWorkItemId, "--stdin", input = "$STARTED_EVENT\n")
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Invalid work item id.")
+        assertFalse(result.error.contains(unsafeWorkItemId))
+        assertPublicSafe(result.error)
+        assertEquals("", result.output)
+    }
+
+    @Test
     fun `inspect empty stdin fails with existing empty input error`() {
         val result = runCli("inspect", "agent-task:42", "--stdin", input = " \n")
 
@@ -539,6 +576,9 @@ class AgentDeskCliTest {
         assertFalse(text.contains("/home/"))
         assertFalse(text.contains("private-token"))
         assertFalse(text.contains("discord", ignoreCase = true))
+        assertFalse(text.contains("channel:", ignoreCase = true))
+        assertFalse(text.contains("message:", ignoreCase = true))
+        assertFalse(text.contains("session:", ignoreCase = true))
         assertFalse(text.contains("op://", ignoreCase = true))
     }
 

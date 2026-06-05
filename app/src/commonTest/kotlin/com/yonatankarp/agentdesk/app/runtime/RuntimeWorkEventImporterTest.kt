@@ -117,7 +117,7 @@ class RuntimeWorkEventImporterTest :
                             source = object : RuntimeWorkEventSource {
                                 override fun loadEvents(): List<WorkEvent> = listOf(
                                     workStartedEvent(
-                                        id = WorkEventId.parse("event:private-token:started"),
+                                        id = WorkEventId.parse("event:agent-task:99:started"),
                                     ),
                                 )
                             },
@@ -127,7 +127,7 @@ class RuntimeWorkEventImporterTest :
 
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Configured event store contains a duplicate work event id at line 12.")
-                        shouldNotContain("private-token")
+                        shouldNotContain("event:agent-task:99:started")
                     }
                 }
             }
