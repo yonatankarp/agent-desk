@@ -78,6 +78,23 @@ class WorkEventJsonTest :
                     event.evidenceReferences shouldBe emptyList()
                 }
             }
+
+            `when`("an event includes an unsafe evidence URL") {
+                then("decoding rejects it without echoing the target") {
+                    val unsafeTarget = "https://github.com@127.0.0.1/report"
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"evidenceReferences":[{"kind":"check-run","label":"Unsafe target","target":"$unsafeTarget"}]}""",
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Evidence target")
+                        shouldNotContain(unsafeTarget)
+                    }
+                }
+            }
         }
 
         given("current lifecycle payload variants") {

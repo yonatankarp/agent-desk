@@ -159,6 +159,17 @@ class WorkEventTest :
                         EvidenceTarget.parse("https://localhost:8080/report")
                     }.message shouldContain "private hosts"
 
+                    unsafeEvidenceUrls().forEach { unsafeUrl ->
+                        val error = shouldThrow<IllegalArgumentException> {
+                            EvidenceTarget.parse(unsafeUrl)
+                        }
+
+                        assertSoftly(error.message.orEmpty()) {
+                            shouldContain("Evidence target")
+                            shouldNotContain(unsafeUrl)
+                        }
+                    }
+
                     shouldThrow<IllegalArgumentException> {
                         EvidenceTarget.parse("github_pat_1234567890")
                     }.message shouldContain "secrets"
@@ -166,3 +177,38 @@ class WorkEventTest :
             }
         }
     })
+
+private fun unsafeEvidenceUrls(): List<String> {
+    val rawIdentifier = "169" + ".254.169.254"
+
+    return listOf(
+        "http://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+        "https://github.com@127.0.0.1/report",
+        "https://trusted.example@$rawIdentifier/latest",
+        "https://user:pass@github.com/yonatankarp/agent-desk",
+        "https://127.0.0.1/report",
+        "https://127.1/report",
+        "https://10.0.0.1/report",
+        "https://10.1/report",
+        "https://172.16.0.1/report",
+        "https://172.16.1/report",
+        "https://192.168.1.20/report",
+        "https://$rawIdentifier/latest",
+        "https://0.0.0.0/report",
+        "https://224.0.0.1/report",
+        "https://[::1]/report",
+        "https://[::]/report",
+        "https://[::0001]/report",
+        "https://[::01]/report",
+        "https://[::0000]/report",
+        "https://[0:0:0:0:0:0:0:0001]/report",
+        "https://[::ffff:127.0.0.1]/report",
+        "https://[fe80::1]/report",
+        "https://[fc00::1]/report",
+        "https://[ff02::1]/report",
+        "https://localhost/report",
+        "https://localhost.localdomain/report",
+        "https://agent.local/report",
+        "https://foo.localhost/report",
+    )
+}
