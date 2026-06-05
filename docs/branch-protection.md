@@ -16,7 +16,6 @@ Protect `main` with:
   - `macOS Compose Build`
   - `Windows Compose Build`
   - `Coverage`
-  - `Coverage Comment` for same-repo pull requests
 - Keep required checks aligned with the current CI workflow as new product surfaces are added.
 - Require Code Owner review.
 - Restrict force pushes.
@@ -25,6 +24,8 @@ Protect `main` with:
 - Include administrators if that matches the owner workflow.
 
 This repository includes `.github/CODEOWNERS` with `@yonatankarp` as owner.
+
+Do not require `Coverage Comment`; it runs only for same-repo pull requests because forked pull requests cannot receive the write-token comment path. Treat the `Coverage` job as the required coverage gate and the comment as same-repo review evidence. GitHub required status contexts are not conditional by pull request origin, so requiring `Coverage Comment` can block pull requests where that context is skipped.
 
 Do not require `dependabot`; it is intentionally skipped unless the actor is `dependabot[bot]`. Treat CodeRabbit as review evidence, but do not make it a required branch-protection context unless the repository owner is comfortable with external review rate limits blocking merges.
 
