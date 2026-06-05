@@ -126,7 +126,7 @@ bash scripts/compose-run-smoke.sh
 
 Releases are created from the `Release` GitHub Actions workflow. Run it manually from `main` and choose the SemVer bump: `patch`, `minor`, or `major`.
 
-The workflow resolves the next `vX.Y.Z` tag from existing tags, runs public hygiene, `spotlessCheck`, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, creates the release tag, uploads the jar as an Actions artifact, and attaches the same jar to the GitHub Release.
+The workflow resolves the next `vX.Y.Z` tag from existing tags, runs public hygiene, `spotlessCheck`, CLI tests, mock runtime smoke, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, creates the release tag, uploads the jar as an Actions artifact, and attaches the same jar to the GitHub Release. Test and smoke gates run before tag creation, artifact upload, or GitHub Release creation.
 
 GitHub generates release notes from merged PRs. Maintainers should label PRs before running a release so notes land in the right sections; use labels such as `feature`, `enhancement`, `slice`, `bug`, `fix`, `decision`, `docs`, `dependencies`, `ci`, `tooling`, `chore`, or `refactor`. Use `no-release-notes` or `skip-release-notes` only for PRs that should be omitted from public notes.
 
