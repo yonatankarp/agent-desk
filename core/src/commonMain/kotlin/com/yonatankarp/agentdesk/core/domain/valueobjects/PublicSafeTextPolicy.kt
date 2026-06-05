@@ -82,34 +82,172 @@ object PublicSafeTextPolicy {
             return
         }
 
-        require(lower.startsWith("https://")) {
+        val parsedUrl = ParsedPublicUrl.parse(normalized, fieldName)
+
+        require(parsedUrl.scheme == "https") {
             "$fieldName URLs must use https"
         }
-        require(
-            listOf(
-                "https://localhost",
-                "https://127.",
-                "https://10.",
-                "https://172.16.",
-                "https://172.17.",
-                "https://172.18.",
-                "https://172.19.",
-                "https://172.20.",
-                "https://172.21.",
-                "https://172.22.",
-                "https://172.23.",
-                "https://172.24.",
-                "https://172.25.",
-                "https://172.26.",
-                "https://172.27.",
-                "https://172.28.",
-                "https://172.29.",
-                "https://172.30.",
-                "https://172.31.",
-                "https://192.168.",
-            ).none { prefix -> lower.startsWith(prefix) } && !lower.contains(".local"),
-        ) {
+        require(!parsedUrl.hasUserInfo) {
+            "$fieldName URLs must not include userinfo"
+        }
+        require(!parsedUrl.host.isPrivateOrLocalHost(parsedUrl.bracketedHost)) {
             "$fieldName URLs must not point to private hosts"
         }
+    }
+
+    private data class ParsedPublicUrl(
+        val scheme: String,
+        val host: String,
+        val bracketedHost: Boolean,
+        val hasUserInfo: Boolean,
+    ) {
+        companion object {
+            fun parse(
+                raw: String,
+                fieldName: String,
+            ): ParsedPublicUrl {
+                val schemeEnd = raw.indexOf("://")
+                require(schemeEnd > 0) {
+                    "$fieldName URLs must include a scheme"
+                }
+
+                val scheme = raw.substring(0, schemeEnd).lowercase()
+                val remainder = raw.substring(schemeEnd + 3)
+                val authorityEnd =
+                    listOfNotNull(
+                        remainder.indexOf('/').takeUnless { it < 0 },
+                        remainder.indexOf('?').takeUnless { it < 0 },
+                        remainder.indexOf('#').takeUnless { it < 0 },
+                    ).minOrNull() ?: remainder.length
+                val authority = remainder.substring(0, authorityEnd)
+                require(authority.isNotBlank()) {
+                    "$fieldName URLs must include a host"
+                }
+
+                val hasUserInfo = "@" in authority
+                val hostAuthority = if (hasUserInfo) authority.substringAfterLast("@") else authority
+                val host = hostAuthority.hostWithoutPort(fieldName)
+
+                return ParsedPublicUrl(
+                    scheme = scheme,
+                    host = host,
+                    bracketedHost = hostAuthority.startsWith("["),
+                    hasUserInfo = hasUserInfo,
+                )
+            }
+        }
+    }
+
+    private fun String.hostWithoutPort(fieldName: String): String {
+        val host =
+            if (startsWith("[")) {
+                val closingBracket = indexOf(']')
+                require(closingBracket > 1) {
+                    "$fieldName URLs must include a host"
+                }
+                val afterBracket = substring(closingBracket + 1)
+                require(afterBracket.isEmpty() || afterBracket.matches(""":[0-9]+""".toRegex())) {
+                    "$fieldName URLs must include a valid host"
+                }
+                substring(1, closingBracket)
+            } else {
+                require(count { it == ':' } <= 1) {
+                    "$fieldName URLs must include a valid host"
+                }
+                val colon = indexOf(':')
+                if (colon >= 0) {
+                    require(colon > 0 && substring(colon + 1).matches("""[0-9]+""".toRegex())) {
+                        "$fieldName URLs must include a valid host"
+                    }
+                    substring(0, colon)
+                } else {
+                    this
+                }
+            }.trim().trimEnd('.').lowercase()
+
+        require(host.isNotBlank()) {
+            "$fieldName URLs must include a host"
+        }
+        return host
+    }
+
+    private fun String.isPrivateOrLocalHost(bracketedHost: Boolean): Boolean = isLocalHostname() ||
+        isUnsafeIpv4Host() ||
+        isAmbiguousNumericHost() ||
+        isUnsafeIpv6Host(bracketedHost)
+
+    private fun String.isLocalHostname(): Boolean = this == "localhost" ||
+        endsWith(".localhost") ||
+        endsWith(".local") ||
+        endsWith(".localdomain")
+
+    private fun String.isUnsafeIpv4Host(): Boolean {
+        val octets =
+            split(".")
+                .takeIf { it.size in 2..4 && it.all { part -> part.isNotEmpty() && part.all(Char::isDigit) } }
+                ?.map { it.toIntOrNull() }
+                ?: return false
+        if (octets.any { it == null || it !in 0..255 }) {
+            return true
+        }
+        val first = octets[0] ?: return true
+        val second = octets[1] ?: return true
+
+        return first == 0 ||
+            first == 10 ||
+            first == 127 ||
+            (first == 169 && second == 254) ||
+            (first == 172 && second in 16..31) ||
+            (first == 192 && second == 168) ||
+            first in 224..255
+    }
+
+    private fun String.isAmbiguousNumericHost(): Boolean = all(Char::isDigit) ||
+        startsWith("0x") ||
+        split(".").any { part -> part.length > 1 && part.startsWith("0") && part.all(Char::isDigit) }
+
+    private fun String.isUnsafeIpv6Host(bracketedHost: Boolean): Boolean {
+        if (!bracketedHost && ":" in this) {
+            return true
+        }
+        if (":" !in this) {
+            return false
+        }
+
+        val firstGroup = substringBefore(":")
+        val mappedIpv4 = substringAfterLast(":").takeIf { "." in it }
+        return this == "::" ||
+            this == "::1" ||
+            isCompressedLoopbackOrUnspecifiedIpv6() ||
+            isExpandedLoopbackOrUnspecifiedIpv6() ||
+            mappedIpv4?.isUnsafeIpv4Host() == true ||
+            firstGroup in "fe80".."febf" ||
+            startsWith("fc") ||
+            startsWith("fd") ||
+            startsWith("ff")
+    }
+
+    private fun String.isCompressedLoopbackOrUnspecifiedIpv6(): Boolean {
+        if (!startsWith("::") || drop(2).contains(":")) {
+            return false
+        }
+        val tail = drop(2)
+        if (tail.isEmpty() || tail.length > 4 || !tail.all { it.isDigit() || it in 'a'..'f' }) {
+            return false
+        }
+        return tail.trimStart('0').ifEmpty { "0" } in setOf("0", "1")
+    }
+
+    private fun String.isExpandedLoopbackOrUnspecifiedIpv6(): Boolean {
+        val groups = split(":")
+        if (groups.size != 8 || groups.any { group -> group.isEmpty() || group.length > 4 }) {
+            return false
+        }
+
+        val normalizedGroups =
+            groups.map { group ->
+                group.trimStart('0').ifEmpty { "0" }
+            }
+        return normalizedGroups.take(7).all { it == "0" } && normalizedGroups.last() in setOf("0", "1")
     }
 }

@@ -139,12 +139,14 @@ private fun unsafeRendererTextExamples(): List<String> {
     val macPath = "/" + listOf("Users", "operator", "Library", "private.log").joinToString("/")
     val windowsPath = listOf("C:", "Users", "operator", "AppData", "private.log").joinToString("\\")
     val privateUrl = "https://" + listOf("localhost", "runtime").joinToString("/")
+    val userInfoUrl = "https://" + listOf("github.com@127.0.0.1", "report").joinToString("/")
 
     return listOf(
         unixPath,
         macPath,
         windowsPath,
         privateUrl,
+        userInfoUrl,
         "123456789012345678",
         listOf("raw", "transcript excerpt").joinToString(" "),
         listOf("bearer", "credential-marker").joinToString(" "),
