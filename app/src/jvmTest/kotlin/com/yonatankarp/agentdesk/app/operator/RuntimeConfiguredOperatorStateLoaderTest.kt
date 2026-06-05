@@ -8,7 +8,6 @@ import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workBlockedEvent
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
-import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -68,14 +67,17 @@ class RuntimeConfiguredOperatorStateLoaderTest :
                 }
             }
 
-            `when`("the configured event store contains duplicate private-looking ids") {
+            `when`("the configured event store contains an unsafe event id") {
                 then("it fails without echoing the raw event id") {
                     val storePath = tempStorePath()
-                    val event = workStartedEvent(id = WorkEventId.parse("event:private-token:started"))
+                    val unsafeEventId = "event:private-token:started"
+                    val unsafeEvent =
+                        """{"id":"$unsafeEventId","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter",""" +
+                            "\"workItemId\":\"agent-task:42\",\"type\":\"work.started\"," +
+                            "\"payload\":{\"title\":\"Run public hygiene check\"}}"
                     Files.writeString(
                         storePath,
-                        WorkEventJson.encode(event) + "\n" +
-                            WorkEventJson.encode(event) + "\n",
+                        "$unsafeEvent\n",
                     )
 
                     val error = shouldThrow<RuntimeConfiguredOperatorStateLoadException> {
@@ -83,8 +85,8 @@ class RuntimeConfiguredOperatorStateLoaderTest :
                     }
 
                     assertSoftly(error.message.orEmpty()) {
-                        shouldContain("Configured event store contains a duplicate work event id at line 2.")
-                        shouldNotContain("private-token")
+                        shouldContain("Corrupt work event record at line 1 in configured event store")
+                        shouldNotContain(unsafeEventId)
                         shouldNotContain(storePath.toString())
                     }
                 }

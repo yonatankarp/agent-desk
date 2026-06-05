@@ -153,7 +153,75 @@ class SanitizedRuntimeObservationMapperTest :
                         )
                     }
 
-                    error.message shouldContain "public-safe"
+                    error.message shouldContain "Runtime observation reason"
+                    error.message.orEmpty() shouldNotContain "/home/operator/private-token.txt"
+                }
+            }
+
+            `when`("runtime ids include raw channel or session identifiers") {
+                then("the mapper rejects them before projection without echoing the unsafe id") {
+                    val rawIdentifier = "123456789" + "012345678"
+                    val unsafeEventId = "event:message:$rawIdentifier:started"
+                    val unsafeWorkItemId = "session:local-agent"
+                    val unsafeThreadSource = "thread:local-review"
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        mapper.toWorkEvent(
+                            RuntimeWorkObservation(
+                                eventId = unsafeEventId,
+                                occurredAt = "2026-06-02T21:30:00Z",
+                                source = "mock-adapter",
+                                workItemId = "agent-task:99",
+                                kind = RuntimeWorkObservationKind.Started,
+                                title = "Run public hygiene check",
+                            ),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Runtime observation eventId")
+                        shouldContain("private runtime")
+                        shouldNotContain(unsafeEventId)
+                        shouldNotContain(rawIdentifier)
+                    }
+
+                    val workItemError = shouldThrow<IllegalArgumentException> {
+                        mapper.toWorkEvent(
+                            RuntimeWorkObservation(
+                                eventId = "event:agent-task:99:started",
+                                occurredAt = "2026-06-02T21:30:00Z",
+                                source = "mock-adapter",
+                                workItemId = unsafeWorkItemId,
+                                kind = RuntimeWorkObservationKind.Started,
+                                title = "Run public hygiene check",
+                            ),
+                        )
+                    }
+
+                    val sourceError = shouldThrow<IllegalArgumentException> {
+                        mapper.toWorkEvent(
+                            RuntimeWorkObservation(
+                                eventId = "event:agent-task:99:started",
+                                occurredAt = "2026-06-02T21:30:00Z",
+                                source = unsafeThreadSource,
+                                workItemId = "agent-task:99",
+                                kind = RuntimeWorkObservationKind.Started,
+                                title = "Run public hygiene check",
+                            ),
+                        )
+                    }
+
+                    assertSoftly(workItemError.message.orEmpty()) {
+                        shouldContain("Runtime observation workItemId")
+                        shouldContain("private runtime")
+                        shouldNotContain(unsafeWorkItemId)
+                    }
+
+                    assertSoftly(sourceError.message.orEmpty()) {
+                        shouldContain("Runtime observation source")
+                        shouldContain("private runtime")
+                        shouldNotContain(unsafeThreadSource)
+                    }
                 }
             }
 
@@ -229,7 +297,7 @@ class SanitizedRuntimeObservationMapperTest :
                     }
 
                     assertSoftly(error.message.orEmpty()) {
-                        shouldContain("Work summary")
+                        shouldContain("Runtime observation reason")
                         shouldNotContain(unsafeReason)
                     }
                 }

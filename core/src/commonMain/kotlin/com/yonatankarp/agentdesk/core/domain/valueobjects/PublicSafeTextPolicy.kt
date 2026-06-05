@@ -1,6 +1,6 @@
 package com.yonatankarp.agentdesk.core.domain.valueobjects
 
-internal object PublicSafeTextPolicy {
+object PublicSafeTextPolicy {
     private val whitespace = """\s+""".toRegex()
     private val windowsPath = """^[A-Za-z]:[\\/].*""".toRegex()
     private val rawChannelOrMessageId = """\b\d{17,20}\b""".toRegex()
@@ -26,9 +26,11 @@ internal object PublicSafeTextPolicy {
             "agent:main:",
             "channel:",
             "discord channel",
+            "message:",
             listOf("open", "claw runtime context").joinToString(""),
             listOf("raw", "transcript").joinToString(" "),
             "session:",
+            "thread:",
         )
 
     fun normalize(

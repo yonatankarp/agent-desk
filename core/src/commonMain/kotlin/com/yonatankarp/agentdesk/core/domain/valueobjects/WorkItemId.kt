@@ -10,6 +10,7 @@ value class WorkItemId private constructor(val value: String) {
             require(validPattern.matches(normalized)) {
                 "Work item id must be 1-64 chars using lowercase letters, numbers, '.', '_', ':', or '-'"
             }
+            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Work item id")
             return WorkItemId(normalized)
         }
     }
