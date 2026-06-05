@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.mobile
 
+import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
@@ -41,7 +42,7 @@ class MobileSmokeSnapshotTest {
                     id = "agent-task:91",
                     title = "Inspect stored projection",
                     summary = "Agent is checking accepted events.",
-                    status = MobileStatusPresentation(label = "Running", tone = "Active"),
+                    status = MobileStatusPresentation(label = "Running", tone = StatusTone.Active),
                     evidenceReferences = listOf(
                         MobileEvidenceReference(
                             kind = "check-run",
@@ -57,7 +58,7 @@ class MobileSmokeSnapshotTest {
                         id = "agent-task:91",
                         title = "Inspect stored projection",
                         summary = "Agent is checking accepted events.",
-                        status = MobileStatusPresentation(label = "Running", tone = "Active"),
+                        status = MobileStatusPresentation(label = "Running", tone = StatusTone.Active),
                         evidenceReferences = listOf(
                             MobileEvidenceReference(
                                 kind = "check-run",
@@ -120,6 +121,15 @@ class MobileSmokeSnapshotTest {
         assertEquals(listOf("No current work"), snapshot.sectionRows("Current work"))
         assertEquals(listOf("No items need attention"), snapshot.sectionRows("Attention queue"))
         assertEquals(listOf("No recent accepted events"), snapshot.sectionRows("Recent events"))
+    }
+
+    @Test
+    fun mobileStatusToneColorsAreExhaustiveForOperatorTones() {
+        assertEquals(MobilePalette.Accent, colorFor(StatusTone.Active))
+        assertEquals(MobilePalette.Attention, colorFor(StatusTone.Attention))
+        assertEquals(MobilePalette.Blocked, colorFor(StatusTone.Blocked))
+        assertEquals(MobilePalette.Success, colorFor(StatusTone.Success))
+        assertEquals(MobilePalette.Failure, colorFor(StatusTone.Failure))
     }
 
     private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows

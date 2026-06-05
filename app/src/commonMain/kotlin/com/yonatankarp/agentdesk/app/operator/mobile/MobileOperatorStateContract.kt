@@ -109,7 +109,7 @@ object MobileOperatorStateContract {
             summary = summary?.toString(),
             status = MobileStatusPresentation(
                 label = presentation.label,
-                tone = presentation.tone.name,
+                tone = presentation.tone,
             ),
             evidenceReferences = evidenceReferences,
         )

@@ -26,12 +26,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
-import com.yonatankarp.agentdesk.app.operator.mobile.MobileStatusPresentation
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 
 @Composable
@@ -170,7 +170,7 @@ private fun MobileWorkRow(
             )
             Text(
                 text = item.status.label,
-                color = colorFor(item.status),
+                color = colorFor(item.status.tone),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -300,16 +300,16 @@ private fun MobileEmptyLine(text: String) {
     )
 }
 
-private fun colorFor(status: MobileStatusPresentation): Color = when (status.tone) {
-    "Active" -> MobilePalette.Accent
-    "Attention" -> MobilePalette.Attention
-    "Blocked" -> MobilePalette.Blocked
-    "Success" -> MobilePalette.Success
-    "Failure" -> MobilePalette.Failure
-    else -> MobilePalette.TextMuted
+internal fun colorFor(tone: StatusTone): Color = when (tone) {
+    StatusTone.Neutral -> MobilePalette.TextMuted
+    StatusTone.Active -> MobilePalette.Accent
+    StatusTone.Attention -> MobilePalette.Attention
+    StatusTone.Blocked -> MobilePalette.Blocked
+    StatusTone.Success -> MobilePalette.Success
+    StatusTone.Failure -> MobilePalette.Failure
 }
 
-private object MobilePalette {
+internal object MobilePalette {
     val Background = Color(0xFFF7F8FA)
     val Surface = Color(0xFFFFFFFF)
     val Row = Color(0xFFF4F6F8)

@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.mobile
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
@@ -56,7 +57,7 @@ class MobileOperatorStateContractTest :
 
                     assertSoftly {
                         state.currentWork.single().status shouldBe
-                            MobileStatusPresentation(label = "Needs decision", tone = "Attention")
+                            MobileStatusPresentation(label = "Needs decision", tone = StatusTone.Attention)
                         state.currentWork.single().evidenceReferences.single() shouldBe
                             MobileEvidenceReference(
                                 kind = "check-run",
