@@ -8,6 +8,12 @@ Run it locally with:
 ./gradlew :desktop:build
 ```
 
+Run the non-interactive desktop run-task smoke:
+
+```bash
+./gradlew :desktop:run --args='--smoke-exit'
+```
+
 Run the desktop shell in public-safe sample mode with:
 
 ```bash
@@ -21,6 +27,8 @@ Run it against a sanitized local event store by passing the shared runtime confi
 ```
 
 The config file uses the same public-safe values documented in [Runtime configuration](runtime-configuration.md). Sample mode is labelled `Sample state`; stored event mode is labelled `Loaded state`; invalid config or unreadable stores render a public-safe error state instead of echoing raw local details.
+
+CI runs `bash scripts/compose-run-smoke.sh` to exercise both Compose run tasks without opening long-lived windows.
 
 The smoke tests cover:
 

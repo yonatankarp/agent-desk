@@ -52,6 +52,12 @@ Run the public-safe mobile read-only smoke:
 bash scripts/mobile-read-only-smoke.sh
 ```
 
+Run the non-interactive Compose run-task smoke:
+
+```bash
+bash scripts/compose-run-smoke.sh
+```
+
 Check deterministic formatting:
 
 ```bash
@@ -111,6 +117,7 @@ Run both checks before opening a PR:
 
 ```bash
 bash scripts/validate-public-hygiene.sh
+bash scripts/compose-run-smoke.sh
 ./gradlew spotlessCheck
 ./gradlew :core:build :app:build :cli:build :desktop:build :mobile:build
 ```

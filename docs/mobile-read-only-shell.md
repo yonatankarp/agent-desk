@@ -18,7 +18,14 @@ Local verification:
 
 ```bash
 bash scripts/mobile-read-only-smoke.sh
+bash scripts/compose-run-smoke.sh
 ./gradlew :mobile:build
+```
+
+Run the non-interactive mobile run-task smoke directly:
+
+```bash
+./gradlew :mobile:run --args='--smoke-exit'
 ```
 
 Run the sample-only shell in a phone-sized desktop window:
