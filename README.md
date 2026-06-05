@@ -31,6 +31,8 @@ The GitHub Wiki is the operator-facing handbook:
 
 ## Local Checks
 
+Install a local Java/JDK first. The Gradle wrapper needs a launcher JVM available through `JAVA_HOME` or `java` on `PATH` before it can start and use the repository's configured JVM toolchain for builds and run tasks.
+
 Run the public-safe repository hygiene check:
 
 ```bash
