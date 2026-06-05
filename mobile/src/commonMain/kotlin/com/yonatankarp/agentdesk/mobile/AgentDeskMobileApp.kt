@@ -57,29 +57,29 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 MobileHeader(state)
-                MobileSection(title = "Current work") {
+                MobileSection(title = MobileDisplayText.CURRENT_WORK_TITLE) {
                     if (state.currentWork.isEmpty()) {
-                        MobileEmptyLine("No current work")
+                        MobileEmptyLine(MobileDisplayText.NO_CURRENT_WORK)
                     } else {
                         state.currentWork.forEach { item -> MobileWorkRow(item) }
                     }
                 }
-                MobileSection(title = "Attention queue") {
+                MobileSection(title = MobileDisplayText.ATTENTION_QUEUE_TITLE) {
                     if (state.attentionQueue.isEmpty()) {
-                        MobileEmptyLine("No items need attention")
+                        MobileEmptyLine(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
                     } else {
                         state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
                     }
                 }
-                MobileSection(title = "Recent events") {
+                MobileSection(title = MobileDisplayText.RECENT_EVENTS_TITLE) {
                     if (state.recentEvents.isEmpty()) {
-                        MobileEmptyRow("No recent accepted events")
+                        MobileEmptyRow(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
                     } else {
                         state.recentEvents.forEach { event -> MobileEventRow(event) }
                     }
                 }
                 if (state.projectionWarnings.isNotEmpty()) {
-                    MobileSection(title = "Projection warnings") {
+                    MobileSection(title = MobileDisplayText.PROJECTION_WARNINGS_TITLE) {
                         state.projectionWarnings.forEach { warning -> MobileWarningRow(warning) }
                     }
                 }
@@ -92,13 +92,16 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
 private fun MobileHeader(state: MobileOperatorState) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = "Agent Desk",
+            text = MobileDisplayText.APP_TITLE,
             color = MobilePalette.TextPrimary,
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
-            text = "${state.currentWork.size} current / ${state.attentionQueue.size} attention",
+            text = MobileDisplayText.summary(
+                currentWorkCount = state.currentWork.size,
+                attentionCount = state.attentionQueue.size,
+            ),
             color = MobilePalette.TextMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
@@ -139,9 +142,7 @@ private fun MobileSection(
 private fun MobileAttentionRow(item: MobileAttentionItem) {
     MobileWorkRow(
         item = item.workItem,
-        footer = item.stale?.let { stale ->
-            "Stale ${stale.staleForMinutes}m since ${stale.lastEventAt}"
-        },
+        footer = item.stale?.let(MobileDisplayText::staleAttention),
     )
 }
 
@@ -191,7 +192,7 @@ private fun MobileWorkRow(
         }
         if (item.evidenceReferences.isNotEmpty()) {
             Text(
-                text = item.evidenceReferences.joinToString { evidence -> "${evidence.kind}: ${evidence.label}" },
+                text = MobileDisplayText.evidenceReferences(item.evidenceReferences),
                 color = MobilePalette.TextMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
@@ -250,7 +251,7 @@ private fun MobileEventRow(event: MobileEventLine) {
         )
         if (event.evidenceReferences.isNotEmpty()) {
             Text(
-                text = event.evidenceReferences.joinToString { evidence -> "${evidence.kind}: ${evidence.label}" },
+                text = MobileDisplayText.evidenceReferences(event.evidenceReferences),
                 color = MobilePalette.TextMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
