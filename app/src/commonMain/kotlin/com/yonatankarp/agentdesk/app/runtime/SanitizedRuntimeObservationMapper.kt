@@ -2,6 +2,10 @@ package com.yonatankarp.agentdesk.app.runtime
 
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
@@ -25,6 +29,7 @@ class SanitizedRuntimeObservationMapper {
             source = EventSource.parse(observation.source),
             workItemId = WorkItemId.parse(observation.workItemId),
             payload = observation.toPayload(),
+            evidenceReferences = observation.evidenceReferences.map { it.toDomain() },
         )
     }
 
@@ -70,7 +75,18 @@ class SanitizedRuntimeObservationMapper {
         ).forEach { (label, value) ->
             value?.requirePublicSafeRuntimeField(label)
         }
+        evidenceReferences.forEachIndexed { index, reference ->
+            reference.kind.requirePublicSafeRuntimeField("evidenceReferences[$index].kind")
+            reference.label.requirePublicSafeRuntimeField("evidenceReferences[$index].label")
+            reference.target.requirePublicSafeRuntimeField("evidenceReferences[$index].target")
+        }
     }
+
+    private fun RuntimeEvidenceReference.toDomain(): EvidenceReference = EvidenceReference(
+        kind = EvidenceReferenceKind.fromWireName(kind),
+        label = EvidenceLabel.parse(label),
+        target = EvidenceTarget.parse(target),
+    )
 
     private fun String.requirePublicSafeRuntimeField(label: String) {
         val fieldName = "Runtime observation $label"
