@@ -169,7 +169,7 @@ class OpenClawRuntimeObservationFileSourceTest :
                     }
 
                     assertSoftly(error.message.orEmpty()) {
-                        shouldContain("Sanitized OpenClaw observation export is invalid.")
+                        shouldContain("Sanitized observation export is invalid.")
                         shouldNotContain("rawTranscript")
                         shouldNotContain("private transcript")
                         shouldNotContain(exportPath.toString())

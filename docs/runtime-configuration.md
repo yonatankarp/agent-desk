@@ -101,6 +101,26 @@ bash scripts/mock-runtime-smoke.sh
 
 The smoke creates a temporary sanitized event store, imports the mock runtime source, renders configured operator state, inspects `agent-task:45`, records a mock `resume` action, verifies the action evidence, and removes its temporary files before exiting.
 
+## Sanitized Observation Import
+
+The first OpenClaw runtime adapter path imports an operator-provided sanitized observation export:
+
+```bash
+./gradlew :cli:run --args='import-openclaw-observations --observations sanitized-observations.json --event-store agent-desk-events.ndjson'
+```
+
+The command reads only the sanitized export file, maps observations through the shared runtime boundary, and appends canonical events into the local event store. It does not read private runtime databases, raw transcripts, local process state, private screenshots, or action-control state.
+
+The initial checked-in fixture lives at `app/src/jvmTest/resources/openclaw/sanitized-observations.json`. It is synthetic and public-safe; do not replace it with copied private runtime logs.
+
+Run the repeatable public-safe smoke workflow with:
+
+```bash
+bash scripts/sanitized-runtime-import-smoke.sh
+```
+
+The smoke creates a temporary sanitized event store, imports the checked-in sanitized fixture, verifies duplicate skipping, renders configured operator state, inspects `agent-task:211`, verifies sanitized evidence output, and removes its temporary files before exiting.
+
 ## Mock Operator Action
 
 The first operator action loop is also mock-only and local-store backed:

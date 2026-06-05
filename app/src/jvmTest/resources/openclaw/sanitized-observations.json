@@ -18,41 +18,77 @@
       ]
     },
     {
-      "eventId": "event:agent-task:211:needs-decision",
-      "occurredAt": "2026-06-05T18:41:00Z",
-      "source": "openclaw-local",
-      "workItemId": "agent-task:211",
-      "kind": "needs-decision",
-      "reason": "Operator must choose whether to keep the fixture in app test resources."
-    },
-    {
       "eventId": "event:agent-task:211:blocked",
-      "occurredAt": "2026-06-05T18:42:00Z",
+      "occurredAt": "2026-06-05T18:41:00Z",
       "source": "openclaw-local",
       "workItemId": "agent-task:211",
       "kind": "blocked",
       "reason": "Fixture import is waiting for CI evidence."
     },
     {
-      "eventId": "event:agent-task:211:succeeded",
+      "eventId": "event:agent-task:212:started",
+      "occurredAt": "2026-06-05T18:42:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:212",
+      "kind": "started",
+      "title": "Choose fixture review path",
+      "summary": "Agent collected fixture review options."
+    },
+    {
+      "eventId": "event:agent-task:212:needs-decision",
       "occurredAt": "2026-06-05T18:43:00Z",
       "source": "openclaw-local",
-      "workItemId": "agent-task:211",
+      "workItemId": "agent-task:212",
+      "kind": "needs-decision",
+      "reason": "Operator must choose whether to keep the fixture in app test resources."
+    },
+    {
+      "eventId": "event:agent-task:213:started",
+      "occurredAt": "2026-06-05T18:44:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:213",
+      "kind": "started",
+      "title": "Verify fixture success path",
+      "summary": "Agent started checking the successful fixture path."
+    },
+    {
+      "eventId": "event:agent-task:213:succeeded",
+      "occurredAt": "2026-06-05T18:45:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:213",
       "kind": "succeeded"
     },
     {
-      "eventId": "event:agent-task:211:failed",
-      "occurredAt": "2026-06-05T18:44:00Z",
+      "eventId": "event:agent-task:214:started",
+      "occurredAt": "2026-06-05T18:46:00Z",
       "source": "openclaw-local",
-      "workItemId": "agent-task:211",
+      "workItemId": "agent-task:214",
+      "kind": "started",
+      "title": "Verify fixture failure path",
+      "summary": "Agent started checking the failed fixture path."
+    },
+    {
+      "eventId": "event:agent-task:214:failed",
+      "occurredAt": "2026-06-05T18:47:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:214",
       "kind": "failed",
       "reason": "Fixture validation failed after local checks."
     },
     {
-      "eventId": "event:agent-task:211:canceled",
-      "occurredAt": "2026-06-05T18:45:00Z",
+      "eventId": "event:agent-task:215:started",
+      "occurredAt": "2026-06-05T18:48:00Z",
       "source": "openclaw-local",
-      "workItemId": "agent-task:211",
+      "workItemId": "agent-task:215",
+      "kind": "started",
+      "title": "Verify fixture cancel path",
+      "summary": "Agent started checking the canceled fixture path."
+    },
+    {
+      "eventId": "event:agent-task:215:canceled",
+      "occurredAt": "2026-06-05T18:49:00Z",
+      "source": "openclaw-local",
+      "workItemId": "agent-task:215",
       "kind": "canceled",
       "reason": "Operator canceled the fixture slice."
     }
