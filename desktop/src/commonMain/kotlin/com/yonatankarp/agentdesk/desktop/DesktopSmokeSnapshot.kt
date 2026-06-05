@@ -77,7 +77,7 @@ object DesktopSmokeSnapshotBuilder {
 
         return map { item ->
             buildString {
-                append("[${item.status}] ${item.id} ${item.title}")
+                append("[${OperatorStatePresenter.presentationFor(item.status).label}] ${item.id} ${item.title}")
                 item.summary?.let { summary ->
                     append(" - $summary")
                 }

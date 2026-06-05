@@ -25,7 +25,7 @@ class DesktopSmokeSnapshotTest {
         assertContains(text, "Attention queue")
         assertContains(text, "[Running] agent-task:42 Run public hygiene check")
         assertContains(text, "work.started agent-task:42 from sample-agent")
-        assertContains(text, "[NeedsDecision] agent-task:43 Choose adapter boundary")
+        assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
         assertContains(text, "[Blocked] agent-task:44 Review build failure")
     }
 
@@ -66,7 +66,7 @@ class DesktopSmokeSnapshotTest {
 
         assertEquals("1 active / 1 attention", snapshot.summary)
         assertEquals(
-            listOf("[NeedsDecision] agent-task:91 Choose retry path - Operator must choose whether to retry."),
+            listOf("[Needs decision] agent-task:91 Choose retry path - Operator must choose whether to retry."),
             snapshot.sectionRows("Attention queue"),
         )
     }

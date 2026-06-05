@@ -43,7 +43,7 @@ class OperatorConsoleRenderer {
         }
 
         workItems.forEach { item ->
-            appendLine("- [${item.status}] ${item.id} ${item.title}")
+            appendLine("- [${OperatorStatePresenter.presentationFor(item.status).label}] ${item.id} ${item.title}")
             item.summary?.let { summary ->
                 appendLine("  $summary")
             }
@@ -60,13 +60,13 @@ class OperatorConsoleRenderer {
         }
 
         attentionItems.forEach { item ->
-            appendLine("- ${item.id} ${item.title} (${item.status})")
+            appendLine("- ${item.id} ${item.title} (${OperatorStatePresenter.presentationFor(item.status).label})")
         }
         staleItems.forEach { stale ->
             val item = state.workItems.firstOrNull { it.id == stale.workItemId }
             appendLine(
                 "- ${stale.workItemId} ${item?.title ?: "Unknown work"} " +
-                    "(Stale ${stale.status}, last event ${stale.staleForMinutes}m before latest event)",
+                    "(Stale ${OperatorStatePresenter.presentationFor(stale.status).label}, last event ${stale.staleForMinutes}m before latest event)",
             )
         }
     }

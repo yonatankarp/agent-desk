@@ -75,9 +75,9 @@ class OperatorConsoleRendererTest {
         )
 
         assertContains(output, "Current work")
-        assertContains(output, "- [NeedsDecision] agent-task:42 Run public hygiene check")
+        assertContains(output, "- [Needs decision] agent-task:42 Run public hygiene check")
         assertContains(output, "Attention queue")
-        assertContains(output, "- agent-task:42 Run public hygiene check (NeedsDecision)")
+        assertContains(output, "- agent-task:42 Run public hygiene check (Needs decision)")
         assertContains(output, "- agent-task:45 Watch long-running import (Stale Running, last event 90m before latest event)")
         assertContains(
             output,
