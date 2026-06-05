@@ -26,7 +26,7 @@ class LocalFileWorkEventRepository(
         try {
             storePath.parent?.let(Files::createDirectories)
         } catch (error: IOException) {
-            throw WorkEventStoreException("Unable to append work event to configured event store", error)
+            throw WorkEventStoreException(WorkEventStoreFailure.AppendFailed, error)
         }
 
         pathLockFor(storePath).withLock {
@@ -40,7 +40,9 @@ class LocalFileWorkEventRepository(
                     channel.lock().use {
                         val existingIds = readSnapshot().eventIds
                         if (event.id in existingIds) {
-                            throw WorkEventStoreException("Duplicate work event id ${event.id} in configured event store")
+                            throw WorkEventStoreException(
+                                WorkEventStoreFailure.DuplicateEventId(eventId = event.id.toString()),
+                            )
                         }
 
                         channel.position(channel.size())
@@ -54,9 +56,9 @@ class LocalFileWorkEventRepository(
                     }
                 }
             } catch (error: IOException) {
-                throw WorkEventStoreException("Unable to append work event to configured event store", error)
+                throw WorkEventStoreException(WorkEventStoreFailure.AppendFailed, error)
             } catch (error: OverlappingFileLockException) {
-                throw WorkEventStoreException("Unable to append work event to configured event store", error)
+                throw WorkEventStoreException(WorkEventStoreFailure.AppendFailed, error)
             }
         }
     }
@@ -78,7 +80,10 @@ class LocalFileWorkEventRepository(
             val event = decode(trimmed, lineNumber = index + 1)
             if (!seenIds.add(event.id)) {
                 throw WorkEventStoreException(
-                    "Duplicate work event id ${event.id} at line ${index + 1} in configured event store",
+                    WorkEventStoreFailure.DuplicateEventId(
+                        eventId = event.id.toString(),
+                        lineNumber = index + 1,
+                    ),
                 )
             }
             event
@@ -90,7 +95,7 @@ class LocalFileWorkEventRepository(
     private fun readLines(): List<String> = try {
         Files.readAllLines(storePath)
     } catch (error: IOException) {
-        throw WorkEventStoreException("Unable to read configured event store", error)
+        throw WorkEventStoreException(WorkEventStoreFailure.Unreadable, error)
     }
 
     private fun decode(
@@ -99,9 +104,9 @@ class LocalFileWorkEventRepository(
     ): WorkEvent = try {
         WorkEventJson.decode(line)
     } catch (error: IllegalArgumentException) {
-        throw WorkEventStoreException("Corrupt work event record at line $lineNumber in configured event store", error)
+        throw WorkEventStoreException(WorkEventStoreFailure.CorruptRecord(lineNumber), error)
     } catch (error: RuntimeException) {
-        throw WorkEventStoreException("Corrupt work event record at line $lineNumber in configured event store", error)
+        throw WorkEventStoreException(WorkEventStoreFailure.CorruptRecord(lineNumber), error)
     }
 
     private data class EventStoreSnapshot(

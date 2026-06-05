@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.app.runtime
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
+import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreFailure
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import io.kotest.assertions.assertSoftly
@@ -143,14 +144,19 @@ private class InMemoryWorkEventRepository(
 
     override fun append(event: WorkEvent) {
         if (appendFailure) {
-            throw WorkEventStoreException("Duplicate work event id ${event.id} at line 12 in configured event store")
+            throw WorkEventStoreException(
+                WorkEventStoreFailure.DuplicateEventId(
+                    eventId = event.id.toString(),
+                    lineNumber = 12,
+                ),
+            )
         }
         events.add(event)
     }
 
     override fun readAll(): List<WorkEvent> {
         if (readFailure) {
-            throw WorkEventStoreException("Corrupt work event record at line 1 in configured event store")
+            throw WorkEventStoreException(WorkEventStoreFailure.CorruptRecord(lineNumber = 1))
         }
         return events.toList()
     }

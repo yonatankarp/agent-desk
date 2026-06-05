@@ -1,27 +1,19 @@
 package com.yonatankarp.agentdesk.app.persistence
 
 internal object PublicSafeWorkEventStoreMessage {
-    private val duplicateWithLinePattern =
-        Regex("""Duplicate work event id .+ at line (\d+) in configured event store""")
-
     fun from(
         error: WorkEventStoreException,
         unreadableMessage: String,
-    ): String {
-        val text = error.message.orEmpty()
-        val duplicateLine = duplicateWithLinePattern
-            .matchEntire(text)
-            ?.groupValues
-            ?.get(1)
-        if (duplicateLine != null) {
-            return "Configured event store contains a duplicate work event id at line $duplicateLine."
-        }
-        if (text.startsWith("Duplicate work event id ")) {
-            return "Configured event store contains a duplicate work event id."
-        }
-        if (text.startsWith("Corrupt work event record at line ")) {
-            return text
-        }
-        return unreadableMessage
+    ): String = when (val reason = error.reason) {
+        WorkEventStoreFailure.AppendFailed -> unreadableMessage
+
+        is WorkEventStoreFailure.CorruptRecord -> "Corrupt work event record at line ${reason.lineNumber} in configured event store"
+
+        is WorkEventStoreFailure.DuplicateEventId ->
+            reason.lineNumber
+                ?.let { lineNumber -> "Configured event store contains a duplicate work event id at line $lineNumber." }
+                ?: "Configured event store contains a duplicate work event id."
+
+        WorkEventStoreFailure.Unreadable -> unreadableMessage
     }
 }
