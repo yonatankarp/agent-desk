@@ -55,22 +55,38 @@ object PublicSafeTextPolicy {
         normalized: String,
         fieldName: String,
     ) {
-        val lower = normalized.lowercase()
-        require(!normalized.startsWith("/") && !normalized.startsWith("~/") && !windowsPath.matches(normalized)) {
-            "$fieldName must not include private local paths"
-        }
-        require("\\" !in normalized && !lower.startsWith("file:")) {
-            "$fieldName must not include private local paths"
-        }
-        require(secretMarkers.none { marker -> marker in lower }) {
-            "$fieldName must not include secrets or credential markers"
-        }
-        require(privateMarkers.none { marker -> marker in lower }) {
-            "$fieldName must not include private runtime, channel, or transcript markers"
-        }
-        require(!rawChannelOrMessageId.containsMatchIn(normalized)) {
-            "$fieldName must not include raw channel or message identifiers"
-        }
+        requireNoPrivateLocalPaths(normalized, fieldName)
+        requireNoPrivateRuntimeOrSecrets(normalized, fieldName)
+    }
+
+    fun normalizeAndRequirePublicSafe(
+        raw: String,
+        fieldName: String,
+        maxLength: Int,
+    ): String {
+        val normalized = normalize(raw, fieldName = fieldName, maxLength = maxLength)
+        requirePublicSafe(normalized, fieldName = fieldName)
+        return normalized
+    }
+
+    fun normalizeAndRequirePublicSafeLocalConfigPath(
+        raw: String,
+        fieldName: String,
+        maxLength: Int,
+    ): String {
+        val normalized = normalize(raw, fieldName = fieldName, maxLength = maxLength)
+        requireNoPrivateRuntimeOrSecrets(normalized, fieldName = fieldName)
+        return normalized
+    }
+
+    fun normalizeAndRequirePublicSafeText(
+        raw: String,
+        fieldName: String,
+        maxLength: Int,
+    ): String {
+        val normalized = normalizeAndRequirePublicSafe(raw, fieldName = fieldName, maxLength = maxLength)
+        requirePublicUrlIfUrl(normalized, fieldName = fieldName)
+        return normalized
     }
 
     fun requirePublicUrlIfUrl(
@@ -92,6 +108,35 @@ object PublicSafeTextPolicy {
         }
         require(!parsedUrl.host.isPrivateOrLocalHost(parsedUrl.bracketedHost)) {
             "$fieldName URLs must not point to private hosts"
+        }
+    }
+
+    private fun requireNoPrivateLocalPaths(
+        normalized: String,
+        fieldName: String,
+    ) {
+        val lower = normalized.lowercase()
+        require(!normalized.startsWith("/") && !normalized.startsWith("~/") && !windowsPath.matches(normalized)) {
+            "$fieldName must not include private local paths"
+        }
+        require("\\" !in normalized && !lower.startsWith("file:")) {
+            "$fieldName must not include private local paths"
+        }
+    }
+
+    private fun requireNoPrivateRuntimeOrSecrets(
+        normalized: String,
+        fieldName: String,
+    ) {
+        val lower = normalized.lowercase()
+        require(secretMarkers.none { marker -> marker in lower }) {
+            "$fieldName must not include secrets or credential markers"
+        }
+        require(privateMarkers.none { marker -> marker in lower }) {
+            "$fieldName must not include private runtime, channel, or transcript markers"
+        }
+        require(!rawChannelOrMessageId.containsMatchIn(normalized)) {
+            "$fieldName must not include raw channel or message identifiers"
         }
     }
 
