@@ -135,6 +135,34 @@ class SanitizedRuntimeObservationMapperTest :
                     (event.payload as WorkCanceledPayload).reason shouldBe null
                 }
             }
+
+            `when`("a sanitized observation includes public-safe evidence") {
+                then("the mapper keeps evidence references on the canonical event") {
+                    val event = mapper.toWorkEvent(
+                        RuntimeWorkObservation(
+                            eventId = "event:agent-task:53:blocked",
+                            occurredAt = "2026-06-02T21:30:00Z",
+                            source = "mock-adapter",
+                            workItemId = "agent-task:53",
+                            kind = RuntimeWorkObservationKind.Blocked,
+                            reason = "CI failed on the runtime adapter test task.",
+                            evidenceReferences = listOf(
+                                RuntimeEvidenceReference(
+                                    kind = "sanitized-note",
+                                    label = "Adapter decision",
+                                    target = "docs/runtime-adapter-scope-decision.md",
+                                ),
+                            ),
+                        ),
+                    )
+
+                    assertSoftly(event.evidenceReferences.single()) {
+                        kind.wireName shouldBe "sanitized-note"
+                        label.toString() shouldBe "Adapter decision"
+                        target.toString() shouldBe "docs/runtime-adapter-scope-decision.md"
+                    }
+                }
+            }
         }
 
         given("unsafe runtime observations") {
