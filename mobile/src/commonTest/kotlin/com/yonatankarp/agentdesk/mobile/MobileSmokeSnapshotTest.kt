@@ -99,7 +99,7 @@ class MobileSmokeSnapshotTest {
 
         val text = MobileSmokeSnapshotBuilder.from(state).flattenedText()
 
-        assertContains(text, "Evidence: check-run:Mobile smoke")
+        assertContains(text, "Evidence: check-run: Mobile smoke")
         assertContains(text, "Stale 90m since 2026-06-02T21:00:00Z")
         assertContains(text, "Recent events")
         assertContains(text, "2026-06-02T21:03:00Z [Evidence attached] agent-task:91")

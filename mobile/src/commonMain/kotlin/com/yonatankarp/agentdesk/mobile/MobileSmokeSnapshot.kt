@@ -31,31 +31,34 @@ object MobileSmokeSnapshotBuilder {
     fun sample(): MobileSmokeSnapshot = from(MobileOperatorStateContract.sample())
 
     fun from(state: MobileOperatorState): MobileSmokeSnapshot = MobileSmokeSnapshot(
-        title = "Agent Desk",
-        summary = "${state.currentWork.size} current / ${state.attentionQueue.size} attention",
+        title = MobileDisplayText.APP_TITLE,
+        summary = MobileDisplayText.summary(
+            currentWorkCount = state.currentWork.size,
+            attentionCount = state.attentionQueue.size,
+        ),
         sections = buildList {
             add(
                 MobileSmokeSection(
-                    title = "Current work",
-                    rows = state.currentWork.toWorkRows(emptyText = "No current work"),
+                    title = MobileDisplayText.CURRENT_WORK_TITLE,
+                    rows = state.currentWork.toWorkRows(emptyText = MobileDisplayText.NO_CURRENT_WORK),
                 ),
             )
             add(
                 MobileSmokeSection(
-                    title = "Attention queue",
+                    title = MobileDisplayText.ATTENTION_QUEUE_TITLE,
                     rows = state.attentionQueue.toAttentionRows(),
                 ),
             )
             add(
                 MobileSmokeSection(
-                    title = "Recent events",
+                    title = MobileDisplayText.RECENT_EVENTS_TITLE,
                     rows = state.recentEvents.toEventRows(),
                 ),
             )
             if (state.projectionWarnings.isNotEmpty()) {
                 add(
                     MobileSmokeSection(
-                        title = "Projection warnings",
+                        title = MobileDisplayText.PROJECTION_WARNINGS_TITLE,
                         rows = state.projectionWarnings.toWarningRows(),
                     ),
                 )
@@ -73,14 +76,14 @@ object MobileSmokeSnapshotBuilder {
 
     private fun List<MobileAttentionItem>.toAttentionRows(): List<String> {
         if (isEmpty()) {
-            return listOf("No items need attention")
+            return listOf(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
         }
 
         return map { attention ->
             buildString {
                 append(attention.workItem.describe())
                 attention.stale?.let { stale ->
-                    append(" (Stale ${stale.staleForMinutes}m since ${stale.lastEventAt})")
+                    append(" (${MobileDisplayText.staleAttention(stale)})")
                 }
             }
         }
@@ -88,7 +91,7 @@ object MobileSmokeSnapshotBuilder {
 
     private fun List<MobileEventLine>.toEventRows(): List<String> {
         if (isEmpty()) {
-            return listOf("No recent accepted events")
+            return listOf(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
         }
 
         return map { event -> event.describe() }
@@ -96,20 +99,7 @@ object MobileSmokeSnapshotBuilder {
 
     private fun List<MobileProjectionWarning>.toWarningRows(): List<String> = map { warning -> "${warning.eventId} - ${warning.reason}" }
 
-    private fun MobileWorkItem.describe(): String = buildString {
-        append("[${status.label}] $id $title")
-        summary?.let { append(" - $it") }
-        if (evidenceReferences.isNotEmpty()) {
-            val evidence = evidenceReferences.joinToString { reference -> "${reference.kind}:${reference.label}" }
-            append(" | Evidence: $evidence")
-        }
-    }
+    private fun MobileWorkItem.describe(): String = MobileDisplayText.workRow(this)
 
-    private fun MobileEventLine.describe(): String = buildString {
-        append("$occurredAt [$type] $workItemId - $detail")
-        if (evidenceReferences.isNotEmpty()) {
-            val evidence = evidenceReferences.joinToString { reference -> "${reference.kind}:${reference.label}" }
-            append(" | Evidence: $evidence")
-        }
-    }
+    private fun MobileEventLine.describe(): String = MobileDisplayText.eventRow(this)
 }
