@@ -40,7 +40,7 @@ Consequence: Maintainers should label PRs before running the release workflow. P
 
 ## 2026-06-03: Tag-driven CLI jar releases
 
-Decision: Agent Desk releases are created from `v*` Git tags and publish the executable CLI jar as both an Actions artifact and a GitHub Release asset.
+Decision: Agent Desk releases are created from `v*` Git tags and publish the executable CLI jar as both an Actions artifact and a GitHub Release asset. Release-critical gates run before tag creation: public hygiene, Spotless, CLI tests, mock runtime smoke, executable jar build, and executable jar smoke.
 
 Rationale: Tag-driven releases keep the public pipeline minimal, auditable, and free of secrets while making the packaged CLI easy to retrieve.
 

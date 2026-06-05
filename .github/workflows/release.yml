@@ -37,6 +37,12 @@ jobs:
       - name: Check Spotless formatting
         run: ./gradlew spotlessCheck
 
+      - name: Run CLI tests
+        run: ./gradlew :cli:test
+
+      - name: Run mock runtime smoke
+        run: bash scripts/mock-runtime-smoke.sh
+
       - name: Build executable CLI jar
         run: ./gradlew :cli:executableJar
 
