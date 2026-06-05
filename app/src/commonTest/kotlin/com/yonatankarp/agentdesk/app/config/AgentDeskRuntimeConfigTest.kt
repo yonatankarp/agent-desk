@@ -42,6 +42,18 @@ class AgentDeskRuntimeConfigTest :
                 }
             }
 
+            `when`("a local filesystem store location is provided") {
+                then("it accepts the location as an app-owned config boundary") {
+                    val linuxPath = privateLinuxPath("agent-desk-events.ndjson")
+                    val macPath = privateMacPath("agent-desk-events.ndjson")
+                    val windowsPath = windowsUserPath("agent-desk-events.ndjson")
+
+                    EventStoreLocation.parse(linuxPath).toString() shouldBe linuxPath
+                    EventStoreLocation.parse(macPath).toString() shouldBe macPath
+                    EventStoreLocation.parse(windowsPath).toString() shouldBe windowsPath
+                }
+            }
+
             `when`("stored event properties are parsed from external names") {
                 then("it applies validated shared app config rules") {
                     val config = AgentDeskRuntimeConfigParser.parse(
@@ -184,13 +196,31 @@ private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$f
 
 private fun privateMacPath(fileName: String): String = "/Users/" + "operator/$fileName"
 
+private fun windowsUserPath(fileName: String): String = listOf("C:", "Users", "operator", "AgentDesk", fileName).joinToString("\\")
+
 private fun rawIdentifier(): String = "123456789" + "012345678"
 
 private fun unsafeEventStoreLocations(): List<String> = listOf(
     rawIdentifier(),
     "channel:${rawIdentifier()}",
+    "message:${rawIdentifier()}",
     "session:local-agent-events.ndjson",
-    privateMacPath("secret-events.ndjson"),
+    "thread:local-review-events.ndjson",
+    "agent:main:events.ndjson",
+    "[subagent events]",
+    "<conversation events>",
+    listOf("raw", "transcript events").joinToString(" "),
+    listOf("bearer", "credential-marker").joinToString(" "),
+    "auth_token=value",
+    "github_pat_123",
+    "ghp_123",
     "op://agent-desk/event-store",
+    "password=value",
+    "secret=value",
+    "xoxb-token",
+    privateLinuxPath("secret-events.ndjson"),
+    privateMacPath("secret-events.ndjson"),
+    windowsUserPath("secret-events.ndjson"),
+    "file:" + privateLinuxPath("secret-events.ndjson"),
     listOf("Open", "Claw runtime context").joinToString(""),
 )

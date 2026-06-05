@@ -18,7 +18,7 @@ enum class EvidenceReferenceKind(val wireName: String) {
 
     companion object {
         fun fromWireName(raw: String): EvidenceReferenceKind = entries.firstOrNull { it.wireName == raw }
-            ?: throw IllegalArgumentException("Unknown evidence reference kind: $raw")
+            ?: throw IllegalArgumentException("Unknown evidence reference kind")
     }
 }
 
@@ -26,8 +26,11 @@ enum class EvidenceReferenceKind(val wireName: String) {
 value class EvidenceLabel private constructor(val value: String) {
     companion object {
         fun parse(raw: String): EvidenceLabel {
-            val normalized = PublicSafeTextPolicy.normalize(raw, fieldName = "Evidence label", maxLength = 80)
-            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Evidence label")
+            val normalized = PublicSafeTextPolicy.normalizeAndRequirePublicSafe(
+                raw = raw,
+                fieldName = "Evidence label",
+                maxLength = 80,
+            )
             return EvidenceLabel(normalized)
         }
     }
@@ -39,9 +42,11 @@ value class EvidenceLabel private constructor(val value: String) {
 value class EvidenceTarget private constructor(val value: String) {
     companion object {
         fun parse(raw: String): EvidenceTarget {
-            val normalized = PublicSafeTextPolicy.normalize(raw, fieldName = "Evidence target", maxLength = 256)
-            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Evidence target")
-            PublicSafeTextPolicy.requirePublicUrlIfUrl(normalized, fieldName = "Evidence target")
+            val normalized = PublicSafeTextPolicy.normalizeAndRequirePublicSafeText(
+                raw = raw,
+                fieldName = "Evidence target",
+                maxLength = 256,
+            )
             return EvidenceTarget(normalized)
         }
     }

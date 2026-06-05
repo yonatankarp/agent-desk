@@ -18,9 +18,6 @@ object PublicSafeTextPolicy {
         )
     private val privateMarkers =
         listOf(
-            "/home/",
-            "/users/",
-            "\\users\\",
             "[subagent",
             "<conversation",
             "agent:main:",
@@ -116,10 +113,10 @@ object PublicSafeTextPolicy {
         fieldName: String,
     ) {
         val lower = normalized.lowercase()
-        require(!normalized.startsWith("/") && !normalized.startsWith("~/") && !windowsPath.matches(normalized)) {
+        require(!normalized.startsWith("/") && "~/" !in normalized && !windowsPath.matches(normalized)) {
             "$fieldName must not include private local paths"
         }
-        require("\\" !in normalized && !lower.startsWith("file:")) {
+        require("\\" !in normalized && "file:" !in lower && "/home/" !in lower && "/users/" !in lower) {
             "$fieldName must not include private local paths"
         }
     }
@@ -130,7 +127,7 @@ object PublicSafeTextPolicy {
     ) {
         val lower = normalized.lowercase()
         require(secretMarkers.none { marker -> marker in lower }) {
-            "$fieldName must not include secrets or credential markers"
+            "$fieldName must not include credentials or credential markers"
         }
         require(privateMarkers.none { marker -> marker in lower }) {
             "$fieldName must not include private runtime, channel, or transcript markers"
