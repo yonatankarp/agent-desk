@@ -573,13 +573,29 @@ class AgentDeskCliTest {
     }
 
     private fun assertPublicSafe(text: String) {
+        val rawIdentifier = "123456789" + "012345678"
+
         assertFalse(text.contains("/home/"))
+        assertFalse(text.contains("/Users/"))
+        assertFalse(text.contains("\\Users\\"))
+        assertFalse(text.contains("file:", ignoreCase = true))
         assertFalse(text.contains("private-token"))
         assertFalse(text.contains("discord", ignoreCase = true))
         assertFalse(text.contains("channel:", ignoreCase = true))
         assertFalse(text.contains("message:", ignoreCase = true))
         assertFalse(text.contains("session:", ignoreCase = true))
+        assertFalse(text.contains("thread:", ignoreCase = true))
+        assertFalse(text.contains("raw transcript", ignoreCase = true))
+        assertFalse(text.contains("OpenClaw", ignoreCase = true))
+        assertFalse(text.contains("bearer", ignoreCase = true))
+        assertFalse(text.contains("auth_token", ignoreCase = true))
+        assertFalse(text.contains("github_pat_", ignoreCase = true))
+        assertFalse(text.contains("ghp_", ignoreCase = true))
         assertFalse(text.contains("op://", ignoreCase = true))
+        assertFalse(text.contains("password", ignoreCase = true))
+        assertFalse(text.contains("secret", ignoreCase = true))
+        assertFalse(text.contains("xoxb-", ignoreCase = true))
+        assertFalse(text.contains(rawIdentifier))
     }
 
     private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"

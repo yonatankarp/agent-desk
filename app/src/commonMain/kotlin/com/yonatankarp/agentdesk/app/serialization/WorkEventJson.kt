@@ -116,5 +116,5 @@ object WorkEventJson {
     }
 
     private fun String.toEventType(): WorkEventType = WorkEventType.entries.firstOrNull { it.wireName == this }
-        ?: throw IllegalArgumentException("Unknown work event type: $this")
+        ?: throw IllegalArgumentException("Unknown work event type")
 }

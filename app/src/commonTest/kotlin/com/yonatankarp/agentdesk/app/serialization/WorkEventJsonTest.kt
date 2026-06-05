@@ -146,27 +146,35 @@ class WorkEventJsonTest :
             }
 
             `when`("the event type is unknown") {
-                then("decoding rejects the record") {
+                then("decoding rejects the record without echoing the raw type") {
+                    val rawType = "message:" + "123456789" + "012345678"
+
                     val error = shouldThrow<IllegalArgumentException> {
                         WorkEventJson.decode(
-                            """{"id":"event:agent-task:42:paused","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.paused","payload":{}}""",
+                            """{"id":"event:agent-task:42:paused","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"$rawType","payload":{}}""",
                         )
                     }
 
-                    error.message shouldContain "Unknown work event type"
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unknown work event type")
+                        shouldNotContain(rawType)
+                    }
                 }
             }
 
             `when`("the evidence kind is unknown") {
-                then("decoding rejects the record") {
-                    val unsafeTarget = "/" + "home/yonatan/run.log"
+                then("decoding rejects the record without echoing the raw kind") {
+                    val rawKind = "message:" + "123456789" + "012345678"
                     val error = shouldThrow<IllegalArgumentException> {
                         WorkEventJson.decode(
-                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"evidenceReferences":[{"kind":"private-log","label":"Raw log","target":"$unsafeTarget"}]}""",
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"evidenceReferences":[{"kind":"$rawKind","label":"Raw log","target":"commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"}]}""",
                         )
                     }
 
-                    error.message shouldContain "Unknown evidence reference kind"
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unknown evidence reference kind")
+                        shouldNotContain(rawKind)
+                    }
                 }
             }
 

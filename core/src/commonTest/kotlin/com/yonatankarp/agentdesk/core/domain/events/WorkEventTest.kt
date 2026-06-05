@@ -155,6 +155,17 @@ class WorkEventTest :
                         EvidenceLabel.parse("raw transcript excerpt")
                     }.message shouldContain "private runtime"
 
+                    unsafeEvidenceLabels().forEach { unsafeLabel ->
+                        val error = shouldThrow<IllegalArgumentException> {
+                            EvidenceLabel.parse(unsafeLabel)
+                        }
+
+                        assertSoftly(error.message.orEmpty()) {
+                            shouldContain("Evidence label")
+                            shouldNotContain(unsafeLabel)
+                        }
+                    }
+
                     shouldThrow<IllegalArgumentException> {
                         EvidenceTarget.parse("https://localhost:8080/report")
                     }.message shouldContain "private hosts"
@@ -172,11 +183,37 @@ class WorkEventTest :
 
                     shouldThrow<IllegalArgumentException> {
                         EvidenceTarget.parse("github_pat_1234567890")
-                    }.message shouldContain "secrets"
+                    }.message shouldContain "credentials"
                 }
             }
         }
     })
+
+private fun unsafeEvidenceLabels(): List<String> {
+    val rawIdentifier = "123456789" + "012345678"
+    val unixPath = "/" + listOf("home", "operator", "workspace", "private.log").joinToString("/")
+
+    return listOf(
+        rawIdentifier,
+        "channel:$rawIdentifier",
+        "message:$rawIdentifier",
+        "session:local-agent",
+        "thread:local-review",
+        "agent:main:worker",
+        "[subagent worker]",
+        "<conversation worker>",
+        unixPath,
+        listOf("raw", "transcript excerpt").joinToString(" "),
+        listOf("Open", "Claw runtime context").joinToString(""),
+        listOf("auth", "token=value").joinToString("_"),
+        "github_pat_marker",
+        "ghp_marker",
+        "op://vault/item",
+        "password=value",
+        "secret=value",
+        "xoxb-marker",
+    )
+}
 
 private fun unsafeEvidenceUrls(): List<String> {
     val rawIdentifier = "169" + ".254.169.254"
