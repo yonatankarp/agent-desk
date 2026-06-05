@@ -25,8 +25,7 @@ curl -fsS -X PUT \
         "Gradle Build",
         "macOS Compose Build",
         "Windows Compose Build",
-        "Coverage",
-        "Coverage Comment"
+        "Coverage"
       ]
     },
     "enforce_admins": true,

@@ -39,4 +39,4 @@ Keep that shared workflow only while it remains compatible with this repository'
 
 ## Current Gate Decision
 
-Coverage is report-only and does not enforce a threshold yet. The required `Coverage` check still proves that Kover can run, that the coverage artifact is generated, and that pull requests receive a parsed coverage summary comment.
+Coverage is report-only and does not enforce a threshold yet. The required `Coverage` check still proves that Kover can run and that the coverage artifact is generated. Same-repo pull requests also receive a parsed coverage summary comment, but `Coverage Comment` is not a universal required status context because fork pull requests skip the write-token comment job.
