@@ -52,8 +52,11 @@ smoke-compose: ## Run the non-interactive desktop/mobile Compose run smoke.
 	bash scripts/compose-run-smoke.sh
 
 .PHONY: smoke-sanitized-runtime
-smoke-sanitized-runtime: ## Run the sanitized runtime observation import smoke.
-	bash scripts/sanitized-runtime-import-smoke.sh
+smoke-sanitized-runtime: replay-sanitized-runtime ## Run the sanitized runtime observation import smoke.
+
+.PHONY: replay-sanitized-runtime
+replay-sanitized-runtime: ## Run the canonical sanitized replay scenario.
+	bash scripts/canonical-sanitized-replay-smoke.sh
 
 .PHONY: coverage
 coverage: ## Verify Kover thresholds and generate XML/HTML reports for testable modules.

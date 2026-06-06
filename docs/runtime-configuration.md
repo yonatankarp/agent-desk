@@ -116,10 +116,10 @@ The initial checked-in fixture lives at `app/src/jvmTest/resources/openclaw/sani
 Run the repeatable public-safe smoke workflow with:
 
 ```bash
-bash scripts/sanitized-runtime-import-smoke.sh
+make replay-sanitized-runtime
 ```
 
-The smoke creates a temporary sanitized event store, imports the checked-in sanitized fixture, verifies duplicate skipping, renders configured operator state, inspects `agent-task:211`, verifies sanitized evidence output, and removes its temporary files before exiting.
+The canonical replay smoke creates a temporary sanitized event store, imports the checked-in sanitized fixture, verifies duplicate skipping and aggregate diagnostics, renders configured operator state, inspects blocked, needs-decision, and succeeded work, verifies sanitized evidence output, and removes its temporary files before exiting. The older `make smoke-sanitized-runtime` target runs the same scenario for compatibility with the full smoke suite.
 
 ## Mock Operator Action
 

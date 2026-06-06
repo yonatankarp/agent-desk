@@ -8,6 +8,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Agent Desk milestone completion criteria](milestone-completion-criteria.md): first milestone done/not-done states, required evidence, and non-goals.
 - [Runtime adapter boundary](runtime-adapter-boundary.md): sanitized import contracts for local/runtime observations.
 - [Observation contract v1](observation-contract-v1.md): public-safe sanitized observation export fields, validation, and diagnostics.
+- [Canonical sanitized replay](canonical-sanitized-replay.md): repeatable public-safe replay proof for timeline-ready and decision-queue-ready state.
 - [Runtime adapter scope decision](runtime-adapter-scope-decision.md): accepted first non-mock adapter scope and public-safe follow-up boundaries.
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
