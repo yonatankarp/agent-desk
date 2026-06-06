@@ -14,6 +14,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
 - [Action permission gates](action-permission-gates.md): action class inventory and fail-closed permission behavior.
+- [Public-safe artifact policy](public-safe-artifact-policy.md): artifact classes, sharing rules, and operator recovery runbooks.
 - [Privacy boundary regression](privacy-boundary-regression.md): safe persist/commit/publish rules and representative leak fixtures.
 - [Roadmap verification gate matrix](roadmap-verification-gate-matrix.md): capability-to-evidence acceptance gates.
 - [Verification evidence](verification-evidence.md): structured check results and completion evidence examples.
