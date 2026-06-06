@@ -10,6 +10,7 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -200,6 +201,53 @@ class ActionCapabilityPlannerTest :
                     }
 
                     error.message.orEmpty() shouldContain "Destructive action proposals require explicit approval"
+                }
+            }
+        }
+
+        given("resume proposals across every work status") {
+            fun itemWith(status: WorkStatus): WorkItem = WorkItem(
+                id = WorkItemId.parse("agent-task:77"),
+                title = WorkItemTitle.parse("Check resumable boundaries"),
+                status = status,
+            )
+
+            `when`("the status is resumable") {
+                then("resume requires local confirmation") {
+                    listOf(WorkStatus.NeedsDecision, WorkStatus.Blocked, WorkStatus.Waiting).forEach { status ->
+                        val proposal = ActionCapabilityPlanner.propose(
+                            item = itemWith(status),
+                            action = OperatorActionIntent.Resume,
+                        )
+
+                        withClue("status: $status") {
+                            proposal.capability.state shouldBe ActionCapabilityState.RequiresConfirmation
+                            proposal.requiredConfirmation shouldBe ActionConfirmationRequirement.ConfirmLocal
+                        }
+                    }
+                }
+            }
+
+            `when`("the status is not resumable") {
+                then("resume is read-only unavailable with a public-safe reason") {
+                    listOf(
+                        WorkStatus.Queued,
+                        WorkStatus.Running,
+                        WorkStatus.Succeeded,
+                        WorkStatus.Failed,
+                        WorkStatus.Canceled,
+                    ).forEach { status ->
+                        val proposal = ActionCapabilityPlanner.propose(
+                            item = itemWith(status),
+                            action = OperatorActionIntent.Resume,
+                        )
+
+                        withClue("status: $status") {
+                            proposal.capability.state shouldBe ActionCapabilityState.ReadOnlyUnavailable
+                            proposal.capability.disabledReason.orEmpty() shouldContain "unavailable for this status"
+                            proposal.riskClass shouldBe ActionRiskClass.LocalPreview
+                        }
+                    }
                 }
             }
         }
