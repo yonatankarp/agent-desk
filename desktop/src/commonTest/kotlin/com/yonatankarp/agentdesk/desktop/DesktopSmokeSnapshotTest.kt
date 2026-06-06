@@ -7,118 +7,119 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
-import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldNotContainIgnoringCase
 
-class DesktopSmokeSnapshotTest {
-    @Test
-    fun `sample state exposes expected desktop sections`() {
-        val snapshot = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current())
-        val text = snapshot.flattenedText()
+class DesktopSmokeSnapshotTest :
+    BehaviorSpec({
+        given("the desktop smoke snapshot builder") {
+            `when`("building from the sample operator state") {
+                then("it exposes the expected desktop sections") {
+                    val snapshot = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current())
+                    val text = snapshot.flattenedText()
 
-        assertContains(text, "Agent Desk")
-        assertContains(text, "Sample state")
-        assertContains(text, "Replay status")
-        assertContains(text, "Work state")
-        assertContains(text, "Read-only timeline")
-        assertContains(text, "Decision queue")
-        assertContains(text, "Evidence drilldown")
-        assertContains(text, "Not done: 2 item(s) need operator attention.")
-        assertContains(text, "Discovery/no-issue output is triage, not product completion.")
-        assertContains(text, "[Running] agent-task:42 Run public hygiene check")
-        assertContains(text, "work.started agent-task:42 from sample-agent")
-        assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
-        assertContains(text, "[Blocked] agent-task:44 Review build failure")
-        assertContains(text, "Observation: work.blocked for agent-task:44")
-        assertContains(text, "Source: sample-agent")
-        assertContains(text, "Provenance: replay event event:agent-task:44:blocked")
-        assertContains(text, "Criteria result: Not done: 2 item(s) need operator attention.")
-        assertContains(text, "Evidence missing: no public-safe evidence reference was attached.")
-        assertContains(text, "Operator notes: unavailable in read-only proof.")
-        assertContains(text, "Redacted evidence: raw provider payloads are not rendered.")
-        assertContains(text, "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.")
-    }
+                    text shouldContain "Agent Desk"
+                    text shouldContain "Sample state"
+                    text shouldContain "Replay status"
+                    text shouldContain "Work state"
+                    text shouldContain "Read-only timeline"
+                    text shouldContain "Decision queue"
+                    text shouldContain "Evidence drilldown"
+                    text shouldContain "Not done: 2 item(s) need operator attention."
+                    text shouldContain "Discovery/no-issue output is triage, not product completion."
+                    text shouldContain "[Running] agent-task:42 Run public hygiene check"
+                    text shouldContain "work.started agent-task:42 from sample-agent"
+                    text shouldContain "[Needs decision] agent-task:43 Choose adapter boundary"
+                    text shouldContain "[Blocked] agent-task:44 Review build failure"
+                    text shouldContain "Observation: work.blocked for agent-task:44"
+                    text shouldContain "Source: sample-agent"
+                    text shouldContain "Provenance: replay event event:agent-task:44:blocked"
+                    text shouldContain "Criteria result: Not done: 2 item(s) need operator attention."
+                    text shouldContain "Evidence missing: no public-safe evidence reference was attached."
+                    text shouldContain "Operator notes: unavailable in read-only proof."
+                    text shouldContain "Redacted evidence: raw provider payloads are not rendered."
+                    text shouldContain
+                        "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design."
+                }
+            }
 
-    @Test
-    fun `empty state exposes explicit empty rows`() {
-        val snapshot =
-            DesktopSmokeSnapshotBuilder.from(
-                DesktopScreenState.Ready(
-                    state = OperatorState(workItems = emptyList(), events = emptyList()),
-                    modeLabel = "Loaded state",
-                ),
-            )
+            `when`("building from an empty operator state") {
+                then("it exposes explicit empty rows") {
+                    val snapshot =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Ready(
+                                state = OperatorState(workItems = emptyList(), events = emptyList()),
+                                modeLabel = "Loaded state",
+                            ),
+                        )
 
-        assertEquals("Loaded state", snapshot.modeLabel)
-        assertEquals("0 active / 0 attention", snapshot.summary)
-        assertContains(
-            snapshot.sectionRows("Replay status").joinToString("\n"),
-            "Empty queue: no current work or decisions; not product completion without milestone evidence.",
-        )
-        assertEquals(listOf("No current work"), snapshot.sectionRows("Work state"))
-        assertEquals(listOf("No recent events"), snapshot.sectionRows("Read-only timeline"))
-        assertEquals(listOf("No items need a decision"), snapshot.sectionRows("Decision queue"))
-        assertEquals(
-            listOf(
-                "Evidence missing: no replay events are available.",
-                "Criteria result: Empty queue: no current work or decisions; not product completion without milestone evidence.",
-                "Operator notes: unavailable in read-only proof.",
-                "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
-            ),
-            snapshot.sectionRows("Evidence drilldown"),
-        )
-    }
+                    snapshot.modeLabel shouldBe "Loaded state"
+                    snapshot.summary shouldBe "0 active / 0 attention"
+                    snapshot.sectionRows("Replay status").joinToString("\n") shouldContain
+                        "Empty queue: no current work or decisions; not product completion without milestone evidence."
+                    snapshot.sectionRows("Work state") shouldBe listOf("No current work")
+                    snapshot.sectionRows("Read-only timeline") shouldBe listOf("No recent events")
+                    snapshot.sectionRows("Decision queue") shouldBe listOf("No items need a decision")
+                    snapshot.sectionRows("Evidence drilldown") shouldBe listOf(
+                        "Evidence missing: no replay events are available.",
+                        "Criteria result: Empty queue: no current work or decisions; not product completion without milestone evidence.",
+                        "Operator notes: unavailable in read-only proof.",
+                        "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
+                    )
+                }
+            }
 
-    @Test
-    fun `attention needed state appears in attention queue`() {
-        val item =
-            WorkItem(
-                id = WorkItemId.parse("agent-task:91"),
-                title = WorkItemTitle.parse("Choose retry path"),
-                status = WorkStatus.NeedsDecision,
-                summary = WorkSummary.parse("Operator must choose whether to retry."),
-            )
+            `when`("an item needs operator attention") {
+                then("it appears in the attention queue") {
+                    val item =
+                        WorkItem(
+                            id = WorkItemId.parse("agent-task:91"),
+                            title = WorkItemTitle.parse("Choose retry path"),
+                            status = WorkStatus.NeedsDecision,
+                            summary = WorkSummary.parse("Operator must choose whether to retry."),
+                        )
 
-        val snapshot =
-            DesktopSmokeSnapshotBuilder.from(
-                DesktopScreenState.Ready(
-                    state = OperatorState(workItems = listOf(item), events = emptyList()),
-                    modeLabel = "Loaded state",
-                ),
-            )
+                    val snapshot =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Ready(
+                                state = OperatorState(workItems = listOf(item), events = emptyList()),
+                                modeLabel = "Loaded state",
+                            ),
+                        )
 
-        assertEquals("1 active / 1 attention", snapshot.summary)
-        assertEquals(
-            listOf("[Needs decision] agent-task:91 Choose retry path - Operator must choose whether to retry."),
-            snapshot.sectionRows("Decision queue"),
-        )
-    }
+                    snapshot.summary shouldBe "1 active / 1 attention"
+                    snapshot.sectionRows("Decision queue") shouldBe listOf(
+                        "[Needs decision] agent-task:91 Choose retry path - Operator must choose whether to retry.",
+                    )
+                }
+            }
 
-    @Test
-    fun `sample snapshot remains public safe`() {
-        val text = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current()).flattenedText()
+            `when`("inspecting the flattened sample text") {
+                then("the snapshot remains public safe") {
+                    val text = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current()).flattenedText()
 
-        assertFalse(text.contains("/" + "home/"))
-        assertFalse(text.contains("discord", ignoreCase = true))
-        assertFalse(text.contains("token", ignoreCase = true))
-        assertFalse(text.contains("op://", ignoreCase = true))
-        assertFalse(text.contains("raw transcript", ignoreCase = true))
-    }
+                    text shouldNotContain ("/" + "home/")
+                    text shouldNotContainIgnoringCase "discord"
+                    text shouldNotContainIgnoringCase "token"
+                    text shouldNotContainIgnoringCase "op://"
+                    text shouldNotContainIgnoringCase "raw transcript"
+                }
+            }
 
-    @Test
-    fun `loading state explains unavailable evidence`() {
-        val snapshot = DesktopSmokeSnapshotBuilder.from(DesktopScreenState.Loading)
+            `when`("building from the loading state") {
+                then("it explains unavailable evidence") {
+                    val snapshot = DesktopSmokeSnapshotBuilder.from(DesktopScreenState.Loading)
 
-        assertEquals(
-            listOf(
-                "Evidence unavailable until operator state is loaded.",
-                "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
-            ),
-            snapshot.sectionRows("Evidence drilldown"),
-        )
-    }
+                    snapshot.sectionRows("Evidence drilldown") shouldBe listOf(
+                        "Evidence unavailable until operator state is loaded.",
+                        "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
+                    )
+                }
+            }
+        }
+    })
 
-    private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
-}
+private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
