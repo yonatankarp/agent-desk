@@ -158,6 +158,83 @@ class WorkEventProjectorTest :
                     WorkEventProjector.project(emptyList()).staleAttention shouldBe emptyList()
                 }
             }
+
+            `when`("running work is exactly at the stale threshold") {
+                then("it is marked stale at the boundary") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T22:00:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.staleAttention.single().workItemId.toString() shouldBe "agent-task:42"
+                    projection.staleAttention.single().staleForMinutes shouldBe 60
+                }
+            }
+
+            `when`("running work is one minute under the stale threshold") {
+                then("it is not marked stale") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T21:59:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.staleAttention shouldBe emptyList()
+                }
+            }
+
+            `when`("terminal work is older than the stale threshold") {
+                then("it is not marked stale") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workSucceededEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T23:30:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Succeeded
+                    projection.staleAttention shouldBe emptyList()
+                }
+            }
+
+            `when`("blocked work is older than the stale threshold") {
+                then("it is not marked stale because attention states already require humans") {
+                    val projection =
+                        WorkEventProjector.project(
+                            listOf(
+                                CoreFixtures.workStartedEvent(),
+                                CoreFixtures.workBlockedEvent(),
+                                CoreFixtures.workStartedEvent(
+                                    id = WorkEventId.parse("event:agent-task:43:started"),
+                                    occurredAt = EventTimestamp.parse("2026-06-02T23:30:00Z"),
+                                    workItemId = WorkItemId.parse("agent-task:43"),
+                                ),
+                            ),
+                        )
+
+                    projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Blocked
+                    projection.staleAttention shouldBe emptyList()
+                }
+            }
         }
 
         given("duplicate event ids") {

@@ -62,4 +62,25 @@ class WorkStatusTest :
                 }
             }
         }
+
+        given("self transitions") {
+            `when`("a status transitions to itself") {
+                then("it is allowed for every status including terminal ones") {
+                    WorkStatus.entries.forEach { status ->
+                        status.canTransitionTo(status).shouldBeTrue()
+                    }
+                }
+            }
+        }
+
+        given("cross-terminal transitions") {
+            `when`("one terminal status moves to another") {
+                then("it is rejected") {
+                    WorkStatus.Succeeded.canTransitionTo(WorkStatus.Failed).shouldBeFalse()
+                    WorkStatus.Succeeded.canTransitionTo(WorkStatus.Canceled).shouldBeFalse()
+                    WorkStatus.Failed.canTransitionTo(WorkStatus.Succeeded).shouldBeFalse()
+                    WorkStatus.Canceled.canTransitionTo(WorkStatus.Succeeded).shouldBeFalse()
+                }
+            }
+        }
     })
