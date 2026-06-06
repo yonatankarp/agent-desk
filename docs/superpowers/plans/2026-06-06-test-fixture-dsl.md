@@ -26,7 +26,7 @@
 
 ## File Structure
 
-```
+```text
 test-fixtures/
   build.gradle.kts                                  (modify: test source sets, kotest dep in commonMain)
   src/commonMain/kotlin/com/yonatankarp/agentdesk/testfixtures/
