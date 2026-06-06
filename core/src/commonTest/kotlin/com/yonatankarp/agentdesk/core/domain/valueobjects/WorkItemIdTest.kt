@@ -59,5 +59,21 @@ class WorkItemIdTest :
                     sessionError.message.orEmpty() shouldNotContain sessionId
                 }
             }
+
+            `when`("raw input is exactly at the 64 character limit") {
+                then("it is accepted") {
+                    val id = WorkItemId.parse("a".repeat(64))
+
+                    id.value shouldBe "a".repeat(64)
+                }
+            }
+
+            `when`("raw input is one character over the limit") {
+                then("it rejects the value") {
+                    shouldThrow<IllegalArgumentException> {
+                        WorkItemId.parse("a".repeat(65))
+                    }
+                }
+            }
         }
     })
