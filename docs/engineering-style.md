@@ -35,6 +35,12 @@ Agent Desk code should stay small, explicit, and easy to move across adapters. T
 - Architecture tests such as Konsist stay rule-oriented instead of forcing given/when/then.
 - Compose UI tests run `runComposeUiTest` inside Kotest test bodies. Its `ExperimentalTestApi` opt-in is accepted, tracked debt (issue #279) — the single permitted experimental API, because no stable Kotest-compatible Compose test API exists yet. Do not cite it as precedent for other experimental APIs.
 - Avoid duplicated test data. Prefer fixtures and a small test DSL for common domain objects, events, and projections.
+- The shared test DSL lives in `:test-fixtures`: `workEvents { started(); blocked() }` for event
+  chains, `eventTimestampAt(...)` for deterministic timestamps, `commitEvidence(...)`-style factories
+  for evidence references, and `shouldBePublicSafe()` / `shouldBeEmptyProjection()` matchers.
+  App-layer projection helpers (`operatorState { }`, `projectedWorkItem { }`) live in
+  `app/src/commonTest/.../fixtures/`. New tests use these instead of hand-built domain objects;
+  the public-safety denylist is maintained only in `PublicSafetyMatchers.kt`.
 - Keep fixtures public-safe and deterministic.
 
 ## Documentation
