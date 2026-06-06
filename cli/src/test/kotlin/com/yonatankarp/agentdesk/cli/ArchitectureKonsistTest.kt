@@ -2,31 +2,30 @@ package com.yonatankarp.agentdesk.cli
 
 import com.lemonappdev.konsist.api.Konsist
 import com.lemonappdev.konsist.api.verify.assertTrue
-import kotlin.test.Test
+import io.kotest.core.spec.style.FunSpec
 
-class ArchitectureKonsistTest {
-    @Test
-    fun `cli production declarations stay under the cli package`() {
-        Konsist
-            .scopeFromProject(moduleName = "cli", sourceSetName = "main")
-            .classes()
-            .assertTrue {
-                it.resideInPackage("com.yonatankarp.agentdesk.cli..")
-            }
-    }
-
-    @Test
-    fun `cli production files do not import private runtime or adapter packages`() {
-        Konsist
-            .scopeFromProject(moduleName = "cli", sourceSetName = "main")
-            .files
-            .assertTrue { file ->
-                !file.hasImport { import ->
-                    blockedImportPrefixes.any { import.name.startsWith(it) }
+class ArchitectureKonsistTest :
+    FunSpec({
+        test("cli production declarations stay under the cli package") {
+            Konsist
+                .scopeFromProject(moduleName = "cli", sourceSetName = "main")
+                .classes()
+                .assertTrue {
+                    it.resideInPackage("com.yonatankarp.agentdesk.cli..")
                 }
-            }
-    }
+        }
 
+        test("cli production files do not import private runtime or adapter packages") {
+            Konsist
+                .scopeFromProject(moduleName = "cli", sourceSetName = "main")
+                .files
+                .assertTrue { file ->
+                    !file.hasImport { import ->
+                        blockedImportPrefixes.any { import.name.startsWith(it) }
+                    }
+                }
+        }
+    }) {
     companion object {
         private val blockedImportPrefixes =
             listOf(
