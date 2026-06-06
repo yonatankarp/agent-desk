@@ -27,6 +27,16 @@ class RuntimeWorkEventImporterTest :
 
                     result.importedCount shouldBe 6
                     result.skippedDuplicateCount shouldBe 0
+                    result.diagnostics.summary().imported shouldBe 6
+                    result.diagnostics.summary().skippedDuplicate shouldBe 0
+                    result.diagnostics.map { it.kind }.shouldContainExactly(
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                        RuntimeWorkEventImportDiagnosticKind.Imported,
+                    )
                     repository.readAll().map { it.id.toString() }.shouldContainExactly(
                         "event:agent-task:42:started",
                         "event:agent-task:44:started",
@@ -51,6 +61,10 @@ class RuntimeWorkEventImporterTest :
 
                     result.importedCount shouldBe 5
                     result.skippedDuplicateCount shouldBe 1
+                    result.diagnostics.summary().imported shouldBe 5
+                    result.diagnostics.summary().skippedDuplicate shouldBe 1
+                    result.diagnostics.first().kind shouldBe RuntimeWorkEventImportDiagnosticKind.SkippedDuplicate
+                    result.diagnostics.first().eventId shouldBe "event:agent-task:42:started"
                     repository.readAll().map { it.id.toString() }.shouldContainExactly(
                         "event:agent-task:42:started",
                         "event:agent-task:44:started",
@@ -76,6 +90,8 @@ class RuntimeWorkEventImporterTest :
                         shouldNotContain("/home/")
                         shouldNotContain("private-token")
                     }
+                    error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.StoreRejected
+                    error.diagnostics.single().message shouldBe "Configured event store could not be read."
                 }
             }
 
@@ -104,6 +120,7 @@ class RuntimeWorkEventImporterTest :
                         shouldNotContain("/home/")
                         shouldNotContain("private-token")
                     }
+                    error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.UnsafeRejected
                 }
             }
 
@@ -131,6 +148,8 @@ class RuntimeWorkEventImporterTest :
                         shouldContain("Configured event store contains a duplicate work event id at line 12.")
                         shouldNotContain("event:agent-task:99:started")
                     }
+                    error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.StoreRejected
+                    error.diagnostics.single().message shouldBe "Configured event store rejected a runtime event."
                 }
             }
         }

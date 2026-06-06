@@ -21,6 +21,7 @@ import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSourc
 import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSourceException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
+import com.yonatankarp.agentdesk.app.runtime.summary
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
@@ -68,6 +69,7 @@ object AgentDeskCli {
                     "Imported ${result.importedCount} mock runtime event(s); " +
                         "skipped ${result.skippedDuplicateCount} duplicate event(s).",
                 )
+                output.println(result.diagnostics.summary().publicMessage())
             }
 
             is CliCommand.ImportOpenClawObservations -> {
@@ -83,6 +85,7 @@ object AgentDeskCli {
                     "Imported ${result.importedCount} sanitized observation event(s); " +
                         "skipped ${result.skippedDuplicateCount} duplicate event(s).",
                 )
+                output.println(result.diagnostics.summary().publicMessage())
             }
 
             is CliCommand.Inspect -> {

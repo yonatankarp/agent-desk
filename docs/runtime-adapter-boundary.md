@@ -2,6 +2,9 @@
 
 Agent Desk imports delegated-work events through a sanitized application boundary. Runtime adapters may observe local process state, host paths, account identifiers, chat metadata, raw transcripts, or runtime-specific task ids, but those details must not cross into `:core` domain records.
 
+The stable public-safe wire shape is documented in
+[Observation contract v1](observation-contract-v1.md).
+
 ## Contract
 
 The shared `:app` module owns the first runtime import contract:
