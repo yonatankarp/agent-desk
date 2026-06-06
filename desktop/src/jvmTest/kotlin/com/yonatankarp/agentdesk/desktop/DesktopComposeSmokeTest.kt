@@ -24,10 +24,12 @@ class DesktopComposeSmokeTest {
         onNodeWithText("Work state").assertIsDisplayed()
         onNodeWithText("Read-only timeline").assertIsDisplayed()
         onNodeWithText("Decision queue").assertIsDisplayed()
+        onNodeWithText("Evidence drilldown").assertIsDisplayed()
         onNodeWithText("Not done: 2 item(s) need operator attention.").assertIsDisplayed()
         onNodeWithText("Run public hygiene check").assertIsDisplayed()
         onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
         onAllNodesWithText("Review build failure").assertCountEquals(2)
+        onNodeWithText("Observation: work.blocked for agent-task:44").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
@@ -47,6 +49,7 @@ class DesktopComposeSmokeTest {
         onNodeWithText("No current work").assertIsDisplayed()
         onNodeWithText("No recent events").assertIsDisplayed()
         onNodeWithText("No items need a decision").assertIsDisplayed()
+        onNodeWithText("Evidence missing: no replay events are available.").assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)

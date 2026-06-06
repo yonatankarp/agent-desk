@@ -58,6 +58,10 @@ object DesktopSmokeSnapshotBuilder {
                     title = "Decision queue",
                     rows = message?.let(::listOf) ?: attentionItems.toWorkRows(emptyText = "No items need a decision"),
                 ),
+                DesktopSmokeSection(
+                    title = "Evidence drilldown",
+                    rows = DesktopEvidenceDrilldown.rows(screenState),
+                ),
             ),
         )
     }

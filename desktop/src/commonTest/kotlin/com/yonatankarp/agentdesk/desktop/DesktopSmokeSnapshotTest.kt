@@ -24,12 +24,21 @@ class DesktopSmokeSnapshotTest {
         assertContains(text, "Work state")
         assertContains(text, "Read-only timeline")
         assertContains(text, "Decision queue")
+        assertContains(text, "Evidence drilldown")
         assertContains(text, "Not done: 2 item(s) need operator attention.")
         assertContains(text, "Discovery/no-issue output is triage, not product completion.")
         assertContains(text, "[Running] agent-task:42 Run public hygiene check")
         assertContains(text, "work.started agent-task:42 from sample-agent")
         assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
         assertContains(text, "[Blocked] agent-task:44 Review build failure")
+        assertContains(text, "Observation: work.blocked for agent-task:44")
+        assertContains(text, "Source: sample-agent")
+        assertContains(text, "Provenance: replay event event:agent-task:44:blocked")
+        assertContains(text, "Criteria result: Not done: 2 item(s) need operator attention.")
+        assertContains(text, "Evidence missing: no public-safe evidence reference was attached.")
+        assertContains(text, "Operator notes: unavailable in read-only proof.")
+        assertContains(text, "Redacted evidence: raw provider payloads are not rendered.")
+        assertContains(text, "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.")
     }
 
     @Test
@@ -51,6 +60,15 @@ class DesktopSmokeSnapshotTest {
         assertEquals(listOf("No current work"), snapshot.sectionRows("Work state"))
         assertEquals(listOf("No recent events"), snapshot.sectionRows("Read-only timeline"))
         assertEquals(listOf("No items need a decision"), snapshot.sectionRows("Decision queue"))
+        assertEquals(
+            listOf(
+                "Evidence missing: no replay events are available.",
+                "Criteria result: Empty queue: no current work or decisions; not product completion without milestone evidence.",
+                "Operator notes: unavailable in read-only proof.",
+                "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
+            ),
+            snapshot.sectionRows("Evidence drilldown"),
+        )
     }
 
     @Test
@@ -87,6 +105,19 @@ class DesktopSmokeSnapshotTest {
         assertFalse(text.contains("token", ignoreCase = true))
         assertFalse(text.contains("op://", ignoreCase = true))
         assertFalse(text.contains("raw transcript", ignoreCase = true))
+    }
+
+    @Test
+    fun `loading state explains unavailable evidence`() {
+        val snapshot = DesktopSmokeSnapshotBuilder.from(DesktopScreenState.Loading)
+
+        assertEquals(
+            listOf(
+                "Evidence unavailable until operator state is loaded.",
+                "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
+            ),
+            snapshot.sectionRows("Evidence drilldown"),
+        )
     }
 
     private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
