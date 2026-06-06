@@ -26,7 +26,7 @@ class WorkEventProjectorTest :
         given("a started event") {
             `when`("it is projected") {
                 then("it creates a running work item") {
-                    val projection = WorkEventProjector.project(listOf(CoreFixtures.workStartedEvent()))
+                    val projection = WorkEventProjector.project(workEvents { started() })
 
                     projection.workItems.single().status shouldBe WorkStatus.Running
                     projection.workItems.single().title shouldBe CoreFixtures.workTitle
@@ -41,11 +41,11 @@ class WorkEventProjectorTest :
                 then("the latest lifecycle state requires human attention") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workNeedsDecisionEvent(),
-                                CoreFixtures.workBlockedEvent(),
-                            ),
+                            workEvents {
+                                started()
+                                needsDecision()
+                                blocked()
+                            },
                         )
 
                     projection.workItems.single().status shouldBe WorkStatus.Blocked
@@ -60,10 +60,10 @@ class WorkEventProjectorTest :
                 then("the projected item is terminal") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workSucceededEvent(),
-                            ),
+                            workEvents {
+                                started()
+                                succeeded()
+                            },
                         )
 
                     projection.workItems.single().status shouldBe WorkStatus.Succeeded
@@ -228,10 +228,10 @@ class WorkEventProjectorTest :
                 then("the event is ignored instead of inventing missing work") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workBlockedEvent(),
-                                CoreFixtures.workStartedEvent(),
-                            ),
+                            workEvents {
+                                blocked()
+                                started()
+                            },
                         )
 
                     projection.workItems.single().status shouldBe WorkStatus.Running
