@@ -1,6 +1,6 @@
 package com.yonatankarp.agentdesk.cli
 
-import io.kotest.assertions.assertSoftly
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -22,7 +22,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 0
                     result.output shouldContain "Agent Desk"
                     result.output shouldContain "sample-agent"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -40,7 +40,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
                     result.output shouldContain "- agent-task:42 Run public hygiene check (Blocked)"
                     result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -69,7 +69,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 0
                     result.output shouldContain "Agent Desk"
                     result.output shouldContain "sample-agent"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -96,7 +96,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
                     result.output shouldContain "- agent-task:42 Run public hygiene check (Blocked)"
                     result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -122,8 +122,8 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 0
                     result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
                     result.error shouldContain "Torn trailing record at line 3"
-                    assertPublicSafe(result.output)
-                    assertPublicSafe(result.error)
+                    result.output.shouldBePublicSafe()
+                    result.error.shouldBePublicSafe()
                     result.error shouldNotContain eventFile.toString()
                 }
             }
@@ -147,7 +147,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 0
                     result.output shouldContain "Work item agent-task:42"
                     result.error shouldContain "Torn trailing record at line 2"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.error shouldNotContain eventFile.toString()
                 }
             }
@@ -160,7 +160,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid event record at line 1."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -182,7 +182,7 @@ class AgentDeskCliTest :
                     result.error shouldContain "Invalid event record at line 1."
                     result.error shouldNotContain unsafeWorkItemId
                     result.error shouldNotContain rawIdentifier
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -195,7 +195,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Duplicate work event id at line 2."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -220,7 +220,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid event sequence:"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -249,7 +249,7 @@ class AgentDeskCliTest :
                             case.expectedErrors.forEach { expected ->
                                 result.error shouldContain expected
                             }
-                            assertPublicSafe(result.error)
+                            result.error.shouldBePublicSafe()
                             result.output shouldBe ""
                         }
                     }
@@ -264,7 +264,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Event input file could not be read."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -281,7 +281,7 @@ class AgentDeskCliTest :
                             result.output shouldContain "Agent Desk"
                             result.output shouldContain "Usage:"
                             result.output shouldContain "--help          Show this help."
-                            assertPublicSafe(result.output)
+                            result.output.shouldBePublicSafe()
                             result.error shouldBe ""
                         }
                     }
@@ -298,7 +298,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 2
                     result.error shouldContain "Choose only one input mode."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -311,7 +311,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Runtime config file could not be read."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -333,7 +333,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid runtime config: stored event mode requires eventStoreLocation"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -356,7 +356,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid runtime config:"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -380,7 +380,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 1
                     result.error shouldContain "Configured event store could not be read."
                     result.error shouldNotContain "broken.ndjson"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -412,7 +412,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 1
                     result.error shouldContain "Corrupt work event record at line 1 in configured event store"
                     result.error shouldNotContain unsafeEventId
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -439,7 +439,7 @@ class AgentDeskCliTest :
                     importResult.output shouldContain "Imported 6 mock runtime event(s); skipped 0 duplicate event(s)."
                     importResult.output shouldContain
                         "Diagnostics: imported=6 skipped-duplicate=0 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0."
-                    assertPublicSafe(importResult.output)
+                    importResult.output.shouldBePublicSafe()
                     importResult.error shouldBe ""
                     eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") } shouldBe
                         listOf(
@@ -455,7 +455,7 @@ class AgentDeskCliTest :
                     renderResult.output shouldContain "- [Blocked] agent-task:44 Investigate core test failure"
                     renderResult.output shouldContain "- [Needs decision] agent-task:45 Choose retry strategy"
                     renderResult.output shouldContain "work.needs-decision agent-task:45 from mock-adapter"
-                    assertPublicSafe(renderResult.output)
+                    renderResult.output.shouldBePublicSafe()
                     renderResult.error shouldBe ""
                 }
             }
@@ -472,7 +472,7 @@ class AgentDeskCliTest :
                     secondResult.output shouldContain "Imported 0 mock runtime event(s); skipped 6 duplicate event(s)."
                     secondResult.output shouldContain
                         "Diagnostics: imported=0 skipped-duplicate=6 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0."
-                    assertPublicSafe(secondResult.output)
+                    secondResult.output.shouldBePublicSafe()
                     eventFile.readLines().size shouldBe 6
                 }
             }
@@ -483,7 +483,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid event store location:"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -518,14 +518,14 @@ class AgentDeskCliTest :
                     importResult.output shouldContain "Imported 2 sanitized observation event(s); skipped 0 duplicate event(s)."
                     importResult.output shouldContain
                         "Diagnostics: imported=2 skipped-duplicate=0 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0."
-                    assertPublicSafe(importResult.output)
+                    importResult.output.shouldBePublicSafe()
                     importResult.error shouldBe ""
                     eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") } shouldBe
                         listOf("work.started", "work.blocked")
                     renderResult.exitCode shouldBe 0
                     renderResult.output shouldContain "- [Blocked] agent-task:212 Run sanitized import smoke"
                     renderResult.output shouldContain "sanitized-note Runtime adapter decision"
-                    assertPublicSafe(renderResult.output)
+                    renderResult.output.shouldBePublicSafe()
                     renderResult.error shouldBe ""
                 }
             }
@@ -556,7 +556,7 @@ class AgentDeskCliTest :
                     secondResult.output shouldContain "Imported 0 sanitized observation event(s); skipped 2 duplicate event(s)."
                     secondResult.output shouldContain
                         "Diagnostics: imported=0 skipped-duplicate=2 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0."
-                    assertPublicSafe(secondResult.output)
+                    secondResult.output.shouldBePublicSafe()
                     eventFile.readLines().size shouldBe 2
                 }
             }
@@ -590,7 +590,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 1
                     result.error shouldContain "Runtime observations could not be imported."
                     result.error shouldNotContain observationsFile.toString()
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -608,14 +608,14 @@ class AgentDeskCliTest :
                     actionResult.exitCode shouldBe 0
                     actionResult.output shouldContain "Recorded resume action for agent-task:42"
                     actionResult.output shouldContain "event:agent-task:42:action-resume"
-                    assertPublicSafe(actionResult.output)
+                    actionResult.output.shouldBePublicSafe()
                     actionResult.error shouldBe ""
                     eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") } shouldBe
                         listOf("work.started", "work.needs-decision", "work.started")
                     inspectResult.exitCode shouldBe 0
                     inspectResult.output shouldContain "Status: Running"
                     inspectResult.output shouldContain "mock-action-adapter"
-                    assertPublicSafe(inspectResult.output)
+                    inspectResult.output.shouldBePublicSafe()
                 }
             }
 
@@ -628,7 +628,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Mock action adapter currently supports only resume."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -642,7 +642,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Work item was not found."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -653,7 +653,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid event store location:"
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -672,7 +672,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "Accepted recent events"
                     result.output shouldContain "Projection warnings\n- none"
                     result.output shouldContain "Evidence references\n- none"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -691,7 +691,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "work.started from mock-adapter"
                     result.output shouldContain "work.blocked from mock-adapter"
                     result.output shouldNotContain "Prepare release checklist"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -710,7 +710,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "Terminal: yes"
                     result.output shouldContain "Projection warnings"
                     result.output shouldContain "ignored event - Cannot transition work item agent-task:42"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -734,7 +734,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 0
                     result.output shouldContain "Work item agent-task:42"
                     result.output shouldContain "Status: Running"
-                    assertPublicSafe(result.output)
+                    result.output.shouldBePublicSafe()
                     result.error shouldBe ""
                 }
             }
@@ -745,7 +745,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 1
                     result.error shouldContain "Work item was not found."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -756,7 +756,7 @@ class AgentDeskCliTest :
 
                     result.exitCode shouldBe 2
                     result.error shouldContain "Invalid work item id."
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -770,7 +770,7 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 2
                     result.error shouldContain "Invalid work item id."
                     result.error shouldNotContain unsafeWorkItemId
-                    assertPublicSafe(result.error)
+                    result.error.shouldBePublicSafe()
                     result.output shouldBe ""
                 }
             }
@@ -817,33 +817,6 @@ class AgentDeskCliTest :
                 output = output.toString().trimEnd(),
                 error = error.toString().trimEnd(),
             )
-        }
-
-        private fun assertPublicSafe(text: String) {
-            val rawIdentifier = "123456789" + "012345678"
-
-            assertSoftly(text) {
-                shouldNotContain("/home/")
-                shouldNotContain("/Users/")
-                shouldNotContain("\\Users\\")
-                lowercase() shouldNotContain "file:"
-                shouldNotContain("private-token")
-                lowercase() shouldNotContain "discord"
-                lowercase() shouldNotContain "channel:"
-                lowercase() shouldNotContain "message:"
-                lowercase() shouldNotContain "session:"
-                lowercase() shouldNotContain "thread:"
-                lowercase() shouldNotContain "raw transcript"
-                lowercase() shouldNotContain "bearer"
-                lowercase() shouldNotContain "auth_token"
-                lowercase() shouldNotContain "github_pat_"
-                lowercase() shouldNotContain "ghp_"
-                lowercase() shouldNotContain "op://"
-                lowercase() shouldNotContain "password"
-                lowercase() shouldNotContain "secret"
-                lowercase() shouldNotContain "xoxb-"
-                shouldNotContain(rawIdentifier)
-            }
         }
 
         private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"

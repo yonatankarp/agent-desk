@@ -2,13 +2,12 @@ package com.yonatankarp.agentdesk.desktop
 
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
-import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
+import com.yonatankarp.agentdesk.testfixtures.WorkEventFixtures
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -51,9 +50,8 @@ class DesktopRuntimeStateProviderTest :
         }
     })
 
-private fun startedEvent(): WorkEvent = WorkEvent(
+private fun startedEvent() = WorkEventFixtures.workStartedEvent(
     id = WorkEventId.parse("event:agent-task:77:started"),
-    occurredAt = EventTimestamp.parse("2026-06-02T21:00:00Z"),
     source = EventSource.parse("test-store"),
     workItemId = WorkItemId.parse("agent-task:77"),
     payload = WorkStartedPayload(

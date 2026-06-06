@@ -8,6 +8,7 @@ import com.yonatankarp.agentdesk.app.operator.action.ActionCapabilityPlanner
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalLoop
 import com.yonatankarp.agentdesk.app.operator.action.MockActionDecision
 import com.yonatankarp.agentdesk.app.operator.action.MockActionDecisionOutcome
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -19,10 +20,10 @@ import io.kotest.matchers.string.shouldNotContain
 class AuditTrailProjectorTest :
     BehaviorSpec({
         given("a mock approval result") {
-            val events = listOf(
-                AppFixtures.workStartedEvent(),
-                AppFixtures.workBlockedEvent(),
-            )
+            val events = workEvents {
+                started()
+                blocked()
+            }
             val item = OperatorStateProjector.project(events).workItems.single()
             val proposal = ActionCapabilityPlanner.propose(
                 item = item,

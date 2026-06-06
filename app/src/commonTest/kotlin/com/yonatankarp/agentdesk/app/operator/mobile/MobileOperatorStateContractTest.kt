@@ -3,16 +3,10 @@ package com.yonatankarp.agentdesk.app.operator.mobile
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
-import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
-import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
+import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
+import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -47,12 +41,17 @@ class MobileOperatorStateContractTest :
             `when`("the mobile contract is derived from events") {
                 then("it preserves status presentation and compact public-safe evidence references") {
                     val state = MobileOperatorStateContract.fromEvents(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workNeedsDecisionEvent(
-                                id = WorkEventId.parse("event:agent-task:42:needs-decision"),
-                            ).copy(evidenceReferences = listOf(publicEvidenceReference())),
-                        ),
+                        workEvents {
+                            started()
+                            needsDecision(
+                                evidence = listOf(
+                                    checkRunEvidence(
+                                        "Mobile contract check",
+                                        "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+                                    ),
+                                ),
+                            )
+                        },
                     )
 
                     assertSoftly {
@@ -74,20 +73,16 @@ class MobileOperatorStateContractTest :
         given("stored events with stale running work") {
             `when`("a newer accepted event is past the stale threshold") {
                 then("stale attention is included in the mobile attention queue") {
-                    val freshWorkItemId = WorkItemId.parse("agent-task:77")
                     val state = MobileOperatorStateContract.fromEvents(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workStartedEvent(
-                                id = WorkEventId.parse("event:agent-task:77:started"),
-                                occurredAt = EventTimestamp.parse("2026-06-02T22:01:00Z"),
-                                workItemId = freshWorkItemId,
-                                payload = WorkStartedPayload(
-                                    title = WorkItemTitle.parse("Refresh operator summary"),
-                                    summary = WorkSummary.parse("Agent started a later task."),
-                                ),
-                            ),
-                        ),
+                        workEvents {
+                            started()
+                            started(
+                                workItemId = "agent-task:77",
+                                at = eventTimestampAt(minute = 1, hour = 22),
+                                title = "Refresh operator summary",
+                                summary = "Agent started a later task.",
+                            )
+                        },
                     )
 
                     val stale = state.attentionQueue.single { it.workItem.id == "agent-task:42" }
@@ -107,13 +102,15 @@ class MobileOperatorStateContractTest :
             `when`("an invalid transition follows accepted state") {
                 then("accepted current work and public-safe warning details are both exposed") {
                     val state = MobileOperatorStateContract.fromEvents(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workSucceededEvent(),
-                            AppFixtures.workBlockedEvent(
-                                id = WorkEventId.parse("event:agent-task:42:blocked-after-success"),
-                            ),
-                        ),
+                        workEvents {
+                            started()
+                            succeeded()
+                            event(
+                                AppFixtures.workBlockedEvent(
+                                    id = WorkEventId.parse("event:agent-task:42:blocked-after-success"),
+                                ),
+                            )
+                        },
                     )
 
                     assertSoftly {
@@ -156,9 +153,3 @@ class MobileOperatorStateContractTest :
             }
         }
     })
-
-private fun publicEvidenceReference(): EvidenceReference = EvidenceReference(
-    kind = EvidenceReferenceKind.CheckRun,
-    label = EvidenceLabel.parse("Mobile contract check"),
-    target = EvidenceTarget.parse("https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"),
-)

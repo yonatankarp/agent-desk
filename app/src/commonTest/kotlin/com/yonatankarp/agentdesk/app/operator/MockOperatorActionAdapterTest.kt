@@ -1,18 +1,15 @@
 package com.yonatankarp.agentdesk.app.operator
 
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workBlockedEvent
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workItemId
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workSucceededEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
-import io.kotest.assertions.assertSoftly
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
 class MockOperatorActionAdapterTest :
     BehaviorSpec({
@@ -24,7 +21,10 @@ class MockOperatorActionAdapterTest :
                     val event = adapter.perform(
                         intent = OperatorActionIntent.Resume,
                         workItemId = workItemId,
-                        events = listOf(workStartedEvent(), workBlockedEvent()),
+                        events = workEvents {
+                            started()
+                            blocked()
+                        },
                     )
 
                     event.id.toString() shouldBe "event:agent-task:42:action-resume"
@@ -41,11 +41,14 @@ class MockOperatorActionAdapterTest :
                         adapter.perform(
                             intent = OperatorActionIntent.Stop,
                             workItemId = workItemId,
-                            events = listOf(workStartedEvent(), workBlockedEvent()),
+                            events = workEvents {
+                                started()
+                                blocked()
+                            },
                         )
                     }
 
-                    assertPublicSafe(error.message.orEmpty())
+                    error.message.orEmpty().shouldBePublicSafe()
                     error.message shouldContain "supports only resume"
                 }
             }
@@ -56,11 +59,14 @@ class MockOperatorActionAdapterTest :
                         adapter.perform(
                             intent = OperatorActionIntent.Resume,
                             workItemId = WorkItemId.parse("agent-task:99"),
-                            events = listOf(workStartedEvent(), workBlockedEvent()),
+                            events = workEvents {
+                                started()
+                                blocked()
+                            },
                         )
                     }
 
-                    assertPublicSafe(error.message.orEmpty())
+                    error.message.orEmpty().shouldBePublicSafe()
                     error.message shouldBe "Work item was not found."
                 }
             }
@@ -71,22 +77,16 @@ class MockOperatorActionAdapterTest :
                         adapter.perform(
                             intent = OperatorActionIntent.Resume,
                             workItemId = workItemId,
-                            events = listOf(workStartedEvent(), workSucceededEvent()),
+                            events = workEvents {
+                                started()
+                                succeeded()
+                            },
                         )
                     }
 
-                    assertPublicSafe(error.message.orEmpty())
+                    error.message.orEmpty().shouldBePublicSafe()
                     error.message shouldContain "cannot be resumed"
                 }
             }
         }
     })
-
-private fun assertPublicSafe(text: String) {
-    assertSoftly(text) {
-        shouldNotContain("/home/")
-        shouldNotContain("private-token")
-        shouldNotContain("discord")
-        shouldNotContain("op://")
-    }
-}

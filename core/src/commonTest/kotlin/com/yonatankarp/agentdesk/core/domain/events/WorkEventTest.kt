@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.core.domain.events
 
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
+import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -128,10 +129,9 @@ class WorkEventTest :
         given("evidence references") {
             `when`("public-safe evidence is parsed") {
                 then("it preserves adapter-neutral kind, label, and target") {
-                    val reference = EvidenceReference(
-                        kind = EvidenceReferenceKind.CheckRun,
-                        label = EvidenceLabel.parse("Gradle Build"),
-                        target = EvidenceTarget.parse("https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"),
+                    val reference = checkRunEvidence(
+                        "Gradle Build",
+                        "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
                     )
 
                     reference.kind.wireName shouldBe "check-run"

@@ -1,9 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator.verification
 
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -184,9 +181,5 @@ private fun verification(
     outputReference = outputReference,
     failureSummary = failureSummary,
     freshness = freshness,
-    evidenceReference = EvidenceReference(
-        kind = EvidenceReferenceKind.SanitizedNote,
-        label = EvidenceLabel.parse("Verification evidence"),
-        target = EvidenceTarget.parse(outputReference),
-    ),
+    evidenceReference = sanitizedNoteEvidence("Verification evidence", outputReference),
 )

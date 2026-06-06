@@ -1,11 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.decision
 
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
-import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
+import com.yonatankarp.agentdesk.app.fixtures.operatorState
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -19,21 +15,10 @@ class DecisionQueueProjectorTest :
         given("operator state with decision requests") {
             `when`("a needs-decision event has public-safe evidence") {
                 then("it creates a pending read-only decision queue item") {
-                    val needsDecision = AppFixtures.workNeedsDecisionEvent().copy(
-                        evidenceReferences = listOf(
-                            EvidenceReference(
-                                kind = EvidenceReferenceKind.SanitizedNote,
-                                label = EvidenceLabel.parse("Decision context"),
-                                target = EvidenceTarget.parse("docs/decision-context.md"),
-                            ),
-                        ),
-                    )
-                    val state = OperatorStateProjector.project(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            needsDecision,
-                        ),
-                    )
+                    val state = operatorState {
+                        started()
+                        needsDecision(evidence = listOf(sanitizedNoteEvidence("Decision context", "docs/decision-context.md")))
+                    }
 
                     val projection = DecisionQueueProjector.project(state)
                     val item = projection.items.single()
@@ -61,12 +46,10 @@ class DecisionQueueProjectorTest :
 
             `when`("a needs-decision event has no evidence") {
                 then("it marks the queue item as insufficient evidence") {
-                    val state = OperatorStateProjector.project(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workNeedsDecisionEvent(),
-                        ),
-                    )
+                    val state = operatorState {
+                        started()
+                        needsDecision()
+                    }
 
                     val item = DecisionQueueProjector.project(state).items.single()
 
@@ -78,13 +61,11 @@ class DecisionQueueProjectorTest :
 
             `when`("later replay state resolves the work") {
                 then("it keeps the historical request but marks it superseded") {
-                    val state = OperatorStateProjector.project(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workNeedsDecisionEvent(),
-                            AppFixtures.workFailedEvent(),
-                        ),
-                    )
+                    val state = operatorState {
+                        started()
+                        needsDecision()
+                        failed()
+                    }
 
                     val item = DecisionQueueProjector.project(state).items.single()
 
