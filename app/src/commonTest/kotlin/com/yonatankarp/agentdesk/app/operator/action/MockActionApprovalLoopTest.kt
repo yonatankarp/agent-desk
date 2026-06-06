@@ -1,6 +1,5 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
@@ -8,6 +7,7 @@ import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -18,10 +18,10 @@ import io.kotest.matchers.string.shouldNotContain
 class MockActionApprovalLoopTest :
     BehaviorSpec({
         given("a mock local resume proposal") {
-            val events = listOf(
-                AppFixtures.workStartedEvent(),
-                AppFixtures.workBlockedEvent(),
-            )
+            val events = workEvents {
+                started()
+                blocked()
+            }
             val item = OperatorStateProjector.project(events).workItems.single()
             val proposal = ActionCapabilityPlanner.propose(
                 item = item,
@@ -143,10 +143,10 @@ class MockActionApprovalLoopTest :
 
             `when`("an approved proposal lacks proposal evidence") {
                 then("it records partial success with the local result event") {
-                    val events = listOf(
-                        AppFixtures.workStartedEvent(),
-                        AppFixtures.workBlockedEvent(),
-                    )
+                    val events = workEvents {
+                        started()
+                        blocked()
+                    }
                     val item = OperatorStateProjector.project(events).workItems.single()
 
                     val result = MockActionApprovalLoop().decide(

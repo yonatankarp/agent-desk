@@ -1,8 +1,6 @@
 package com.yonatankarp.agentdesk.app.runtime
 
-import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
-import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.app.fixtures.InMemoryWorkEventRepository
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -203,7 +201,7 @@ class OpenClawRuntimeObservationFileSourceTest :
                     val error = shouldThrow<RuntimeWorkEventImportException> {
                         RuntimeWorkEventImporter(
                             source = source,
-                            repository = OpenClawFileSourceTestRepository(),
+                            repository = InMemoryWorkEventRepository(),
                         ).importEvents()
                     }
 
@@ -222,14 +220,4 @@ private fun tempExport(content: String): Path {
     val path = Files.createTempFile("agent-desk-sanitized-observations", ".json")
     Files.writeString(path, content)
     return path
-}
-
-private class OpenClawFileSourceTestRepository : WorkEventRepository {
-    private val events = mutableListOf<WorkEvent>()
-
-    override fun append(event: WorkEvent) {
-        events.add(event)
-    }
-
-    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
 }

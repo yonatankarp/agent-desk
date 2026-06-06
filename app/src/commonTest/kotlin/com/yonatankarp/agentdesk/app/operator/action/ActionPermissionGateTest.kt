@@ -1,8 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.fixtures.projectedWorkItem
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
-import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.audit.AuditResult
 import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailProjector
 import io.kotest.assertions.assertSoftly
@@ -310,9 +309,7 @@ private fun blockedTarget(): ActionTarget = blockedItem().let { item ->
     )
 }
 
-private fun blockedItem() = OperatorStateProjector.project(
-    listOf(
-        AppFixtures.workStartedEvent(),
-        AppFixtures.workBlockedEvent(),
-    ),
-).workItems.single()
+private fun blockedItem() = projectedWorkItem {
+    started()
+    blocked()
+}

@@ -1,8 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
-import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -13,16 +12,12 @@ class WorkItemInspectorTest :
         given("accepted work events") {
             `when`("a work item is inspected") {
                 then("it selects the item and filters accepted event lines") {
-                    val otherItemId = WorkItemId.parse("agent-task:43")
                     val inspection = WorkItemInspector.inspect(
-                        events = listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workBlockedEvent(),
-                            AppFixtures.workStartedEvent(
-                                id = WorkEventId.parse("event:agent-task:43:started"),
-                                workItemId = otherItemId,
-                            ),
-                        ),
+                        events = workEvents {
+                            started()
+                            blocked()
+                            started(workItemId = "agent-task:43")
+                        },
                         workItemId = AppFixtures.workItemId,
                     )
 
@@ -44,11 +39,11 @@ class WorkItemInspectorTest :
             `when`("an ignored event belongs to the inspected item") {
                 then("the warning is preserved without dropping accepted state") {
                     val inspection = WorkItemInspector.inspect(
-                        events = listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workSucceededEvent(),
-                            AppFixtures.workBlockedEvent(),
-                        ),
+                        events = workEvents {
+                            started()
+                            succeeded()
+                            blocked()
+                        },
                         workItemId = AppFixtures.workItemId,
                     )
 

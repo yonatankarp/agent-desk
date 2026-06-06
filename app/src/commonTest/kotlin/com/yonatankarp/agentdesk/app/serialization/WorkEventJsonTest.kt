@@ -1,10 +1,8 @@
 package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
+import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
+import com.yonatankarp.agentdesk.testfixtures.commitEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -46,17 +44,10 @@ class WorkEventJsonTest :
                 then("it preserves compact public-safe evidence records") {
                     val event = AppFixtures.workStartedEvent().copy(
                         evidenceReferences = listOf(
-                            EvidenceReference(
-                                kind = EvidenceReferenceKind.Commit,
-                                label = EvidenceLabel.parse("Implementation commit"),
-                                target = EvidenceTarget.parse("commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"),
-                            ),
-                            EvidenceReference(
-                                kind = EvidenceReferenceKind.CheckRun,
-                                label = EvidenceLabel.parse("Gradle Build"),
-                                target = EvidenceTarget.parse(
-                                    "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
-                                ),
+                            commitEvidence("Implementation commit", "commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"),
+                            checkRunEvidence(
+                                "Gradle Build",
+                                "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
                             ),
                         ),
                     )

@@ -1,12 +1,12 @@
 package com.yonatankarp.agentdesk.app.operator
 
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
 class OperatorStatePresenterTest :
     BehaviorSpec({
@@ -33,10 +33,7 @@ class OperatorStatePresenterTest :
                         text shouldContain "sample-agent"
                         text shouldContain "work.started"
                         text shouldContain "work.blocked"
-                        text shouldNotContain "/home/"
-                        text shouldNotContain "discord"
-                        text shouldNotContain "token"
-                        text shouldNotContain "op://"
+                        text.shouldBePublicSafe()
                     }
                 }
             }

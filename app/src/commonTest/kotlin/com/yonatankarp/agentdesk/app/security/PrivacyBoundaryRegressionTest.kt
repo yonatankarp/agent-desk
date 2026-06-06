@@ -1,12 +1,11 @@
 package com.yonatankarp.agentdesk.app.security
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.fixtures.InMemoryWorkEventRepository
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionEvidenceChecklist
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionOutcome
-import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
-import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportDiagnosticKind
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
@@ -22,7 +21,7 @@ import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -55,8 +54,8 @@ class PrivacyBoundaryRegressionTest :
                         verificationResults = emptyList(),
                     )
 
-                    assertPublicSafeOutput(persisted)
-                    assertPublicSafeOutput(uiSummary)
+                    persisted.shouldBePublicSafe()
+                    uiSummary.shouldBePublicSafe()
                     report.touchedArtifacts shouldContain
                         "app/src/commonTest/kotlin/com/yonatankarp/agentdesk/app/security/PrivacyBoundaryRegressionTest.kt"
                 }
@@ -227,30 +226,4 @@ private enum class PrivacyLeakKind {
     LocalPath,
     RawChannelId,
     RuntimeSessionId,
-}
-
-private class InMemoryWorkEventRepository : WorkEventRepository {
-    private val events = mutableListOf<WorkEvent>()
-
-    override fun append(event: WorkEvent) {
-        events += event
-    }
-
-    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
-}
-
-private fun assertPublicSafeOutput(text: String) {
-    assertSoftly(text) {
-        shouldNotContain("/home/")
-        shouldNotContain("/Users/")
-        shouldNotContain("C:\\")
-        shouldNotContain("localhost")
-        shouldNotContain("auth_token")
-        shouldNotContain("password")
-        shouldNotContain("secret")
-        shouldNotContain("token")
-        shouldNotContain("raw transcript")
-        shouldNotContain("channel:")
-        shouldNotContain("session:")
-    }
 }

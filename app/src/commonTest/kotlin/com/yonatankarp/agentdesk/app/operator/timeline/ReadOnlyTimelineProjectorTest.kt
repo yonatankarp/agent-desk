@@ -1,16 +1,15 @@
 package com.yonatankarp.agentdesk.app.operator.timeline
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.fixtures.operatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContain
@@ -86,18 +85,11 @@ class ReadOnlyTimelineProjectorTest :
 
             `when`("state has stale attention and evidence") {
                 then("entries carry stale, evidence, and diagnostic markers without private text") {
-                    val eventWithEvidence = AppFixtures.workStartedEvent().copy(
-                        evidenceReferences = listOf(
-                            EvidenceReference(
-                                kind = EvidenceReferenceKind.SanitizedNote,
-                                label = EvidenceLabel.parse("Replay evidence"),
-                                target = EvidenceTarget.parse("docs/canonical-sanitized-replay.md"),
-                            ),
-                        ),
-                    )
-                    val projected = OperatorStateProjector.project(
-                        listOf(eventWithEvidence),
-                    )
+                    val events = workEvents {
+                        started(evidence = listOf(sanitizedNoteEvidence("Replay evidence", "docs/canonical-sanitized-replay.md")))
+                    }
+                    val eventWithEvidence = events.single()
+                    val projected = OperatorStateProjector.project(events)
                     val state = projected.copy(
                         staleAttention = listOf(
                             StaleWorkAttention(
@@ -125,12 +117,10 @@ class ReadOnlyTimelineProjectorTest :
 
             `when`("events include failed and partial entries") {
                 then("it exposes failure and partial markers") {
-                    val failed = OperatorStateProjector.project(
-                        listOf(
-                            AppFixtures.workStartedEvent(),
-                            AppFixtures.workFailedEvent(),
-                        ),
-                    )
+                    val failed = operatorState {
+                        started()
+                        failed()
+                    }
                     val partial = failed.copy(workItems = emptyList())
 
                     val failedProjection = ReadOnlyTimelineProjector.project(failed)

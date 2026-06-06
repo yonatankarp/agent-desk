@@ -1,8 +1,7 @@
 package com.yonatankarp.agentdesk.app.runtime
 
-import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
-import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.app.fixtures.InMemoryWorkEventRepository
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -19,7 +18,7 @@ class OpenClawRuntimeObservationFixtureTest :
         given("the checked-in sanitized OpenClaw export fixture") {
             `when`("the fixture is imported") {
                 then("it produces canonical work events in source order") {
-                    val repository = FixtureImportRepository()
+                    val repository = InMemoryWorkEventRepository()
 
                     val result = RuntimeWorkEventImporter(
                         source = OpenClawRuntimeObservationFileSource(fixturePath()),
@@ -58,16 +57,7 @@ class OpenClawRuntimeObservationFixtureTest :
 
                     assertSoftly(fixtureText) {
                         shouldContain("openclaw-local")
-                        shouldNotContain("/home/")
-                        shouldNotContain("/Users/")
-                        shouldNotContain("auth_token")
-                        shouldNotContain("bearer ")
-                        shouldNotContain("channel:")
-                        shouldNotContain("message:")
-                        shouldNotContain("raw transcript")
-                        shouldNotContain("session:")
-                        shouldNotContain("thread:")
-                        shouldNotContain("op://")
+                        shouldBePublicSafe()
                     }
                 }
             }
@@ -98,7 +88,7 @@ class OpenClawRuntimeObservationFixtureTest :
                     val error = shouldThrow<RuntimeWorkEventImportException> {
                         RuntimeWorkEventImporter(
                             source = OpenClawRuntimeObservationFileSource(exportPath),
-                            repository = FixtureImportRepository(),
+                            repository = InMemoryWorkEventRepository(),
                         ).importEvents()
                     }
 
@@ -122,14 +112,4 @@ private fun fixtureTempExport(content: String): Path {
     val path = Files.createTempFile("agent-desk-invalid-sanitized-observations", ".json")
     Files.writeString(path, content)
     return path
-}
-
-private class FixtureImportRepository : WorkEventRepository {
-    private val events = mutableListOf<WorkEvent>()
-
-    override fun append(event: WorkEvent) {
-        events.add(event)
-    }
-
-    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
 }

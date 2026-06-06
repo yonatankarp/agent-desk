@@ -1,9 +1,8 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
-import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.fixtures.projectedWorkItem
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
-import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
@@ -20,13 +19,10 @@ import io.kotest.matchers.string.shouldNotContain
 class ActionCapabilityPlannerTest :
     BehaviorSpec({
         given("a blocked work item") {
-            val state = OperatorStateProjector.project(
-                listOf(
-                    AppFixtures.workStartedEvent(),
-                    AppFixtures.workBlockedEvent(),
-                ),
-            )
-            val item = state.workItems.single()
+            val item = projectedWorkItem {
+                started()
+                blocked()
+            }
 
             `when`("inspect is proposed") {
                 then("it is preview-only and read-only") {

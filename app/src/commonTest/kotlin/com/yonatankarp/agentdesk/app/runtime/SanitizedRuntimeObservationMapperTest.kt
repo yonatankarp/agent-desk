@@ -6,6 +6,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -343,11 +344,7 @@ class SanitizedRuntimeObservationMapperTest :
 
                     assertSoftly {
                         text shouldContain "mock-adapter"
-                        text shouldNotContain "/home/"
-                        text shouldNotContain "discord"
-                        text shouldNotContain "token"
-                        text shouldNotContain "secret"
-                        text shouldNotContain "op://"
+                        text.shouldBePublicSafe()
                     }
                 }
             }
