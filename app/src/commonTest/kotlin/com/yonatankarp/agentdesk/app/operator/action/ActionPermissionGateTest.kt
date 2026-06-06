@@ -193,6 +193,85 @@ class ActionPermissionGateTest :
             }
         }
 
+        given("approval attribution") {
+            `when`("a different operator approves a local write") {
+                then("the decision adopts the approval actor and timestamp, not the request's") {
+                    val decision = ActionPermissionGate.decide(
+                        request(
+                            proposal = resumeProposal(),
+                            actionClass = PermissionedActionClass.LocalWrite,
+                            intentSummary = "Resume local mock work.",
+                            approval = ActionPermissionApproval(
+                                outcome = PermissionApprovalOutcome.Approve,
+                                actor = "operator:reviewer",
+                                decidedAt = "2026-06-06T09:30:00Z",
+                                rationale = "Reviewed the public-safe proposal.",
+                            ),
+                        ),
+                    )
+
+                    assertSoftly(decision) {
+                        state shouldBe PermissionDecisionState.Approved
+                        actor shouldBe "operator:reviewer"
+                        decidedAt shouldBe "2026-06-06T09:30:00Z"
+                    }
+                }
+            }
+
+            `when`("intent is ambiguous even though an approval is attached") {
+                then("ambiguity wins and the gate fails closed") {
+                    val decision = ActionPermissionGate.decide(
+                        request(
+                            proposal = resumeProposal(),
+                            actionClass = PermissionedActionClass.LocalWrite,
+                            intentSummary = "Maybe resume the item.",
+                            ambiguous = true,
+                            approval = approval(PermissionApprovalOutcome.Approve),
+                        ),
+                    )
+
+                    decision.state shouldBe PermissionDecisionState.RequiresClarification
+                    decision.behavior shouldBe PermissionGateBehavior.RequireClarification
+                }
+            }
+        }
+
+        given("explicit approval classes on an enabled proposal") {
+            `when`("a destructive-class request is approved") {
+                then("it is approved for planning only with the explicit-approval behavior") {
+                    val decision = ActionPermissionGate.decide(
+                        request(
+                            proposal = resumeProposal(),
+                            actionClass = PermissionedActionClass.Destructive,
+                            intentSummary = "Plan a destructive control.",
+                            approval = approval(PermissionApprovalOutcome.Approve),
+                        ),
+                    )
+
+                    decision.state shouldBe PermissionDecisionState.Approved
+                    decision.behavior shouldBe PermissionGateBehavior.RequireExplicitApproval
+                    decision.logSummary shouldContain "planning only"
+                }
+            }
+
+            `when`("a destructive-class request is rejected") {
+                then("it is denied with the rejection recorded") {
+                    val decision = ActionPermissionGate.decide(
+                        request(
+                            proposal = resumeProposal(),
+                            actionClass = PermissionedActionClass.Destructive,
+                            intentSummary = "Plan a destructive control.",
+                            approval = approval(PermissionApprovalOutcome.Reject),
+                        ),
+                    )
+
+                    decision.state shouldBe PermissionDecisionState.Denied
+                    decision.behavior shouldBe PermissionGateBehavior.RequireExplicitApproval
+                    decision.logSummary shouldContain "rejected by operator"
+                }
+            }
+        }
+
         given("public-safe validation") {
             `when`("private content is used in a loggable field") {
                 then("it rejects without echoing the private value") {
