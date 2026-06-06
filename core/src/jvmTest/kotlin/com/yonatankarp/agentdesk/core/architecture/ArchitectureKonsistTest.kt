@@ -1,10 +1,49 @@
 package com.yonatankarp.agentdesk.core.architecture
 
 import com.lemonappdev.konsist.api.Konsist
-import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
+import com.yonatankarp.agentdesk.testfixtures.architecture.ModuleArchitectureRules
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
+
+private val eventDeclarationNames =
+    setOf(
+        "EventSource",
+        "EventTimestamp",
+        "EvidenceLabel",
+        "EvidenceReference",
+        "EvidenceReferenceKind",
+        "EvidenceTarget",
+        "WorkBlockedPayload",
+        "WorkCanceledPayload",
+        "WorkEvent",
+        "WorkEventId",
+        "WorkEventPayload",
+        "WorkEventType",
+        "WorkFailedPayload",
+        "WorkNeedsDecisionPayload",
+        "WorkStartedPayload",
+        "WorkSucceededPayload",
+    )
+
+private val blockedImportPrefixes =
+    listOf(
+        "androidx.compose.",
+        "com.yonatankarp.agentdesk.adapter.",
+        "com.yonatankarp.agentdesk.cli.",
+        "com.yonatankarp.agentdesk.desktop.",
+        "com.yonatankarp.agentdesk.app.",
+        "com.yonatankarp.agentdesk.persistence.",
+        "com.yonatankarp.agentdesk.runtime.",
+        "com.yonatankarp.agentdesk.ui.",
+        "io.ktor.",
+        "java.io.",
+        "java.nio.",
+        "kotlin.io.",
+        "kotlinx.serialization.",
+        "okhttp3.",
+        "org.slf4j.",
+    )
 
 class ArchitectureKonsistTest :
     FunSpec({
@@ -18,12 +57,11 @@ class ArchitectureKonsistTest :
         }
 
         test("core declarations stay under the domain package") {
-            Konsist
-                .scopeFromProject(moduleName = "core", sourceSetName = "commonMain")
-                .classes()
-                .assertTrue {
-                    it.resideInPackage("com.yonatankarp.agentdesk.core.domain..")
-                }
+            ModuleArchitectureRules.assertProductionDeclarationsResideIn(
+                moduleName = "core",
+                sourceSets = listOf("commonMain"),
+                packagePattern = "com.yonatankarp.agentdesk.core.domain..",
+            )
         }
 
         test("core entity declarations stay in the entities package") {
@@ -65,25 +103,18 @@ class ArchitectureKonsistTest :
         }
 
         test("core production files do not import concrete adapter or library packages") {
-            Konsist
-                .scopeFromProject(moduleName = "core", sourceSetName = "commonMain")
-                .files
-                .assertTrue { file ->
-                    !file.hasBlockedConcreteImport()
-                }
+            ModuleArchitectureRules.assertNoBlockedImports(
+                moduleName = "core",
+                sourceSets = listOf("commonMain"),
+                blockedImportPrefixes = blockedImportPrefixes,
+            )
         }
 
         test("core test files use Kotest instead of kotlin.test or JUnit") {
-            coreTestSourceSets.forEach { sourceSet ->
-                Konsist
-                    .scopeFromProject(moduleName = "core", sourceSetName = sourceSet)
-                    .files
-                    .assertTrue { file ->
-                        !file.hasImport { import ->
-                            blockedTestFrameworkPrefixes.any { import.name.startsWith(it) }
-                        }
-                    }
-            }
+            ModuleArchitectureRules.assertKotestOnly(
+                moduleName = "core",
+                testSourceSets = listOf("commonTest", "jvmTest"),
+            )
         }
 
         test("forbidden domain import guard catches serialization fixtures") {
@@ -94,60 +125,6 @@ class ArchitectureKonsistTest :
                     .single()
 
             fixture.hasPackage("com.yonatankarp.agentdesk.core.domain.fixture").shouldBeTrue()
-            fixture.hasBlockedConcreteImport().shouldBeTrue()
+            ModuleArchitectureRules.hasBlockedImport(fixture, blockedImportPrefixes).shouldBeTrue()
         }
-    }) {
-    companion object {
-        private val coreTestSourceSets = listOf("commonTest", "jvmTest")
-
-        // Kotest is the only test framework (docs/engineering-style.md).
-        private val blockedTestFrameworkPrefixes =
-            listOf(
-                "kotlin.test.",
-                "org.junit.",
-            )
-
-        private val eventDeclarationNames =
-            setOf(
-                "EventSource",
-                "EventTimestamp",
-                "EvidenceLabel",
-                "EvidenceReference",
-                "EvidenceReferenceKind",
-                "EvidenceTarget",
-                "WorkBlockedPayload",
-                "WorkCanceledPayload",
-                "WorkEvent",
-                "WorkEventId",
-                "WorkEventPayload",
-                "WorkEventType",
-                "WorkFailedPayload",
-                "WorkNeedsDecisionPayload",
-                "WorkStartedPayload",
-                "WorkSucceededPayload",
-            )
-
-        private val blockedImportPrefixes =
-            listOf(
-                "androidx.compose.",
-                "com.yonatankarp.agentdesk.adapter.",
-                "com.yonatankarp.agentdesk.cli.",
-                "com.yonatankarp.agentdesk.desktop.",
-                "com.yonatankarp.agentdesk.app.",
-                "com.yonatankarp.agentdesk.persistence.",
-                "com.yonatankarp.agentdesk.runtime.",
-                "com.yonatankarp.agentdesk.ui.",
-                "io.ktor.",
-                "java.io.",
-                "java.nio.",
-                "kotlin.io.",
-                "kotlinx.serialization.",
-                "okhttp3.",
-                "org.slf4j.",
-            )
-
-        private fun KoFileDeclaration.hasBlockedConcreteImport(): Boolean = hasImport { import ->
-            blockedImportPrefixes.any { import.name.startsWith(it) }
-        }
-    }
-}
+    })
