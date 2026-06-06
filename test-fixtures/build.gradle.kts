@@ -12,6 +12,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core"))
+            implementation(libs.kotest.assertions.core)
         }
         jvmMain.dependencies {
             implementation(libs.konsist)
