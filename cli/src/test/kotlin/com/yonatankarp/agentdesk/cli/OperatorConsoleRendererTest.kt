@@ -5,18 +5,14 @@ import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
-import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
-import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
+import com.yonatankarp.agentdesk.testfixtures.WorkEventFixtures
+import com.yonatankarp.agentdesk.testfixtures.commitEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -30,14 +26,11 @@ class OperatorConsoleRendererTest :
         given("an operator state with work items, attention, and events") {
             `when`("the state is rendered") {
                 then("it renders current work, attention queue, and event timeline") {
-                    val workItemId = WorkItemId.parse("agent-task:42")
                     val staleWorkItemId = WorkItemId.parse("agent-task:45")
                     val output = renderer.render(
                         OperatorState(
                             workItems = listOf(
-                                WorkItem(
-                                    id = workItemId,
-                                    title = WorkItemTitle.parse("Run public hygiene check"),
+                                WorkEventFixtures.workItem(
                                     status = WorkStatus.NeedsDecision,
                                     summary = WorkSummary.parse("Operator decision needed before continuing."),
                                 ),
@@ -48,20 +41,17 @@ class OperatorConsoleRendererTest :
                                 ),
                             ),
                             events = listOf(
-                                WorkEvent(
-                                    id = WorkEventId.parse("event:agent-task:42:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T21:00:00Z"),
+                                WorkEventFixtures.workStartedEvent(
                                     source = EventSource.parse("sample-agent"),
-                                    workItemId = workItemId,
                                     payload = WorkStartedPayload(
-                                        title = WorkItemTitle.parse("Run public hygiene check"),
+                                        title = WorkEventFixtures.workTitle,
                                         summary = WorkSummary.parse("Agent accepted the task and started checks."),
                                     ),
+                                ).copy(
                                     evidenceReferences = listOf(
-                                        EvidenceReference(
-                                            kind = EvidenceReferenceKind.Commit,
-                                            label = EvidenceLabel.parse("Implementation commit"),
-                                            target = EvidenceTarget.parse("commit:80de32988617392e1f42e6c4c48c66a56aaae4c4"),
+                                        commitEvidence(
+                                            "Implementation commit",
+                                            "commit:80de32988617392e1f42e6c4c48c66a56aaae4c4",
                                         ),
                                     ),
                                 ),
