@@ -122,6 +122,23 @@ class ActionPermissionGateTest :
                     decision.logSummary shouldContain "canceled"
                 }
             }
+
+            `when`("operator rejects") {
+                then("it records rejection and denies execution") {
+                    val decision = ActionPermissionGate.decide(
+                        request(
+                            proposal = resumeProposal(),
+                            actionClass = PermissionedActionClass.LocalWrite,
+                            intentSummary = "Resume local mock work.",
+                            approval = approval(PermissionApprovalOutcome.Reject),
+                        ),
+                    )
+
+                    decision.state shouldBe PermissionDecisionState.Denied
+                    decision.behavior shouldBe PermissionGateBehavior.RequireLocalConfirmation
+                    decision.logSummary shouldContain "rejected by operator"
+                }
+            }
         }
 
         given("external and ambiguous permissions") {

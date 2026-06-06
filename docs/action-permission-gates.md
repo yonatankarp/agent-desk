@@ -25,9 +25,12 @@ and credential actions require explicit approval and still remain planning-only
 until a future adapter deliberately implements execution.
 
 Unsupported or disabled proposals are denied even when approval is present.
-Ambiguous requests require clarification and allow no action. Permission decision
-logs record class, behavior, state, actor, target, action, receipt, and a compact
-public-safe summary; they do not store private content.
+Ambiguous requests require clarification and allow no action. Permission
+decisions retain class, behavior, state, actor, target, action, receipt, and a
+compact public-safe summary. The audit projection persists state, actor, target,
+action, receipt, and uses the public-safe summary as detail; gate behavior is
+available on the decision object, not as a separate audit column. Logs do not
+store private content.
 
 Non-goals for this slice: live external sends, executor wiring, account changes,
 destructive controls, credential storage, or provider-specific permission APIs.

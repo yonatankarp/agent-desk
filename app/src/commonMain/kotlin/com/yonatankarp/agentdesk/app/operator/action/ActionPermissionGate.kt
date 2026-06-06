@@ -53,6 +53,7 @@ data class ActionPermissionDecision(
 ) {
     init {
         EventTimestamp.parse(decidedAt)
+        require(actor.isNotBlank()) { "Permission decision actor must not be blank." }
         require(action.isNotBlank()) { "Permission decision action must not be blank." }
         require(target.isNotBlank()) { "Permission decision target must not be blank." }
         require(logSummary.isNotBlank()) { "Permission decision summary must not be blank." }
