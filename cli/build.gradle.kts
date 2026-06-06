@@ -20,7 +20,8 @@ dependencies {
     implementation(project(":app"))
     implementation(project(":core"))
     testImplementation(libs.konsist)
-    testImplementation(kotlin("test"))
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
 }
 
 kover {
