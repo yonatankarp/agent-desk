@@ -11,6 +11,16 @@ This repository is public. Treat all tracked files, issues, CI logs, screenshots
 - Prefer reusable workflows and composite actions from `yonatankarp/github-actions` when they fit the slice.
 - Do not commit private OpenClaw paths, real Discord channel IDs, tokens, raw transcripts, personal data, or private logs.
 
+## Binding Documentation
+
+The conventions in `docs/` are binding for all agent work, not optional reading. Start from the [documentation index](docs/index.md) and treat these as enforced on every PR:
+
+- [Engineering style](docs/engineering-style.md): code and test conventions, including the shared test DSL in `:test-fixtures` (`workEvents { }`, evidence factories, `shouldBePublicSafe()`). New tests use the DSL instead of hand-built domain objects; the public-safety denylist lives only in `PublicSafetyMatchers.kt`.
+- [Public-safe artifact policy](docs/public-safe-artifact-policy.md) and [public hygiene](docs/public-hygiene.md): what may appear in tracked files and CI output.
+- [Decision log](docs/decision-log.md): recorded owner decisions; do not relitigate or contradict them in a slice.
+
+A PR that violates a documented convention is not mergeable, even if CI is green.
+
 ## Daily Autonomous Run Contract
 
 Each daily run should:
