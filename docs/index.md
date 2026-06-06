@@ -5,6 +5,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 ## Reading Order
 
 - [Domain model](domain-model.md): public-safe core concepts, value objects, event envelope, and adapter-neutral examples.
+- [Agent Desk milestone completion criteria](milestone-completion-criteria.md): first milestone done/not-done states, required evidence, and non-goals.
 - [Runtime adapter boundary](runtime-adapter-boundary.md): sanitized import contracts for local/runtime observations.
 - [Runtime adapter scope decision](runtime-adapter-scope-decision.md): accepted first non-mock adapter scope and public-safe follow-up boundaries.
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
