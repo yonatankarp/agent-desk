@@ -31,6 +31,7 @@ kotlin {
         jvmTest.dependencies {
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
+            implementation(project(":test-fixtures"))
             implementation(libs.konsist)
             implementation(libs.kotest.runner.junit5)
         }

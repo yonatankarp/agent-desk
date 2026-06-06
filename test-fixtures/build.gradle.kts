@@ -11,5 +11,8 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core"))
         }
+        jvmMain.dependencies {
+            implementation(libs.konsist)
+        }
     }
 }
