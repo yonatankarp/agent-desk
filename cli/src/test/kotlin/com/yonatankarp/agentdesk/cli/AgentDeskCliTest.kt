@@ -320,6 +320,10 @@ class AgentDeskCliTest {
 
         assertEquals(0, importResult.exitCode)
         assertContains(importResult.output, "Imported 6 mock runtime event(s); skipped 0 duplicate event(s).")
+        assertContains(
+            importResult.output,
+            "Diagnostics: imported=6 skipped-duplicate=0 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0.",
+        )
         assertPublicSafe(importResult.output)
         assertEquals("", importResult.error)
         assertEquals(
@@ -352,6 +356,10 @@ class AgentDeskCliTest {
         assertEquals(0, firstResult.exitCode)
         assertEquals(0, secondResult.exitCode)
         assertContains(secondResult.output, "Imported 0 mock runtime event(s); skipped 6 duplicate event(s).")
+        assertContains(
+            secondResult.output,
+            "Diagnostics: imported=0 skipped-duplicate=6 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0.",
+        )
         assertPublicSafe(secondResult.output)
         assertEquals(6, eventFile.readLines().size)
     }
@@ -382,6 +390,10 @@ class AgentDeskCliTest {
 
         assertEquals(0, importResult.exitCode)
         assertContains(importResult.output, "Imported 2 sanitized observation event(s); skipped 0 duplicate event(s).")
+        assertContains(
+            importResult.output,
+            "Diagnostics: imported=2 skipped-duplicate=0 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0.",
+        )
         assertPublicSafe(importResult.output)
         assertEquals("", importResult.error)
         assertEquals(
@@ -419,6 +431,10 @@ class AgentDeskCliTest {
         assertEquals(0, firstResult.exitCode)
         assertEquals(0, secondResult.exitCode)
         assertContains(secondResult.output, "Imported 0 sanitized observation event(s); skipped 2 duplicate event(s).")
+        assertContains(
+            secondResult.output,
+            "Diagnostics: imported=0 skipped-duplicate=2 invalid=0 unsafe-rejected=0 store-rejected=0 redacted-or-dropped=0.",
+        )
         assertPublicSafe(secondResult.output)
         assertEquals(2, eventFile.readLines().size)
     }

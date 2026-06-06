@@ -211,6 +211,7 @@ class OpenClawRuntimeObservationFileSourceTest :
                         shouldNotContain(rawIdentifier)
                         shouldNotContain(exportPath.toString())
                     }
+                    error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.UnsafeRejected
                 }
             }
         }
