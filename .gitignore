@@ -13,6 +13,9 @@ local.properties
 
 # OpenClaw runtime files are private workspace context, not project source.
 .openclaw/
+
+# Superpowers working docs (specs/plans) are local artifacts, not project source.
+docs/superpowers/
 HEARTBEAT.md
 IDENTITY.md
 SOUL.md
