@@ -239,6 +239,152 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `help flags print usage and exit cleanly`() {
+        listOf("--help", "-h").forEach { flag ->
+            val result = runCli(flag)
+
+            assertEquals(0, result.exitCode, "args: $flag")
+            assertContains(result.output, "Agent Desk")
+            assertContains(result.output, "Usage:")
+            assertContains(result.output, "--help          Show this help.")
+            assertPublicSafe(result.output)
+            assertEquals("", result.error, "args: $flag")
+        }
+    }
+
+    @Test
+    fun `combining two commands is a usage error`() {
+        val cases = listOf(
+            listOf("inspect", "agent-task:42", "import-mock-runtime"),
+            listOf("import-mock-runtime", "import-openclaw-observations"),
+            listOf("import-openclaw-observations", "act", "resume", "agent-task:42"),
+            listOf("act", "resume", "agent-task:42", "inspect", "agent-task:43"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "Choose only one command.")
+            assertContains(result.error, "Run with --help for usage.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `repeating the event store option is a usage error`() {
+        val cases = listOf(
+            listOf("import-mock-runtime", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+            listOf("act", "resume", "agent-task:42", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+            listOf("import-openclaw-observations", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "Choose only one event store.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `repeating the observations option is a usage error`() {
+        val result = runCli(
+            "import-openclaw-observations",
+            "--observations",
+            "observations-one.json",
+            "--observations",
+            "observations-two.json",
+        )
+
+        assertEquals(2, result.exitCode)
+        assertContains(result.error, "Choose only one observations export.")
+        assertEquals("", result.output)
+    }
+
+    @Test
+    fun `event store option outside import or act context is a usage error`() {
+        val cases = listOf(
+            listOf("--event-store", "store.ndjson"),
+            listOf("inspect", "agent-task:42", "--event-store", "store.ndjson"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "--event-store is only valid with import commands or act.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `observations option outside its import context is a usage error`() {
+        val cases = listOf(
+            listOf("--observations", "observations.json"),
+            listOf("import-mock-runtime", "--observations", "observations.json"),
+            listOf("act", "resume", "agent-task:42", "--observations", "observations.json"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "--observations is only valid with import-openclaw-observations.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `act without an intent is a usage error`() {
+        val cases = listOf(
+            listOf("act"),
+            listOf("act", "--event-store", "store.ndjson"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "Missing action intent for act.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `act without a work item id is a usage error`() {
+        val cases = listOf(
+            listOf("act", "resume"),
+            listOf("act", "resume", "--event-store"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "Missing work item id for act.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
+    fun `inspect without a work item id is a usage error`() {
+        val cases = listOf(
+            listOf("inspect"),
+            listOf("inspect", "--sample"),
+        )
+
+        cases.forEach { args ->
+            val result = runCli(*args.toTypedArray())
+
+            assertEquals(2, result.exitCode, "args: $args")
+            assertContains(result.error, "Missing work item id for inspect.")
+            assertEquals("", result.output, "args: $args")
+        }
+    }
+
+    @Test
     fun `config cannot be combined with other input modes`() {
         val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
 
