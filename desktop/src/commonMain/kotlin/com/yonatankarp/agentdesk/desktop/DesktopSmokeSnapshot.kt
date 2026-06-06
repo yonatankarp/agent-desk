@@ -41,17 +41,21 @@ object DesktopSmokeSnapshotBuilder {
             summary = screenState.summaryText(),
             sections = listOf(
                 DesktopSmokeSection(
-                    title = "Current work",
+                    title = "Replay status",
+                    rows = DesktopReplayStatus.rows(screenState),
+                ),
+                DesktopSmokeSection(
+                    title = "Work state",
                     rows = workItems.toWorkRows(emptyText = "No current work"),
                 ),
                 DesktopSmokeSection(
-                    title = "Recent events",
+                    title = "Read-only timeline",
                     rows = events.map { line ->
                         "${line.type} ${line.workItemId} from ${line.source} - ${line.detail}"
                     }.ifEmpty { listOf("No recent events") },
                 ),
                 DesktopSmokeSection(
-                    title = "Attention queue",
+                    title = "Decision queue",
                     rows = message?.let(::listOf) ?: attentionItems.toWorkRows(emptyText = "No items need a decision"),
                 ),
             ),

@@ -20,9 +20,12 @@ class DesktopSmokeSnapshotTest {
 
         assertContains(text, "Agent Desk")
         assertContains(text, "Sample state")
-        assertContains(text, "Current work")
-        assertContains(text, "Recent events")
-        assertContains(text, "Attention queue")
+        assertContains(text, "Replay status")
+        assertContains(text, "Work state")
+        assertContains(text, "Read-only timeline")
+        assertContains(text, "Decision queue")
+        assertContains(text, "Not done: 2 item(s) need operator attention.")
+        assertContains(text, "Discovery/no-issue output is triage, not product completion.")
         assertContains(text, "[Running] agent-task:42 Run public hygiene check")
         assertContains(text, "work.started agent-task:42 from sample-agent")
         assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
@@ -41,9 +44,13 @@ class DesktopSmokeSnapshotTest {
 
         assertEquals("Loaded state", snapshot.modeLabel)
         assertEquals("0 active / 0 attention", snapshot.summary)
-        assertEquals(listOf("No current work"), snapshot.sectionRows("Current work"))
-        assertEquals(listOf("No recent events"), snapshot.sectionRows("Recent events"))
-        assertEquals(listOf("No items need a decision"), snapshot.sectionRows("Attention queue"))
+        assertContains(
+            snapshot.sectionRows("Replay status").joinToString("\n"),
+            "Empty queue: no current work or decisions; not product completion without milestone evidence.",
+        )
+        assertEquals(listOf("No current work"), snapshot.sectionRows("Work state"))
+        assertEquals(listOf("No recent events"), snapshot.sectionRows("Read-only timeline"))
+        assertEquals(listOf("No items need a decision"), snapshot.sectionRows("Decision queue"))
     }
 
     @Test
@@ -67,7 +74,7 @@ class DesktopSmokeSnapshotTest {
         assertEquals("1 active / 1 attention", snapshot.summary)
         assertEquals(
             listOf("[Needs decision] agent-task:91 Choose retry path - Operator must choose whether to retry."),
-            snapshot.sectionRows("Attention queue"),
+            snapshot.sectionRows("Decision queue"),
         )
     }
 
