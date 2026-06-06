@@ -22,7 +22,6 @@ kotlin {
             implementation(compose.material3)
         }
         commonTest.dependencies {
-            implementation(kotlin("test"))
             implementation(libs.kotest.assertions.core)
             implementation(libs.kotest.framework.engine)
         }
