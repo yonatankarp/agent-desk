@@ -50,6 +50,30 @@ class RuntimeConfiguredOperatorStateLoaderTest :
                 }
             }
 
+            `when`("the configured event store has a torn trailing record") {
+                then("it projects the committed prefix and carries a public-safe warning") {
+                    val storePath = tempStorePath()
+                    Files.writeString(
+                        storePath,
+                        WorkEventJson.encode(workStartedEvent()) + "\n" +
+                            WorkEventJson.encode(workBlockedEvent()) + "\n" +
+                            "{\"id\":\"event:agent-task:46:sta",
+                    )
+
+                    val state = RuntimeConfiguredOperatorStateLoader.load(storedEventsConfig(storePath))
+
+                    state.events.map { it.id.toString() }.shouldContainExactly(
+                        "event:agent-task:42:started",
+                        "event:agent-task:42:blocked",
+                    )
+                    assertSoftly(state.storeReadWarning.orEmpty()) {
+                        shouldContain("Torn trailing record at line 3")
+                        shouldNotContain(storePath.toString())
+                        shouldNotContain("/home/")
+                    }
+                }
+            }
+
             `when`("the configured event store is corrupt") {
                 then("it fails without echoing the filesystem path") {
                     val storePath = tempStorePath()

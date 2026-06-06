@@ -27,10 +27,22 @@ val repository = LocalFileWorkEventRepository(Path.of("agent-desk-events.ndjson"
 - Appends are serialized inside the current JVM by normalized store path, then protected with a cooperative exclusive file lock while the record is written.
 - Duplicate event ids are rejected on append and when reading an existing store.
 - Append duplicate checks re-read the current store while the append lock is held, so two repository instances in the same JVM do not depend on stale in-memory event-id caches.
-- Corrupt records fail with a line-numbered `WorkEventStoreException`.
-- Error messages intentionally refer to the configured event store instead of echoing local filesystem paths.
+- Corrupt newline-terminated records fail with a line-numbered `WorkEventStoreException`.
+- Reads enforce a maximum store size (10 MiB by default, constructor-configurable) and reject larger files with a public-safe error before loading any bytes.
+- Error messages intentionally refer to the configured event store instead of echoing local filesystem paths, sizes, or limits.
 
-This is a local-first newline-delimited event file, not a transactional database. The locking behavior is intended for cooperating Agent Desk CLI, desktop, and runtime adapter processes that use the same repository implementation or otherwise honor JVM file locks. Tools that bypass locks and write directly to the file can still corrupt records; the repository rejects corrupt partial records before appending more data.
+### Torn trailing records
+
+Appends write directly to the live file, so a crash mid-append can leave a partial final line. Reads distinguish two corruption cases:
+
+- **Torn trailing record** — the final line is not newline-terminated and fails to decode. This is the signature of an interrupted append. `readAll()` recovers the committed prefix and returns it together with a public-safe trailing-corruption warning (literal line number and recovered event count; never path, size, or record content). History is not discarded.
+- **Mid-file or newline-terminated corruption** — any other undecodable record means the write completed and the content is genuinely corrupt. Reads fail hard with a line-numbered error. The store never silently recovers past mid-file corruption, because doing so would hide tampering or data loss in an audit history.
+
+While a torn trailing record exists, `append()` refuses with the same line-numbered corruption error and leaves the file untouched. Recovery is read-only by design: the repository never truncates or rewrites the store. Repairing a torn store is a deliberate operator action (restore from backup, or remove the torn final line manually after review).
+
+A final record that decodes correctly but lacks its trailing newline is accepted on read; a subsequent append isolates it by writing a newline before the new record instead of corrupting it.
+
+This is a local-first newline-delimited event file, not a transactional database. The locking behavior is intended for cooperating Agent Desk CLI, desktop, and runtime adapter processes that use the same repository implementation or otherwise honor JVM file locks. Tools that bypass locks and write directly to the file can still corrupt records mid-file; the repository fails hard on those instead of guessing.
 
 The store accepts sanitized event records only. Private paths, credentials, channel ids, raw transcripts, and runtime-specific local identifiers must be stripped before events are appended.
 

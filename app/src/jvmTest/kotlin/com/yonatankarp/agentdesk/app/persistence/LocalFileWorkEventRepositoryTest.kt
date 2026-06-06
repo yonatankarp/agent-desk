@@ -12,6 +12,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CountDownLatch
@@ -25,7 +26,7 @@ class LocalFileWorkEventRepositoryTest :
                 then("it returns an empty stream") {
                     val repository = LocalFileWorkEventRepository(tempStorePath())
 
-                    repository.readAll() shouldBe emptyList()
+                    repository.readAll().events shouldBe emptyList()
                 }
             }
         }
@@ -36,7 +37,7 @@ class LocalFileWorkEventRepositoryTest :
                     val storePath = tempStorePath()
                     Files.writeString(storePath, "")
 
-                    LocalFileWorkEventRepository(storePath).readAll() shouldBe emptyList()
+                    LocalFileWorkEventRepository(storePath).readAll().events shouldBe emptyList()
                 }
             }
         }
@@ -51,7 +52,7 @@ class LocalFileWorkEventRepositoryTest :
                     repository.append(started)
                     repository.append(blocked)
 
-                    repository.readAll().shouldContainExactly(started, blocked)
+                    repository.readAll().events.shouldContainExactly(started, blocked)
                 }
             }
 
@@ -66,7 +67,7 @@ class LocalFileWorkEventRepositoryTest :
                     firstRepository.append(started)
                     secondRepository.append(blocked)
 
-                    LocalFileWorkEventRepository(storePath).readAll().shouldContainExactly(started, blocked)
+                    LocalFileWorkEventRepository(storePath).readAll().events.shouldContainExactly(started, blocked)
                 }
             }
 
@@ -101,7 +102,7 @@ class LocalFileWorkEventRepositoryTest :
                             ?.message
                             ?.contains("Duplicate work event id event:agent-task:42:started") == true
                     } shouldBe 1
-                    LocalFileWorkEventRepository(storePath).readAll().shouldContainExactly(event)
+                    LocalFileWorkEventRepository(storePath).readAll().events.shouldContainExactly(event)
                 }
             }
         }
@@ -135,7 +136,7 @@ class LocalFileWorkEventRepositoryTest :
                     val secondRepository = LocalFileWorkEventRepository(storePath)
                     val event = workStartedEvent()
 
-                    firstRepository.readAll().shouldHaveSize(0)
+                    firstRepository.readAll().events.shouldHaveSize(0)
                     secondRepository.append(event)
                     val error = shouldThrow<WorkEventStoreException> {
                         firstRepository.append(event)
@@ -196,7 +197,7 @@ class LocalFileWorkEventRepositoryTest :
             }
 
             `when`("a partial record exists before append") {
-                then("append fails before adding another record") {
+                then("append refuses with a repair-needed error before adding another record") {
                     val storePath = tempStorePath()
                     val partialRecord = "{\"id\":\"event:partial\""
                     Files.writeString(storePath, partialRecord)
@@ -207,12 +208,200 @@ class LocalFileWorkEventRepositoryTest :
                         )
                     }
 
-                    error.reason shouldBe WorkEventStoreFailure.CorruptRecord(lineNumber = 1)
+                    error.reason shouldBe WorkEventStoreFailure.AppendBlockedByTornRecord(
+                        trailingCorruption = TornTrailingRecord(
+                            lineNumber = 1,
+                            recoveredEventCount = 0,
+                        ),
+                    )
                     assertSoftly(error.message.orEmpty()) {
-                        shouldContain("Corrupt work event record at line 1")
+                        shouldContain("Torn trailing record at line 1")
+                        shouldContain("blocked until the store is repaired")
                         shouldNotContain(storePath.toString())
                     }
                     Files.readString(storePath) shouldBe partialRecord
+                }
+            }
+        }
+
+        given("a torn trailing record in the event store") {
+            `when`("the final record is cut mid-write without a newline") {
+                then("it recovers the committed prefix and reports the torn line") {
+                    val storePath = tempStorePath()
+                    val started = workStartedEvent()
+                    val blocked = workBlockedEvent()
+                    Files.writeString(
+                        storePath,
+                        WorkEventJson.encode(started) + "\n" +
+                            WorkEventJson.encode(blocked) + "\n" +
+                            "{\"id\":\"event:agent-task:46:sta",
+                    )
+
+                    val result = LocalFileWorkEventRepository(storePath).readAll()
+
+                    result.events.shouldContainExactly(started, blocked)
+                    result.trailingCorruption shouldBe TornTrailingRecord(
+                        lineNumber = 3,
+                        recoveredEventCount = 2,
+                    )
+                }
+            }
+
+            `when`("the torn record ends in a truncated multi-byte character") {
+                then("it recovers the committed prefix") {
+                    val storePath = tempStorePath()
+                    val started = workStartedEvent()
+                    val committed = (WorkEventJson.encode(started) + "\n").toByteArray(StandardCharsets.UTF_8)
+                    val torn = "{\"title\":\"désync\"".toByteArray(StandardCharsets.UTF_8)
+                    Files.write(storePath, committed + torn.copyOfRange(0, torn.size - 2))
+
+                    val result = LocalFileWorkEventRepository(storePath).readAll()
+
+                    result.events.shouldContainExactly(started)
+                    result.trailingCorruption shouldBe TornTrailingRecord(
+                        lineNumber = 2,
+                        recoveredEventCount = 1,
+                    )
+                }
+            }
+
+            `when`("the store holds only a torn record") {
+                then("it recovers an empty history and reports the torn line") {
+                    val storePath = tempStorePath()
+                    Files.writeString(storePath, "{\"id\":\"event:partial\"")
+
+                    val result = LocalFileWorkEventRepository(storePath).readAll()
+
+                    result.events shouldBe emptyList()
+                    result.trailingCorruption shouldBe TornTrailingRecord(
+                        lineNumber = 1,
+                        recoveredEventCount = 0,
+                    )
+                }
+            }
+
+            `when`("the torn-record warning is rendered") {
+                then("it stays path-free and public-safe") {
+                    val storePath = tempStorePath()
+                    Files.writeString(
+                        storePath,
+                        WorkEventJson.encode(workStartedEvent()) + "\n" + "{\"id\":\"event:par",
+                    )
+
+                    val warning = LocalFileWorkEventRepository(storePath).readAll().trailingCorruption
+
+                    assertSoftly(warning?.publicSafeMessage().orEmpty()) {
+                        shouldContain("line 2")
+                        shouldNotContain(storePath.toString())
+                        shouldNotContain("event:par")
+                    }
+                }
+            }
+        }
+
+        given("a newline-terminated corrupt record at the end of the store") {
+            `when`("events are read") {
+                then("read still fails hard because the record write completed") {
+                    val storePath = tempStorePath()
+                    Files.writeString(
+                        storePath,
+                        WorkEventJson.encode(workStartedEvent()) + "\n" + "{not-json}\n",
+                    )
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath).readAll()
+                    }
+
+                    error.reason shouldBe WorkEventStoreFailure.CorruptRecord(lineNumber = 2)
+                }
+            }
+        }
+
+        given("a corrupt record in the middle of the store") {
+            `when`("events are read") {
+                then("read fails hard and does not silently recover past it") {
+                    val storePath = tempStorePath()
+                    Files.writeString(
+                        storePath,
+                        "{not-json}\n" + WorkEventJson.encode(workStartedEvent()) + "\n",
+                    )
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath).readAll()
+                    }
+
+                    error.reason shouldBe WorkEventStoreFailure.CorruptRecord(lineNumber = 1)
+                }
+            }
+        }
+
+        given("a valid final record without a trailing newline") {
+            `when`("events are read") {
+                then("all events are readable with no corruption warning") {
+                    val storePath = tempStorePath()
+                    val started = workStartedEvent()
+                    val blocked = workBlockedEvent()
+                    Files.writeString(
+                        storePath,
+                        WorkEventJson.encode(started) + "\n" + WorkEventJson.encode(blocked),
+                    )
+
+                    val result = LocalFileWorkEventRepository(storePath).readAll()
+
+                    result.events.shouldContainExactly(started, blocked)
+                    result.trailingCorruption shouldBe null
+                }
+            }
+
+            `when`("another event is appended") {
+                then("the unterminated record is isolated instead of corrupted") {
+                    val storePath = tempStorePath()
+                    val started = workStartedEvent()
+                    val blocked = workBlockedEvent()
+                    Files.writeString(storePath, WorkEventJson.encode(started))
+
+                    LocalFileWorkEventRepository(storePath).append(blocked)
+
+                    val result = LocalFileWorkEventRepository(storePath).readAll()
+                    result.events.shouldContainExactly(started, blocked)
+                    result.trailingCorruption shouldBe null
+                }
+            }
+        }
+
+        given("an oversized event store") {
+            `when`("the file exceeds the configured size limit") {
+                then("read is rejected with a path-free public-safe error before loading") {
+                    val storePath = tempStorePath()
+                    Files.writeString(storePath, "x".repeat(64))
+
+                    val error = shouldThrow<WorkEventStoreException> {
+                        LocalFileWorkEventRepository(storePath, maxStoreSizeBytes = 32).readAll()
+                    }
+
+                    error.reason shouldBe WorkEventStoreFailure.StoreTooLarge
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Configured event store exceeds the maximum readable size")
+                        shouldNotContain(storePath.toString())
+                        shouldNotContain("32")
+                        shouldNotContain("64")
+                    }
+                }
+            }
+
+            `when`("the file is exactly at the size limit") {
+                then("read succeeds") {
+                    val storePath = tempStorePath()
+                    val started = workStartedEvent()
+                    val content = WorkEventJson.encode(started) + "\n"
+                    Files.writeString(storePath, content)
+
+                    val repository = LocalFileWorkEventRepository(
+                        storePath,
+                        maxStoreSizeBytes = content.toByteArray(StandardCharsets.UTF_8).size.toLong(),
+                    )
+
+                    repository.readAll().events.shouldContainExactly(started)
                 }
             }
         }

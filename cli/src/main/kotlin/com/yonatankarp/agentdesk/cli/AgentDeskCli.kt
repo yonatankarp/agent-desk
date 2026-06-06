@@ -15,6 +15,7 @@ import com.yonatankarp.agentdesk.app.operator.RuntimeConfiguredWorkEventLoader
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.runtime.MockRuntimeWorkEventSource
 import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSource
@@ -58,6 +59,7 @@ object AgentDeskCli {
         when (val command = options.command) {
             CliCommand.Dashboard -> {
                 val state = options.toOperatorState(input)
+                state.storeReadWarning?.let { warning -> error.println("Warning: $warning") }
                 output.println(renderer.render(state))
             }
 
@@ -90,8 +92,11 @@ object AgentDeskCli {
 
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
-                val events = options.toWorkEvents(input)
-                val inspection = WorkItemInspector.inspect(events, workItemId)
+                val read = options.toWorkEventRead(input)
+                read.trailingCorruption?.let { corruption ->
+                    error.println("Warning: ${corruption.publicSafeMessage()}")
+                }
+                val inspection = WorkItemInspector.inspect(read.events, workItemId)
                     ?: throw CliInputException("Work item was not found.")
                 output.println(renderer.render(inspection))
             }
@@ -162,7 +167,7 @@ object AgentDeskCli {
         val event = MockOperatorActionAdapter().perform(
             intent = command.intent,
             workItemId = parseWorkItemId(command.rawWorkItemId),
-            events = repository.readAll(),
+            events = repository.readAll().events,
         )
         repository.append(event)
         event
@@ -187,10 +192,10 @@ object AgentDeskCli {
         is CliInputMode.Config -> readConfiguredState(mode.path)
     }
 
-    private fun CliOptions.toWorkEvents(input: InputStream): List<WorkEvent> = when (mode) {
-        CliInputMode.Sample -> SampleOperatorState.current().events
-        is CliInputMode.File -> readEventsFromFile(mode.path)
-        CliInputMode.Stdin -> readEventsFromInput(input)
+    private fun CliOptions.toWorkEventRead(input: InputStream): WorkEventReadResult = when (mode) {
+        CliInputMode.Sample -> WorkEventReadResult(events = SampleOperatorState.current().events)
+        is CliInputMode.File -> WorkEventReadResult(events = readEventsFromFile(mode.path))
+        CliInputMode.Stdin -> WorkEventReadResult(events = readEventsFromInput(input))
         is CliInputMode.Config -> readConfiguredEvents(mode.path)
     }
 
@@ -210,7 +215,7 @@ object AgentDeskCli {
         }
     }
 
-    private fun readConfiguredEvents(path: String): List<WorkEvent> {
+    private fun readConfiguredEvents(path: String): WorkEventReadResult {
         val values = readConfig(path)
         val config =
             try {

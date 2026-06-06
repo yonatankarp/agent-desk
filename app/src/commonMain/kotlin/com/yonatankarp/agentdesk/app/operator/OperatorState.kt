@@ -8,4 +8,5 @@ data class OperatorState(
     val workItems: List<WorkItem>,
     val events: List<WorkEvent>,
     val staleAttention: List<StaleWorkAttention> = emptyList(),
+    val storeReadWarning: String? = null,
 )

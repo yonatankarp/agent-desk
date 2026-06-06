@@ -10,8 +10,10 @@ object RuntimeConfiguredOperatorStateLoader {
     }
 
     private fun loadStoredEvents(config: AgentDeskRuntimeConfig): OperatorState = try {
-        val events = RuntimeConfiguredWorkEventLoader.load(config)
-        OperatorStateProjector.project(events)
+        val result = RuntimeConfiguredWorkEventLoader.load(config)
+        OperatorStateProjector.project(result.events).copy(
+            storeReadWarning = result.trailingCorruption?.publicSafeMessage(),
+        )
     } catch (error: OperatorStateProjectionException) {
         throw RuntimeConfiguredOperatorStateLoadException(error.message ?: "Configured event store could not be projected.", error)
     }

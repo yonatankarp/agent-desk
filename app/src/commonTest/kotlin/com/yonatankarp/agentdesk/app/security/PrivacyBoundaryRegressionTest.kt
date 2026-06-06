@@ -5,6 +5,7 @@ import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionEvidenceChecklist
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionOutcome
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportDiagnosticKind
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
@@ -235,7 +236,7 @@ private class InMemoryWorkEventRepository : WorkEventRepository {
         events += event
     }
 
-    override fun readAll(): List<WorkEvent> = events.toList()
+    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
 }
 
 private fun assertPublicSafeOutput(text: String) {

@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.runtime
 
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import io.kotest.assertions.assertSoftly
@@ -230,5 +231,5 @@ private class OpenClawFileSourceTestRepository : WorkEventRepository {
         events.add(event)
     }
 
-    override fun readAll(): List<WorkEvent> = events.toList()
+    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
 }
