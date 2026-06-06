@@ -107,13 +107,29 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
                         }
                     }
 
-                    SectionPanel(
-                        title = "Decision queue",
+                    Column(
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
-                        AttentionList(screenState.attentionItems(), screenState.message())
+                        SectionPanel(
+                            title = "Decision queue",
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                        ) {
+                            AttentionList(screenState.attentionItems(), screenState.message())
+                        }
+
+                        SectionPanel(
+                            title = "Evidence drilldown",
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                        ) {
+                            EvidenceDrilldown(screenState)
+                        }
                     }
                 }
             }
@@ -226,6 +242,18 @@ private fun AttentionList(
 
     items.forEach { item ->
         WorkRow(item)
+    }
+}
+
+@Composable
+private fun EvidenceDrilldown(screenState: DesktopScreenState) {
+    DesktopEvidenceDrilldown.rows(screenState).forEach { row ->
+        Text(
+            text = row,
+            color = Palette.TextSecondary,
+            fontSize = 12.sp,
+            lineHeight = 17.sp,
+        )
     }
 }
 

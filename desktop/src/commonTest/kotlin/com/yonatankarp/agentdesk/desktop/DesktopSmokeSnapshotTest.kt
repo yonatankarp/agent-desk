@@ -3,6 +3,15 @@ package com.yonatankarp.agentdesk.desktop
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.EventSource
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
+import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
+import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
@@ -24,12 +33,16 @@ class DesktopSmokeSnapshotTest {
         assertContains(text, "Work state")
         assertContains(text, "Read-only timeline")
         assertContains(text, "Decision queue")
+        assertContains(text, "Evidence drilldown")
         assertContains(text, "Not done: 2 item(s) need operator attention.")
         assertContains(text, "Discovery/no-issue output is triage, not product completion.")
         assertContains(text, "[Running] agent-task:42 Run public hygiene check")
         assertContains(text, "work.started agent-task:42 from sample-agent")
         assertContains(text, "[Needs decision] agent-task:43 Choose adapter boundary")
         assertContains(text, "[Blocked] agent-task:44 Review build failure")
+        assertContains(text, "Observation: work.blocked for agent-task:44")
+        assertContains(text, "Evidence missing: no public-safe evidence reference was attached.")
+        assertContains(text, "Operator notes: unavailable in read-only proof.")
     }
 
     @Test
@@ -51,6 +64,7 @@ class DesktopSmokeSnapshotTest {
         assertEquals(listOf("No current work"), snapshot.sectionRows("Work state"))
         assertEquals(listOf("No recent events"), snapshot.sectionRows("Read-only timeline"))
         assertEquals(listOf("No items need a decision"), snapshot.sectionRows("Decision queue"))
+        assertEquals(listOf("Evidence missing: no replay events are available."), snapshot.sectionRows("Evidence drilldown"))
     }
 
     @Test
@@ -87,6 +101,50 @@ class DesktopSmokeSnapshotTest {
         assertFalse(text.contains("token", ignoreCase = true))
         assertFalse(text.contains("op://", ignoreCase = true))
         assertFalse(text.contains("raw transcript", ignoreCase = true))
+    }
+
+    @Test
+    fun `evidence drilldown renders sanitized evidence reference`() {
+        val event =
+            WorkEvent(
+                id = WorkEventId.parse("event:agent-task:99:started"),
+                occurredAt = EventTimestamp.parse("2026-06-02T21:00:00Z"),
+                source = EventSource.parse("sample-agent"),
+                workItemId = WorkItemId.parse("agent-task:99"),
+                payload = WorkStartedPayload(
+                    title = WorkItemTitle.parse("Inspect evidence drilldown"),
+                    summary = WorkSummary.parse("Agent started evidence inspection."),
+                ),
+                evidenceReferences = listOf(
+                    EvidenceReference(
+                        kind = EvidenceReferenceKind.SanitizedNote,
+                        label = EvidenceLabel.parse("Replay fixture"),
+                        target = EvidenceTarget.parse("docs/replay-fixture.md"),
+                    ),
+                ),
+            )
+        val snapshot =
+            DesktopSmokeSnapshotBuilder.from(
+                DesktopScreenState.Ready(
+                    state = OperatorState(workItems = emptyList(), events = listOf(event)),
+                    modeLabel = "Loaded state",
+                ),
+            )
+
+        assertEquals(
+            listOf(
+                "Observation: work.started for agent-task:99",
+                "Source: sample-agent",
+                "Timestamp: 2026-06-02T21:00:00Z",
+                "Provenance: replay event event:agent-task:99:started",
+                "Derived summary: Agent started evidence inspection.",
+                "Primary evidence: sanitized-note Replay fixture -> docs/replay-fixture.md",
+                "Agent interpretation: derived from sanitized replay state.",
+                "Operator notes: unavailable in read-only proof.",
+                "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
+            ),
+            snapshot.sectionRows("Evidence drilldown"),
+        )
     }
 
     private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
