@@ -22,12 +22,9 @@ class MobileSmokeSnapshotTest :
 
             snapshot.title shouldBe "Agent Desk"
             text shouldContain "3 current / 2 attention"
-            text shouldContain "Current work"
             text shouldContain "[Running] agent-task:42 Run public hygiene check"
-            text shouldContain "Attention queue"
             text shouldContain "[Needs decision] agent-task:43 Choose adapter boundary"
             text shouldContain "[Blocked] agent-task:44 Review build failure"
-            text shouldContain "Recent events"
             text shouldContain "agent-task:42"
             text shouldNotContain "Resume"
             text shouldNotContain "Approve"

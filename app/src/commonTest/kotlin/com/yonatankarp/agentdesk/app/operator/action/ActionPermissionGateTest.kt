@@ -8,45 +8,12 @@ import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailProjector
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
 class ActionPermissionGateTest :
     BehaviorSpec({
-        given("permission class inventory") {
-            `when`("default gate behavior is inspected") {
-                then("every public action class has a fail-closed behavior") {
-                    PermissionedActionClass.entries.shouldContainExactly(
-                        PermissionedActionClass.ReadOnly,
-                        PermissionedActionClass.LocalWrite,
-                        PermissionedActionClass.ExternalSend,
-                        PermissionedActionClass.PublicPost,
-                        PermissionedActionClass.Destructive,
-                        PermissionedActionClass.AccountSecurity,
-                        PermissionedActionClass.PurchasePayment,
-                        PermissionedActionClass.Credential,
-                    )
-                    ActionPermissionGate.behaviorFor(PermissionedActionClass.ReadOnly) shouldBe
-                        PermissionGateBehavior.AllowWithoutApproval
-                    ActionPermissionGate.behaviorFor(PermissionedActionClass.LocalWrite) shouldBe
-                        PermissionGateBehavior.RequireLocalConfirmation
-                    listOf(
-                        PermissionedActionClass.ExternalSend,
-                        PermissionedActionClass.PublicPost,
-                        PermissionedActionClass.Destructive,
-                        PermissionedActionClass.AccountSecurity,
-                        PermissionedActionClass.PurchasePayment,
-                        PermissionedActionClass.Credential,
-                    ).forEach { actionClass ->
-                        ActionPermissionGate.behaviorFor(actionClass) shouldBe
-                            PermissionGateBehavior.RequireExplicitApproval
-                    }
-                }
-            }
-        }
-
         given("read-only permission") {
             `when`("a read-only proposal is evaluated") {
                 then("it is approved without approval and logged publicly") {

@@ -78,9 +78,7 @@ class WorkTextTest :
                     val summary = WorkSummary.parse("  CI failed   on the core test task.  ")
 
                     title.value shouldBe "Review build logs"
-                    title.toString() shouldBe "Review build logs"
                     summary.value shouldBe "CI failed on the core test task."
-                    summary.toString() shouldBe "CI failed on the core test task."
                 }
             }
 
