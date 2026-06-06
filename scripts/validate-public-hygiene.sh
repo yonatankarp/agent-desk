@@ -13,6 +13,7 @@ run_self_test() {
   git -C "$tmpdir" init -q
   mkdir -p \
     "$tmpdir/.github/workflows" \
+    "$tmpdir/app/fixtures" \
     "$tmpdir/docs" \
     "$tmpdir/scripts"
 
@@ -89,6 +90,38 @@ run_self_test() {
   } >"$tmpdir/docs/public-hygiene.md"
   git -C "$tmpdir" add -A
 
+  # Product artifact formats (json/ndjson/properties/yaml) live outside the
+  # directory pathspecs, so these prove the glob coverage fires on its own.
+  write_fixture "$tmpdir/app/fixtures/leak-private-path.json" '{"path": "%s%s%s"}\n' "/home/" "alex" "/agent-desk/secrets.json"
+  expect_hygiene_failure "json-private-path"
+  rm "$tmpdir/app/fixtures/leak-private-path.json"
+
+  write_fixture "$tmpdir/app/fixtures/leak-token.json" '{"apiKey": "%s-%s"}\n' "sk" "aaaaaaaaaaaaaaaaaaaaaaaa"
+  expect_hygiene_failure "json-token-format"
+  rm "$tmpdir/app/fixtures/leak-token.json"
+
+  write_fixture "$tmpdir/app/fixtures/leak-channel.json" '{"channel_id": "%s%s"}\n' "C" "ABCD1234EFGH5678"
+  expect_hygiene_failure "json-channel-id"
+  rm "$tmpdir/app/fixtures/leak-channel.json"
+
+  write_fixture "$tmpdir/app/fixtures/leak-private-path.ndjson" '{"event":"started","path":"%s%s%s"}\n' "/home/" "jane" "/agent-desk/private.log"
+  expect_hygiene_failure "ndjson-private-path"
+  rm "$tmpdir/app/fixtures/leak-private-path.ndjson"
+
+  write_fixture "$tmpdir/app/fixtures/leak-channel.ndjson" '{"message_id":"%s"}\n' "123456789012345678"
+  expect_hygiene_failure "ndjson-channel-id"
+  rm "$tmpdir/app/fixtures/leak-channel.ndjson"
+
+  write_fixture "$tmpdir/app/fixtures/leak-token.properties" '%s=%s\n' "AUTH_TOKEN" "fixture-not-real-value"
+  expect_hygiene_failure "properties-token-assignment"
+  rm "$tmpdir/app/fixtures/leak-token.properties"
+
+  write_fixture "$tmpdir/app/fixtures/leak-private-path.yaml" 'storePath: %s%s%s\n' "/Users/" "jane" "/agent-desk/private.ndjson"
+  expect_hygiene_failure "yaml-private-path"
+  rm "$tmpdir/app/fixtures/leak-private-path.yaml"
+
+  git -C "$tmpdir" add -A
+
   AGENT_DESK_HYGIENE_ROOT="$tmpdir" "$script_dir/validate-public-hygiene.sh" >"$tmpdir/positive.out"
   echo "Public hygiene self-test passed."
 }
@@ -154,6 +187,11 @@ scan_pathspecs=(
   ":(glob)**/*.kt"
   ":(glob)**/*.kts"
   ":(glob)**/*.toml"
+  ":(glob)**/*.json"
+  ":(glob)**/*.ndjson"
+  ":(glob)**/*.properties"
+  ":(glob)**/*.yml"
+  ":(glob)**/*.yaml"
 )
 
 openclaw_instructions_pattern="OpenClaw Workspace"
