@@ -5,5 +5,5 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 interface WorkEventRepository {
     fun append(event: WorkEvent)
 
-    fun readAll(): List<WorkEvent>
+    fun readAll(): WorkEventReadResult
 }

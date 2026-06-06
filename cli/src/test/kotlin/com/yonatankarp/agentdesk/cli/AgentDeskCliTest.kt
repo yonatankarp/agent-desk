@@ -85,6 +85,53 @@ class AgentDeskCliTest {
     }
 
     @Test
+    fun `stored event config with torn trailing record renders prefix and warns on stderr`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(eventFile, "$STARTED_EVENT\n$BLOCKED_EVENT\n{\"id\":\"event:agent-task:46:sta")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+
+        val result = runCli("--config", configFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "- [Blocked] agent-task:42 Run public hygiene check")
+        assertContains(result.error, "Torn trailing record at line 3")
+        assertPublicSafe(result.output)
+        assertPublicSafe(result.error)
+        assertFalse(result.error.contains(eventFile.toString()))
+    }
+
+    @Test
+    fun `inspect with torn trailing store renders prefix and warns on stderr`() {
+        val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+        val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+        Files.writeString(eventFile, "$STARTED_EVENT\n{\"id\":\"event:agent-task:46:sta")
+        Files.writeString(
+            configFile,
+            """
+            mode=stored-events
+            source=local-event-store
+            eventStoreLocation=$eventFile
+            """.trimIndent(),
+        )
+
+        val result = runCli("inspect", "agent-task:42", "--config", configFile.toString())
+
+        assertEquals(0, result.exitCode)
+        assertContains(result.output, "Work item agent-task:42")
+        assertContains(result.error, "Torn trailing record at line 2")
+        assertPublicSafe(result.error)
+        assertFalse(result.error.contains(eventFile.toString()))
+    }
+
+    @Test
     fun `invalid input fails without echoing raw private-looking data`() {
         val result = runCli("--stdin", input = """{"secret":"${privateLinuxPath("private-token.txt")}"}""")
 

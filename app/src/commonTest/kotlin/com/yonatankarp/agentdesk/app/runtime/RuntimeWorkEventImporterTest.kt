@@ -1,6 +1,8 @@
 package com.yonatankarp.agentdesk.app.runtime
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
+import com.yonatankarp.agentdesk.app.persistence.TornTrailingRecord
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreFailure
@@ -37,7 +39,7 @@ class RuntimeWorkEventImporterTest :
                         RuntimeWorkEventImportDiagnosticKind.Imported,
                         RuntimeWorkEventImportDiagnosticKind.Imported,
                     )
-                    repository.readAll().map { it.id.toString() }.shouldContainExactly(
+                    repository.readAll().events.map { it.id.toString() }.shouldContainExactly(
                         "event:agent-task:42:started",
                         "event:agent-task:44:started",
                         "event:agent-task:44:blocked",
@@ -65,7 +67,7 @@ class RuntimeWorkEventImporterTest :
                     result.diagnostics.summary().skippedDuplicate shouldBe 1
                     result.diagnostics.first().kind shouldBe RuntimeWorkEventImportDiagnosticKind.SkippedDuplicate
                     result.diagnostics.first().eventId shouldBe "event:agent-task:42:started"
-                    repository.readAll().map { it.id.toString() }.shouldContainExactly(
+                    repository.readAll().events.map { it.id.toString() }.shouldContainExactly(
                         "event:agent-task:42:started",
                         "event:agent-task:44:started",
                         "event:agent-task:44:blocked",
@@ -92,6 +94,31 @@ class RuntimeWorkEventImporterTest :
                     }
                     error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.StoreRejected
                     error.diagnostics.single().message shouldBe "Configured event store could not be read."
+                }
+            }
+
+            `when`("the store reports a torn trailing record") {
+                then("import is refused with a public-safe repair message") {
+                    val error = shouldThrow<RuntimeWorkEventImportException> {
+                        RuntimeWorkEventImporter(
+                            source = MockRuntimeWorkEventSource(),
+                            repository = InMemoryWorkEventRepository(
+                                trailingCorruption = TornTrailingRecord(
+                                    lineNumber = 3,
+                                    recoveredEventCount = 2,
+                                ),
+                            ),
+                        ).importEvents()
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Torn trailing record at line 3")
+                        shouldNotContain("/home/")
+                        shouldNotContain("/Users/")
+                    }
+                    error.diagnostics.single().kind shouldBe RuntimeWorkEventImportDiagnosticKind.StoreRejected
+                    error.diagnostics.single().message shouldBe
+                        "Configured event store has a torn trailing record; repair it before importing."
                 }
             }
 
@@ -159,6 +186,7 @@ private class InMemoryWorkEventRepository(
     initialEvents: List<WorkEvent> = emptyList(),
     private val readFailure: Boolean = false,
     private val appendFailure: Boolean = false,
+    private val trailingCorruption: TornTrailingRecord? = null,
 ) : WorkEventRepository {
     private val events = initialEvents.toMutableList()
 
@@ -174,11 +202,11 @@ private class InMemoryWorkEventRepository(
         events.add(event)
     }
 
-    override fun readAll(): List<WorkEvent> {
+    override fun readAll(): WorkEventReadResult {
         if (readFailure) {
             throw WorkEventStoreException(WorkEventStoreFailure.CorruptRecord(lineNumber = 1))
         }
-        return events.toList()
+        return WorkEventReadResult(events = events.toList(), trailingCorruption = trailingCorruption)
     }
 }
 

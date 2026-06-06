@@ -45,19 +45,37 @@ class RuntimeWorkEventImporter(
         )
     }
 
-    private fun readExistingIds(): Set<WorkEventId> = try {
-        repository.readAll().mapTo(mutableSetOf()) { it.id }
-    } catch (error: WorkEventStoreException) {
-        throw RuntimeWorkEventImportException(
-            message = error.publicSafeImportMessage(),
-            diagnostics = listOf(
-                RuntimeWorkEventImportDiagnostic(
-                    kind = RuntimeWorkEventImportDiagnosticKind.StoreRejected,
-                    message = "Configured event store could not be read.",
+    private fun readExistingIds(): Set<WorkEventId> {
+        val result = try {
+            repository.readAll()
+        } catch (error: WorkEventStoreException) {
+            throw RuntimeWorkEventImportException(
+                message = error.publicSafeImportMessage(),
+                diagnostics = listOf(
+                    RuntimeWorkEventImportDiagnostic(
+                        kind = RuntimeWorkEventImportDiagnosticKind.StoreRejected,
+                        message = "Configured event store could not be read.",
+                    ),
                 ),
-            ),
-            cause = error,
-        )
+                cause = error,
+            )
+        }
+
+        // Appends are refused while a torn trailing record exists, so an
+        // import cannot proceed against a store in this state.
+        result.trailingCorruption?.let { corruption ->
+            throw RuntimeWorkEventImportException(
+                message = corruption.publicSafeMessage(),
+                diagnostics = listOf(
+                    RuntimeWorkEventImportDiagnostic(
+                        kind = RuntimeWorkEventImportDiagnosticKind.StoreRejected,
+                        message = "Configured event store has a torn trailing record; repair it before importing.",
+                    ),
+                ),
+            )
+        }
+
+        return result.events.mapTo(mutableSetOf()) { it.id }
     }
 
     private fun loadSourceEvents(): List<WorkEvent> = try {

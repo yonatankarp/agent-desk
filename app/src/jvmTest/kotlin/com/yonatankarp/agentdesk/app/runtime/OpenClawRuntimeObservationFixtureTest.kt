@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.runtime
 
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventRepository
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import io.kotest.assertions.assertSoftly
@@ -27,7 +28,7 @@ class OpenClawRuntimeObservationFixtureTest :
 
                     result.importedCount shouldBe 10
                     result.skippedDuplicateCount shouldBe 0
-                    repository.readAll().map { it.type.wireName }.shouldContainExactly(
+                    repository.readAll().events.map { it.type.wireName }.shouldContainExactly(
                         "work.started",
                         "work.blocked",
                         "work.started",
@@ -39,7 +40,7 @@ class OpenClawRuntimeObservationFixtureTest :
                         "work.started",
                         "work.canceled",
                     )
-                    assertSoftly(repository.readAll().first()) {
+                    assertSoftly(repository.readAll().events.first()) {
                         id.toString() shouldBe "event:agent-task:211:started"
                         source.toString() shouldBe "openclaw-local"
                         workItemId.toString() shouldBe "agent-task:211"
@@ -130,5 +131,5 @@ private class FixtureImportRepository : WorkEventRepository {
         events.add(event)
     }
 
-    override fun readAll(): List<WorkEvent> = events.toList()
+    override fun readAll(): WorkEventReadResult = WorkEventReadResult(events = events.toList())
 }

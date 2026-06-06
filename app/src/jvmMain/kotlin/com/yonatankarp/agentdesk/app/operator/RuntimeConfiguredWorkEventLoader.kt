@@ -4,18 +4,18 @@ import com.yonatankarp.agentdesk.app.config.AgentDeskMode
 import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfig
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.PublicSafeWorkEventStoreMessage
+import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
-import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 
 object RuntimeConfiguredWorkEventLoader {
-    fun load(config: AgentDeskRuntimeConfig): List<WorkEvent> = when (config.mode) {
-        AgentDeskMode.Sample -> SampleOperatorState.current().events
+    fun load(config: AgentDeskRuntimeConfig): WorkEventReadResult = when (config.mode) {
+        AgentDeskMode.Sample -> WorkEventReadResult(events = SampleOperatorState.current().events)
         AgentDeskMode.StoredEvents -> loadStoredEvents(config)
     }
 
-    private fun loadStoredEvents(config: AgentDeskRuntimeConfig): List<WorkEvent> {
+    private fun loadStoredEvents(config: AgentDeskRuntimeConfig): WorkEventReadResult {
         val location = config.eventStoreLocation
             ?: throw RuntimeConfiguredOperatorStateLoadException("Configured event store could not be read.")
 
