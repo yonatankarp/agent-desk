@@ -70,5 +70,21 @@ class WorkEventSequenceBuilderTest :
                     events[1] shouldBe custom
                 }
             }
+
+            `when`("decision and terminal events are built with defaults") {
+                then("they match the canonical fixtures") {
+                    val events = workEvents {
+                        needsDecision()
+                        failed()
+                        canceled()
+                    }
+
+                    events shouldBe listOf(
+                        WorkEventFixtures.workNeedsDecisionEvent(),
+                        WorkEventFixtures.workFailedEvent(),
+                        WorkEventFixtures.workCanceledEvent(),
+                    )
+                }
+            }
         }
     })

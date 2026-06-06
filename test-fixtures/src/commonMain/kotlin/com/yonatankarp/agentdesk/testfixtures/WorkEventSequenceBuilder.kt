@@ -63,16 +63,22 @@ class WorkEventSequenceBuilder internal constructor(
     fun needsDecision(
         workItemId: String? = null,
         at: EventTimestamp = fixtures.needsDecisionAt,
-        reason: String = "Operator decision needed.",
+        reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
     ) {
         val itemId = itemId(workItemId)
-        events += fixtures.workNeedsDecisionEvent(
-            id = eventId(itemId, suffix = "needs-decision"),
-            occurredAt = at,
-            workItemId = itemId,
-            payload = WorkNeedsDecisionPayload(reason = WorkSummary.parse(reason)),
-        ).withEvidence(evidence)
+        val id = eventId(itemId, suffix = "needs-decision")
+        val event = when (reason) {
+            null -> fixtures.workNeedsDecisionEvent(id = id, occurredAt = at, workItemId = itemId)
+
+            else -> fixtures.workNeedsDecisionEvent(
+                id = id,
+                occurredAt = at,
+                workItemId = itemId,
+                payload = WorkNeedsDecisionPayload(reason = WorkSummary.parse(reason)),
+            )
+        }
+        events += event.withEvidence(evidence)
     }
 
     fun succeeded(
@@ -91,31 +97,43 @@ class WorkEventSequenceBuilder internal constructor(
     fun failed(
         workItemId: String? = null,
         at: EventTimestamp = fixtures.terminalAt,
-        reason: String = "Build failed.",
+        reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
     ) {
         val itemId = itemId(workItemId)
-        events += fixtures.workFailedEvent(
-            id = eventId(itemId, suffix = "failed"),
-            occurredAt = at,
-            workItemId = itemId,
-            payload = WorkFailedPayload(reason = WorkSummary.parse(reason)),
-        ).withEvidence(evidence)
+        val id = eventId(itemId, suffix = "failed")
+        val event = when (reason) {
+            null -> fixtures.workFailedEvent(id = id, occurredAt = at, workItemId = itemId)
+
+            else -> fixtures.workFailedEvent(
+                id = id,
+                occurredAt = at,
+                workItemId = itemId,
+                payload = WorkFailedPayload(reason = WorkSummary.parse(reason)),
+            )
+        }
+        events += event.withEvidence(evidence)
     }
 
     fun canceled(
         workItemId: String? = null,
         at: EventTimestamp = fixtures.terminalAt,
-        reason: String = "Operator canceled the task.",
+        reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
     ) {
         val itemId = itemId(workItemId)
-        events += fixtures.workCanceledEvent(
-            id = eventId(itemId, suffix = "canceled"),
-            occurredAt = at,
-            workItemId = itemId,
-            payload = WorkCanceledPayload(reason = WorkSummary.parse(reason)),
-        ).withEvidence(evidence)
+        val id = eventId(itemId, suffix = "canceled")
+        val event = when (reason) {
+            null -> fixtures.workCanceledEvent(id = id, occurredAt = at, workItemId = itemId)
+
+            else -> fixtures.workCanceledEvent(
+                id = id,
+                occurredAt = at,
+                workItemId = itemId,
+                payload = WorkCanceledPayload(reason = WorkSummary.parse(reason)),
+            )
+        }
+        events += event.withEvidence(evidence)
     }
 
     /** Escape hatch for events the named builders cannot express. */
