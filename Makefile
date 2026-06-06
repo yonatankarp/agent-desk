@@ -39,6 +39,9 @@ check: hygiene format-check build ## Run the default local pre-PR check set.
 .PHONY: smoke
 smoke: smoke-mock smoke-mobile smoke-compose smoke-sanitized-runtime ## Run all public-safe smoke workflows.
 
+.PHONY: smoke-local-first
+smoke-local-first: hygiene replay-sanitized-runtime smoke-mock ## Run the core local-first operator loop smoke without external services.
+
 .PHONY: smoke-mock
 smoke-mock: ## Run the mock runtime/operator smoke.
 	bash scripts/mock-runtime-smoke.sh
