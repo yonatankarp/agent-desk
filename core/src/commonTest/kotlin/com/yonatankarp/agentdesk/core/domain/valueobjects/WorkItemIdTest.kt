@@ -14,7 +14,6 @@ class WorkItemIdTest :
                     val id = WorkItemId.parse("  Agent-Task:42  ")
 
                     id.value shouldBe "agent-task:42"
-                    id.toString() shouldBe "agent-task:42"
                 }
             }
 

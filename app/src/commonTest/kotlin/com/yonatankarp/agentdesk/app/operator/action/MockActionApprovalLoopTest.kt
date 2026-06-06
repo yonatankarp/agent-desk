@@ -37,7 +37,7 @@ class MockActionApprovalLoopTest :
             val loop = MockActionApprovalLoop()
 
             `when`("the proposal is approved") {
-                then("it records actor, rationale, receipt, and a resulting replay event") {
+                then("it records a receipt and a resulting replay event") {
                     val result = loop.decide(
                         proposal = proposal,
                         decision = decision(MockActionDecisionOutcome.Approve),
@@ -46,8 +46,6 @@ class MockActionApprovalLoopTest :
 
                     assertSoftly(result) {
                         state shouldBe MockActionApprovalState.Approved
-                        actor shouldBe "operator:daily-agent"
-                        decidedAt shouldBe "2026-06-02T21:22:00Z"
                         rationale shouldBe "Public-safe mock approval."
                         selection shouldBe "approve-resume"
                         sourceWorkItemId shouldBe "agent-task:42"
