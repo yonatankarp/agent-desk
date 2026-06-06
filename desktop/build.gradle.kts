@@ -24,6 +24,7 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotest.assertions.core)
             implementation(libs.kotest.framework.engine)
+            implementation(project(":test-fixtures"))
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -31,7 +32,6 @@ kotlin {
         jvmTest.dependencies {
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
-            implementation(project(":test-fixtures"))
             implementation(libs.konsist)
             implementation(libs.kotest.runner.junit5)
         }
