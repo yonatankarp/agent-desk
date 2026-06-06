@@ -14,94 +14,98 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
-import kotlin.test.Test
+import io.kotest.core.spec.style.FunSpec
 
-class MobileComposeSmokeTest {
-    @OptIn(ExperimentalTestApi::class)
-    @Test
-    fun `sample state renders visible shell text`() = runComposeUiTest {
-        setContent {
-            AgentDeskMobileApp(MobileOperatorStateContract.sample())
+// ExperimentalTestApi opt-in is tracked debt: see issue #279 — remove when
+// Compose Multiplatform stabilizes the test API.
+@OptIn(ExperimentalTestApi::class)
+class MobileComposeSmokeTest :
+    FunSpec({
+        test("sample state renders visible shell text") {
+            runComposeUiTest {
+                setContent {
+                    AgentDeskMobileApp(MobileOperatorStateContract.sample())
+                }
+
+                onNodeWithText("Agent Desk").assertIsDisplayed()
+                onNodeWithText("3 current / 2 attention").assertIsDisplayed()
+                onNodeWithText("Current work").assertIsDisplayed()
+                onNodeWithText("Attention queue").assertIsDisplayed()
+                onNodeWithText("Run public hygiene check").assertIsDisplayed()
+                onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
+                onAllNodesWithText("Review build failure").assertCountEquals(2)
+                onNodeWithText("Recent events").performScrollTo().assertIsDisplayed()
+            }
         }
 
-        onNodeWithText("Agent Desk").assertIsDisplayed()
-        onNodeWithText("3 current / 2 attention").assertIsDisplayed()
-        onNodeWithText("Current work").assertIsDisplayed()
-        onNodeWithText("Attention queue").assertIsDisplayed()
-        onNodeWithText("Run public hygiene check").assertIsDisplayed()
-        onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
-        onAllNodesWithText("Review build failure").assertCountEquals(2)
-        onNodeWithText("Recent events").performScrollTo().assertIsDisplayed()
-    }
+        test("empty state renders visible empty rows") {
+            runComposeUiTest {
+                setContent {
+                    AgentDeskMobileApp(
+                        MobileOperatorState(
+                            currentWork = emptyList(),
+                            attentionQueue = emptyList(),
+                            recentEvents = emptyList(),
+                        ),
+                    )
+                }
 
-    @OptIn(ExperimentalTestApi::class)
-    @Test
-    fun `empty state renders visible empty rows`() = runComposeUiTest {
-        setContent {
-            AgentDeskMobileApp(
-                MobileOperatorState(
-                    currentWork = emptyList(),
-                    attentionQueue = emptyList(),
-                    recentEvents = emptyList(),
-                ),
-            )
+                onNodeWithText("0 current / 0 attention").assertIsDisplayed()
+                onNodeWithText("No current work").assertIsDisplayed()
+                onNodeWithText("No items need attention").assertIsDisplayed()
+                onNodeWithText("No recent accepted events").assertIsDisplayed()
+            }
         }
 
-        onNodeWithText("0 current / 0 attention").assertIsDisplayed()
-        onNodeWithText("No current work").assertIsDisplayed()
-        onNodeWithText("No items need attention").assertIsDisplayed()
-        onNodeWithText("No recent accepted events").assertIsDisplayed()
-    }
+        test("stale evidence and warnings render visible text") {
+            runComposeUiTest {
+                val evidence = MobileEvidenceReference(
+                    kind = "check-run",
+                    label = "Mobile smoke",
+                    target = "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+                )
+                val workItem = MobileOperatorStateContract.sample().currentWork.first()
 
-    @OptIn(ExperimentalTestApi::class)
-    @Test
-    fun `stale evidence and warnings render visible text`() = runComposeUiTest {
-        val evidence = MobileEvidenceReference(
-            kind = "check-run",
-            label = "Mobile smoke",
-            target = "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
-        )
-        val workItem = MobileOperatorStateContract.sample().currentWork.first()
-
-        setContent {
-            AgentDeskMobileApp(
-                MobileOperatorState(
-                    currentWork = listOf(workItem.copy(evidenceReferences = listOf(evidence))),
-                    attentionQueue = listOf(
-                        MobileAttentionItem(
-                            workItem = workItem.copy(evidenceReferences = listOf(evidence)),
-                            reason = workItem.summary,
-                            stale = MobileStaleAttention(
-                                lastEventAt = "2026-06-02T21:00:00Z",
-                                staleForMinutes = 90,
+                setContent {
+                    AgentDeskMobileApp(
+                        MobileOperatorState(
+                            currentWork = listOf(workItem.copy(evidenceReferences = listOf(evidence))),
+                            attentionQueue = listOf(
+                                MobileAttentionItem(
+                                    workItem = workItem.copy(evidenceReferences = listOf(evidence)),
+                                    reason = workItem.summary,
+                                    stale = MobileStaleAttention(
+                                        lastEventAt = "2026-06-02T21:00:00Z",
+                                        staleForMinutes = 90,
+                                    ),
+                                ),
+                            ),
+                            recentEvents = listOf(
+                                MobileEventLine(
+                                    occurredAt = "2026-06-02T21:03:00Z",
+                                    type = "Evidence attached",
+                                    workItemId = workItem.id,
+                                    detail = "Accepted event includes mobile smoke evidence.",
+                                    evidenceReferences = listOf(evidence),
+                                ),
+                            ),
+                            projectionWarnings = listOf(
+                                MobileProjectionWarning(
+                                    eventId = "event:agent-task:91:blocked-after-success",
+                                    reason = "Cannot transition work item agent-task:91 from Succeeded to Blocked",
+                                ),
                             ),
                         ),
-                    ),
-                    recentEvents = listOf(
-                        MobileEventLine(
-                            occurredAt = "2026-06-02T21:03:00Z",
-                            type = "Evidence attached",
-                            workItemId = workItem.id,
-                            detail = "Accepted event includes mobile smoke evidence.",
-                            evidenceReferences = listOf(evidence),
-                        ),
-                    ),
-                    projectionWarnings = listOf(
-                        MobileProjectionWarning(
-                            eventId = "event:agent-task:91:blocked-after-success",
-                            reason = "Cannot transition work item agent-task:91 from Succeeded to Blocked",
-                        ),
-                    ),
-                ),
-            )
-        }
+                    )
+                }
 
-        onAllNodesWithText("check-run: Mobile smoke").assertCountEquals(3)
-        onNodeWithText("Stale 90m since 2026-06-02T21:00:00Z").performScrollTo().assertIsDisplayed()
-        onNodeWithText("Evidence attached").performScrollTo().assertIsDisplayed()
-        onNodeWithText("Projection warnings").performScrollTo().assertIsDisplayed()
-        onNodeWithText("Cannot transition work item agent-task:91 from Succeeded to Blocked")
-            .performScrollTo()
-            .assertIsDisplayed()
-    }
-}
+                onAllNodesWithText("check-run: Mobile smoke").assertCountEquals(3)
+                onNodeWithText("Stale 90m since 2026-06-02T21:00:00Z").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Evidence attached").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Projection warnings").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Cannot transition work item agent-task:91 from Succeeded to Blocked")
+                    .performScrollTo()
+                    .assertIsDisplayed()
+            }
+        }
+    })
