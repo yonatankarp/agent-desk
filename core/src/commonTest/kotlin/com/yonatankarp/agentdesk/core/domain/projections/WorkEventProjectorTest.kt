@@ -1,10 +1,11 @@
 package com.yonatankarp.agentdesk.core.domain.projections
 
-import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
+import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBeEmptyProjection
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -17,9 +18,7 @@ class WorkEventProjectorTest :
                 then("it returns empty current state") {
                     val projection = WorkEventProjector.project(emptyList())
 
-                    projection.workItems shouldBe emptyList()
-                    projection.recentEvents shouldBe emptyList()
-                    projection.ignoredEvents shouldBe emptyList()
+                    projection.shouldBeEmptyProjection()
                 }
             }
         }
@@ -78,14 +77,10 @@ class WorkEventProjectorTest :
                 then("it is marked as stale attention without changing lifecycle status") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T22:01:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(hour = 22, minute = 1))
+                            },
                         )
 
                     projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Running
@@ -100,14 +95,10 @@ class WorkEventProjectorTest :
                 then("it is not marked stale") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T21:30:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(minute = 30))
+                            },
                         )
 
                     projection.staleAttention shouldBe emptyList()
@@ -119,14 +110,10 @@ class WorkEventProjectorTest :
                     val projection =
                         WorkEventProjector.project(
                             events =
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T21:30:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(minute = 30))
+                            },
                             staleThreshold = StaleWorkThreshold.parseMinutes(30),
                         )
 
@@ -138,15 +125,11 @@ class WorkEventProjectorTest :
                 then("it is not marked stale") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workSucceededEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T22:30:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                succeeded()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(hour = 22, minute = 30))
+                            },
                         )
 
                     projection.staleAttention shouldBe emptyList()
@@ -163,14 +146,10 @@ class WorkEventProjectorTest :
                 then("it is marked stale at the boundary") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T22:00:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(hour = 22, minute = 0))
+                            },
                         )
 
                     projection.staleAttention.single().workItemId.toString() shouldBe "agent-task:42"
@@ -182,14 +161,10 @@ class WorkEventProjectorTest :
                 then("it is not marked stale") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T21:59:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(minute = 59))
+                            },
                         )
 
                     projection.staleAttention shouldBe emptyList()
@@ -200,15 +175,11 @@ class WorkEventProjectorTest :
                 then("it is not marked stale") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workSucceededEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T23:30:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                succeeded()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(hour = 23, minute = 30))
+                            },
                         )
 
                     projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Succeeded
@@ -220,15 +191,11 @@ class WorkEventProjectorTest :
                 then("it is not marked stale because attention states already require humans") {
                     val projection =
                         WorkEventProjector.project(
-                            listOf(
-                                CoreFixtures.workStartedEvent(),
-                                CoreFixtures.workBlockedEvent(),
-                                CoreFixtures.workStartedEvent(
-                                    id = WorkEventId.parse("event:agent-task:43:started"),
-                                    occurredAt = EventTimestamp.parse("2026-06-02T23:30:00Z"),
-                                    workItemId = WorkItemId.parse("agent-task:43"),
-                                ),
-                            ),
+                            workEvents {
+                                started()
+                                blocked()
+                                started(workItemId = "agent-task:43", at = eventTimestampAt(hour = 23, minute = 30))
+                            },
                         )
 
                     projection.workItems.first { it.id.toString() == "agent-task:42" }.status shouldBe WorkStatus.Blocked
