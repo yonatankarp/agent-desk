@@ -54,6 +54,16 @@ For docs-only slices, public hygiene, diff check, and Spotless are the minimum
 local gates. For code that touches runtime, persistence, UI, or reports, run the
 focused test plus the strongest relevant module gate.
 
+The hygiene scanner is the automated backstop for the artifact classes above:
+it scans tracked Markdown/docs/scripts/workflow files plus `*.kt`, `*.kts`,
+`*.toml`, `*.json`, `*.ndjson`, `*.properties`, `*.yml`, and `*.yaml` — the
+formats the product itself reads and writes (event stores, sanitized exports,
+runtime config). It blocks private home paths, credential and token shapes,
+webhook URLs, raw transcript markers, and real-looking chat or channel ids.
+Build output stays excluded because the scan only sees git-tracked files. Run
+`bash scripts/validate-public-hygiene.sh --self-test` to prove the coverage
+fires; the self-test includes leaky JSON/NDJSON/properties/YAML fixtures.
+
 ## Runbooks
 
 ### Startup
