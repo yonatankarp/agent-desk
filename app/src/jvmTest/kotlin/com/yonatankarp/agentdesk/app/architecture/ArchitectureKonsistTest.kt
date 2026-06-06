@@ -44,6 +44,19 @@ class ArchitectureKonsistTest :
                 }
         }
 
+        test("app test files use Kotest instead of kotlin.test or JUnit") {
+            appTestSourceSets.forEach { sourceSet ->
+                Konsist
+                    .scopeFromProject(moduleName = "app", sourceSetName = sourceSet)
+                    .files
+                    .assertTrue { file ->
+                        !file.hasImport { import ->
+                            blockedTestFrameworkPrefixes.any { import.name.startsWith(it) }
+                        }
+                    }
+            }
+        }
+
         test("forbidden app JVM import guard catches client fixtures") {
             val fixture =
                 Konsist
@@ -55,6 +68,15 @@ class ArchitectureKonsistTest :
         }
     }) {
     companion object {
+        private val appTestSourceSets = listOf("commonTest", "jvmTest")
+
+        // Kotest is the only test framework (docs/engineering-style.md).
+        private val blockedTestFrameworkPrefixes =
+            listOf(
+                "kotlin.test.",
+                "org.junit.",
+            )
+
         private val blockedImportPrefixes =
             listOf(
                 "com.yonatankarp.agentdesk.adapter.",
