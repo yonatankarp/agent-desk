@@ -19,6 +19,7 @@ application {
 dependencies {
     implementation(project(":app"))
     implementation(project(":core"))
+    testImplementation(project(":test-fixtures"))
     testImplementation(libs.konsist)
     testImplementation(libs.kotest.runner.junit5)
     testImplementation(libs.kotest.assertions.core)

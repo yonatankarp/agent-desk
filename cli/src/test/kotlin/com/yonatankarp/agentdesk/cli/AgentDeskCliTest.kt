@@ -238,15 +238,21 @@ class AgentDeskCliTest :
             }
         }
 
-        given("a --events flag with no value") {
-            `when`("the CLI is run") {
-                then("missing event file option value is a usage error") {
-                    val result = runCli("--events")
+        given("usage errors") {
+            `when`("each invalid argument list is run") {
+                then("it exits with code 2, explains the error, and prints nothing on stdout") {
+                    usageErrorCases().forEach { case ->
+                        val result = runCli(*case.args.toTypedArray())
 
-                    result.exitCode shouldBe 2
-                    result.error shouldContain "Missing value for --events."
-                    result.error shouldContain "Run with --help for usage."
-                    result.output shouldBe ""
+                        withClue("args: ${case.args}") {
+                            result.exitCode shouldBe 2
+                            case.expectedErrors.forEach { expected ->
+                                result.error shouldContain expected
+                            }
+                            assertPublicSafe(result.error)
+                            result.output shouldBe ""
+                        }
+                    }
                 }
             }
         }
@@ -259,32 +265,6 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 1
                     result.error shouldContain "Event input file could not be read."
                     assertPublicSafe(result.error)
-                    result.output shouldBe ""
-                }
-            }
-        }
-
-        given("an unknown option carrying a private-looking argument") {
-            `when`("the CLI is run") {
-                then("unknown option fails without echoing the argument") {
-                    val result = runCli("--private-token-file=${privateLinuxPath("private-token.txt")}")
-
-                    result.exitCode shouldBe 2
-                    result.error shouldContain "Unknown option."
-                    assertPublicSafe(result.error)
-                    result.output shouldBe ""
-                }
-            }
-        }
-
-        given("a --config flag with no value") {
-            `when`("the CLI is run") {
-                then("missing config option value is a usage error") {
-                    val result = runCli("--config")
-
-                    result.exitCode shouldBe 2
-                    result.error shouldContain "Missing value for --config."
-                    result.error shouldContain "Run with --help for usage."
                     result.output shouldBe ""
                 }
             }
@@ -303,176 +283,6 @@ class AgentDeskCliTest :
                             result.output shouldContain "--help          Show this help."
                             assertPublicSafe(result.output)
                             result.error shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("argument lists combining two commands") {
-            `when`("each is run") {
-                then("combining two commands is a usage error") {
-                    val cases = listOf(
-                        listOf("inspect", "agent-task:42", "import-mock-runtime"),
-                        listOf("import-mock-runtime", "import-openclaw-observations"),
-                        listOf("import-openclaw-observations", "act", "resume", "agent-task:42"),
-                        listOf("act", "resume", "agent-task:42", "inspect", "agent-task:43"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "Choose only one command."
-                            result.error shouldContain "Run with --help for usage."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("argument lists repeating the event store option") {
-            `when`("each is run") {
-                then("repeating the event store option is a usage error") {
-                    val cases = listOf(
-                        listOf("import-mock-runtime", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
-                        listOf("act", "resume", "agent-task:42", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
-                        listOf("import-openclaw-observations", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "Choose only one event store."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("arguments repeating the observations option") {
-            `when`("the CLI is run") {
-                then("repeating the observations option is a usage error") {
-                    val result = runCli(
-                        "import-openclaw-observations",
-                        "--observations",
-                        "observations-one.json",
-                        "--observations",
-                        "observations-two.json",
-                    )
-
-                    result.exitCode shouldBe 2
-                    result.error shouldContain "Choose only one observations export."
-                    result.output shouldBe ""
-                }
-            }
-        }
-
-        given("the event store option used outside import or act") {
-            `when`("each is run") {
-                then("event store option outside import or act context is a usage error") {
-                    val cases = listOf(
-                        listOf("--event-store", "store.ndjson"),
-                        listOf("inspect", "agent-task:42", "--event-store", "store.ndjson"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "--event-store is only valid with import commands or act."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("the observations option used outside its import command") {
-            `when`("each is run") {
-                then("observations option outside its import context is a usage error") {
-                    val cases = listOf(
-                        listOf("--observations", "observations.json"),
-                        listOf("import-mock-runtime", "--observations", "observations.json"),
-                        listOf("act", "resume", "agent-task:42", "--observations", "observations.json"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "--observations is only valid with import-openclaw-observations."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("act invoked without an intent") {
-            `when`("each is run") {
-                then("act without an intent is a usage error") {
-                    val cases = listOf(
-                        listOf("act"),
-                        listOf("act", "--event-store", "store.ndjson"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "Missing action intent for act."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("act invoked without a work item id") {
-            `when`("each is run") {
-                then("act without a work item id is a usage error") {
-                    val cases = listOf(
-                        listOf("act", "resume"),
-                        listOf("act", "resume", "--event-store"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "Missing work item id for act."
-                            result.output shouldBe ""
-                        }
-                    }
-                }
-            }
-        }
-
-        given("inspect invoked without a work item id") {
-            `when`("each is run") {
-                then("inspect without a work item id is a usage error") {
-                    val cases = listOf(
-                        listOf("inspect"),
-                        listOf("inspect", "--sample"),
-                    )
-
-                    cases.forEach { args ->
-                        val result = runCli(*args.toTypedArray())
-
-                        withClue("args: $args") {
-                            result.exitCode shouldBe 2
-                            result.error shouldContain "Missing work item id for inspect."
-                            result.output shouldBe ""
                         }
                     }
                 }
@@ -674,16 +484,6 @@ class AgentDeskCliTest :
                     result.exitCode shouldBe 1
                     result.error shouldContain "Invalid event store location:"
                     assertPublicSafe(result.error)
-                    result.output shouldBe ""
-                }
-            }
-
-            `when`("no event store option is provided") {
-                then("mock runtime import requires an event store option") {
-                    val result = runCli("import-mock-runtime")
-
-                    result.exitCode shouldBe 2
-                    result.error shouldContain "Missing value for --event-store."
                     result.output shouldBe ""
                 }
             }
@@ -992,6 +792,11 @@ class AgentDeskCliTest :
         val error: String,
     )
 
+    private data class UsageErrorCase(
+        val args: List<String>,
+        val expectedErrors: List<String>,
+    )
+
     companion object {
         private fun runCli(
             vararg args: String,
@@ -1042,6 +847,107 @@ class AgentDeskCliTest :
         }
 
         private fun privateLinuxPath(fileName: String): String = "/home/" + "operator/$fileName"
+
+        private fun usageErrorCases(): List<UsageErrorCase> = listOf(
+            UsageErrorCase(
+                args = listOf("--events"),
+                expectedErrors = listOf("Missing value for --events.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("--config"),
+                expectedErrors = listOf("Missing value for --config.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("--private-token-file=${privateLinuxPath("private-token.txt")}"),
+                expectedErrors = listOf("Unknown option."),
+            ),
+            UsageErrorCase(
+                args = listOf("inspect", "agent-task:42", "import-mock-runtime"),
+                expectedErrors = listOf("Choose only one command.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-mock-runtime", "import-openclaw-observations"),
+                expectedErrors = listOf("Choose only one command.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-openclaw-observations", "act", "resume", "agent-task:42"),
+                expectedErrors = listOf("Choose only one command.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "resume", "agent-task:42", "inspect", "agent-task:43"),
+                expectedErrors = listOf("Choose only one command.", "Run with --help for usage."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-mock-runtime", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+                expectedErrors = listOf("Choose only one event store."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "resume", "agent-task:42", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+                expectedErrors = listOf("Choose only one event store."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-openclaw-observations", "--event-store", "store-one.ndjson", "--event-store", "store-two.ndjson"),
+                expectedErrors = listOf("Choose only one event store."),
+            ),
+            UsageErrorCase(
+                args = listOf(
+                    "import-openclaw-observations",
+                    "--observations",
+                    "observations-one.json",
+                    "--observations",
+                    "observations-two.json",
+                ),
+                expectedErrors = listOf("Choose only one observations export."),
+            ),
+            UsageErrorCase(
+                args = listOf("--event-store", "store.ndjson"),
+                expectedErrors = listOf("--event-store is only valid with import commands or act."),
+            ),
+            UsageErrorCase(
+                args = listOf("inspect", "agent-task:42", "--event-store", "store.ndjson"),
+                expectedErrors = listOf("--event-store is only valid with import commands or act."),
+            ),
+            UsageErrorCase(
+                args = listOf("--observations", "observations.json"),
+                expectedErrors = listOf("--observations is only valid with import-openclaw-observations."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-mock-runtime", "--observations", "observations.json"),
+                expectedErrors = listOf("--observations is only valid with import-openclaw-observations."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "resume", "agent-task:42", "--observations", "observations.json"),
+                expectedErrors = listOf("--observations is only valid with import-openclaw-observations."),
+            ),
+            UsageErrorCase(
+                args = listOf("act"),
+                expectedErrors = listOf("Missing action intent for act."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "--event-store", "store.ndjson"),
+                expectedErrors = listOf("Missing action intent for act."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "resume"),
+                expectedErrors = listOf("Missing work item id for act."),
+            ),
+            UsageErrorCase(
+                args = listOf("act", "resume", "--event-store"),
+                expectedErrors = listOf("Missing work item id for act."),
+            ),
+            UsageErrorCase(
+                args = listOf("inspect"),
+                expectedErrors = listOf("Missing work item id for inspect."),
+            ),
+            UsageErrorCase(
+                args = listOf("inspect", "--sample"),
+                expectedErrors = listOf("Missing work item id for inspect."),
+            ),
+            UsageErrorCase(
+                args = listOf("import-mock-runtime"),
+                expectedErrors = listOf("Missing value for --event-store."),
+            ),
+        )
 
         private const val STARTED_EVENT =
             """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check","summary":"Agent accepted the task and started local checks."}}"""
