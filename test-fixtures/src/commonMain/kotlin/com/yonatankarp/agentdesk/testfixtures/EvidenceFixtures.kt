@@ -9,10 +9,6 @@ fun commitEvidence(label: String, target: String): EvidenceReference = evidence(
 
 fun checkRunEvidence(label: String, target: String): EvidenceReference = evidence(EvidenceReferenceKind.CheckRun, label, target)
 
-fun artifactEvidence(label: String, target: String): EvidenceReference = evidence(EvidenceReferenceKind.Artifact, label, target)
-
-fun screenshotEvidence(label: String, target: String): EvidenceReference = evidence(EvidenceReferenceKind.Screenshot, label, target)
-
 fun sanitizedNoteEvidence(label: String, target: String): EvidenceReference = evidence(EvidenceReferenceKind.SanitizedNote, label, target)
 
 private fun evidence(
