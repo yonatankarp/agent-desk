@@ -21,3 +21,7 @@ IDENTITY.md
 SOUL.md
 TOOLS.md
 USER.md
+
+# Claude Code local runtime state; only .claude/skills is project source.
+.claude/*
+!.claude/skills/
