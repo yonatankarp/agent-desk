@@ -59,7 +59,7 @@ All existing test files in core/app/cli/desktop/mobile are migration targets (Ta
 - [ ] **Step 1: Create a work branch**
 
 ```bash
-cd /Users/yonatankarp-rudin/Projects/_private_projects/agent-desk
+# from the repository root
 git checkout -b test/fixture-dsl
 ```
 
