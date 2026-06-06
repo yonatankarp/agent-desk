@@ -25,6 +25,17 @@ class ArchitectureKonsistTest :
                     }
                 }
         }
+
+        test("cli test files use Kotest instead of kotlin.test or JUnit") {
+            Konsist
+                .scopeFromProject(moduleName = "cli", sourceSetName = "test")
+                .files
+                .assertTrue { file ->
+                    !file.hasImport { import ->
+                        blockedTestFrameworkPrefixes.any { import.name.startsWith(it) }
+                    }
+                }
+        }
     }) {
     companion object {
         private val blockedImportPrefixes =
@@ -34,6 +45,13 @@ class ArchitectureKonsistTest :
                 "com.yonatankarp.agentdesk.runtime.",
                 "com.yonatankarp.agentdesk.desktop.",
                 "com.yonatankarp.agentdesk.ui.",
+            )
+
+        // Kotest is the only test framework (docs/engineering-style.md).
+        private val blockedTestFrameworkPrefixes =
+            listOf(
+                "kotlin.test.",
+                "org.junit.",
             )
     }
 }

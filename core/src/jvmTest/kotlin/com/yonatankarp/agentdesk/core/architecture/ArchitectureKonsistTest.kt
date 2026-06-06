@@ -73,6 +73,19 @@ class ArchitectureKonsistTest :
                 }
         }
 
+        test("core test files use Kotest instead of kotlin.test or JUnit") {
+            coreTestSourceSets.forEach { sourceSet ->
+                Konsist
+                    .scopeFromProject(moduleName = "core", sourceSetName = sourceSet)
+                    .files
+                    .assertTrue { file ->
+                        !file.hasImport { import ->
+                            blockedTestFrameworkPrefixes.any { import.name.startsWith(it) }
+                        }
+                    }
+            }
+        }
+
         test("forbidden domain import guard catches serialization fixtures") {
             val fixture =
                 Konsist
@@ -85,6 +98,15 @@ class ArchitectureKonsistTest :
         }
     }) {
     companion object {
+        private val coreTestSourceSets = listOf("commonTest", "jvmTest")
+
+        // Kotest is the only test framework (docs/engineering-style.md).
+        private val blockedTestFrameworkPrefixes =
+            listOf(
+                "kotlin.test.",
+                "org.junit.",
+            )
+
         private val eventDeclarationNames =
             setOf(
                 "EventSource",

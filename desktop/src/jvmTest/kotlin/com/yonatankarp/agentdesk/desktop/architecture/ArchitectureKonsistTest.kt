@@ -7,6 +7,15 @@ import io.kotest.core.spec.style.FunSpec
 
 private val desktopProductionSourceSets = listOf("commonMain", "jvmMain")
 
+private val desktopTestSourceSets = listOf("commonTest", "jvmTest")
+
+// Kotest is the only test framework (docs/engineering-style.md).
+private val blockedTestFrameworkPrefixes =
+    listOf(
+        "kotlin.test.",
+        "org.junit.",
+    )
+
 private val blockedImportPrefixes =
     listOf(
         "com.yonatankarp.agentdesk.adapter.",
@@ -41,6 +50,19 @@ class ArchitectureKonsistTest :
                     .files
                     .assertTrue { file ->
                         !file.hasBlockedImport()
+                    }
+            }
+        }
+
+        test("desktop test files use Kotest instead of kotlin.test or JUnit") {
+            desktopTestSourceSets.forEach { sourceSet ->
+                Konsist
+                    .scopeFromProject(moduleName = "desktop", sourceSetName = sourceSet)
+                    .files
+                    .assertTrue { file ->
+                        !file.hasImport { import ->
+                            blockedTestFrameworkPrefixes.any { import.name.startsWith(it) }
+                        }
                     }
             }
         }
