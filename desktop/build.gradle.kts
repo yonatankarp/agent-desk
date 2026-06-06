@@ -22,7 +22,8 @@ kotlin {
             implementation(compose.material3)
         }
         commonTest.dependencies {
-            implementation(kotlin("test"))
+            implementation(libs.kotest.assertions.core)
+            implementation(libs.kotest.framework.engine)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -31,6 +32,7 @@ kotlin {
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
             implementation(libs.konsist)
+            implementation(libs.kotest.runner.junit5)
         }
     }
 }
