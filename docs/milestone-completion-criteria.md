@@ -9,6 +9,9 @@ This document defines first-milestone product completion. `VISION.md` remains
 the product intent, while this file gives Manager, Discovery, implementation,
 QA, and reporting roles the concrete done/not-done vocabulary.
 
+Shared product surface names and object vocabulary live in
+[Agent Desk information architecture](information-architecture.md).
+
 ## First Milestone Definition
 
 The first milestone proves the smallest useful supervisor loop:

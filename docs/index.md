@@ -6,6 +6,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 
 - [Domain model](domain-model.md): public-safe core concepts, value objects, event envelope, and adapter-neutral examples.
 - [Agent Desk milestone completion criteria](milestone-completion-criteria.md): first milestone done/not-done states, required evidence, and non-goals.
+- [Agent Desk information architecture](information-architecture.md): primary operator surfaces, shared vocabulary, and read-only/actionable boundaries.
 - [Runtime adapter boundary](runtime-adapter-boundary.md): sanitized import contracts for local/runtime observations.
 - [Observation contract v1](observation-contract-v1.md): public-safe sanitized observation export fields, validation, and diagnostics.
 - [Canonical sanitized replay](canonical-sanitized-replay.md): repeatable public-safe replay proof for timeline-ready and decision-queue-ready state.
