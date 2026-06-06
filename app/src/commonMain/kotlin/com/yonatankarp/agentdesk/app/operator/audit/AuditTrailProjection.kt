@@ -1,7 +1,9 @@
 package com.yonatankarp.agentdesk.app.operator.audit
 
+import com.yonatankarp.agentdesk.app.operator.action.ActionPermissionDecision
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalResult
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalState
+import com.yonatankarp.agentdesk.app.operator.action.PermissionDecisionState
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
@@ -102,6 +104,20 @@ object AuditTrailProjector {
         return listOf(decisionEntry, actionEntry)
     }
 
+    fun fromPermissionDecision(decision: ActionPermissionDecision): AuditEntry = AuditEntry(
+        id = "audit:${decision.target}:${decision.action}:permission:${decision.decidedAt}",
+        actor = decision.actor,
+        actorKind = AuditActorKind.Human,
+        timestamp = decision.decidedAt,
+        action = "permission.${decision.actionClass.name.lowercase()}",
+        target = decision.target,
+        result = decision.state.toAuditResult(),
+        sourceItem = decision.target,
+        correlationId = "correlation:${decision.target}:${decision.action}:permission:${decision.decidedAt}",
+        evidenceReference = decision.receipt,
+        detail = decision.logSummary,
+    )
+
     fun fromImporterEvent(
         event: WorkEvent,
         correlationId: String,
@@ -169,6 +185,14 @@ object AuditTrailProjector {
         MockActionApprovalState.Failed -> AuditResult.Failed
         MockActionApprovalState.PartialSuccess -> AuditResult.PartialSuccess
         MockActionApprovalState.Unsupported -> AuditResult.Unsupported
+    }
+
+    private fun PermissionDecisionState.toAuditResult(): AuditResult = when (this) {
+        PermissionDecisionState.Approved -> AuditResult.Approved
+        PermissionDecisionState.Denied -> AuditResult.Rejected
+        PermissionDecisionState.Canceled -> AuditResult.Canceled
+        PermissionDecisionState.RequiresClarification -> AuditResult.Deferred
+        PermissionDecisionState.Unsupported -> AuditResult.Unsupported
     }
 
     private fun sanitizedNote(

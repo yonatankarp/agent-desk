@@ -13,6 +13,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Runtime adapter scope decision](runtime-adapter-scope-decision.md): accepted first non-mock adapter scope and public-safe follow-up boundaries.
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
+- [Action permission gates](action-permission-gates.md): action class inventory and fail-closed permission behavior.
 - [Verification evidence](verification-evidence.md): structured check results and completion evidence examples.
 - [Mobile read-only contract](mobile-read-only-contract.md): shared `:app` read model and first mobile evidence expectations.
 - [Engineering style](engineering-style.md): Kotlin, domain, adapter, test, and documentation conventions.
