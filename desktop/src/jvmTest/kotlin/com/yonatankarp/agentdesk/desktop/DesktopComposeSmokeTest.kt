@@ -20,9 +20,11 @@ class DesktopComposeSmokeTest {
 
         onNodeWithText("Agent Desk").assertIsDisplayed()
         onNodeWithText("Sample state").assertIsDisplayed()
-        onNodeWithText("Current work").assertIsDisplayed()
-        onNodeWithText("Recent events").assertIsDisplayed()
-        onNodeWithText("Attention queue").assertIsDisplayed()
+        onNodeWithText("Replay status").assertIsDisplayed()
+        onNodeWithText("Work state").assertIsDisplayed()
+        onNodeWithText("Read-only timeline").assertIsDisplayed()
+        onNodeWithText("Decision queue").assertIsDisplayed()
+        onNodeWithText("Not done: 2 item(s) need operator attention.").assertIsDisplayed()
         onNodeWithText("Run public hygiene check").assertIsDisplayed()
         onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
         onAllNodesWithText("Review build failure").assertCountEquals(2)
@@ -41,6 +43,7 @@ class DesktopComposeSmokeTest {
         }
 
         onNodeWithText("0 active / 0 attention").assertIsDisplayed()
+        onNodeWithText("Empty queue: no current work or decisions; not product completion without milestone evidence.").assertIsDisplayed()
         onNodeWithText("No current work").assertIsDisplayed()
         onNodeWithText("No recent events").assertIsDisplayed()
         onNodeWithText("No items need a decision").assertIsDisplayed()

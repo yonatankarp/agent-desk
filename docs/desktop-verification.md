@@ -28,14 +28,16 @@ Run it against a sanitized local event store by passing the shared runtime confi
 
 The config file uses the same public-safe values documented in [Runtime configuration](runtime-configuration.md). Sample mode is labelled `Sample state`; stored event mode is labelled `Loaded state`; invalid config or unreadable stores render a public-safe error state instead of echoing raw local details.
 
+The first read-only operator surface shows `Replay status`, `Work state`, `Read-only timeline`, and `Decision queue`. `Replay status` is deliberately interpretive: it distinguishes empty queue from product completion, calls out not-done states when attention is required, points import diagnostics back to the canonical replay smoke, and treats Discovery/no-issue output as triage only.
+
 CI runs `bash scripts/compose-run-smoke.sh` to exercise both Compose run tasks without opening long-lived windows.
 
 The smoke tests cover:
 
-- the `Current work`, `Recent events`, and `Attention queue` sections
+- the `Replay status`, `Work state`, `Read-only timeline`, and `Decision queue` sections
 - public-safe sample state
 - empty state rows
-- attention-needed rows
+- not-done and attention-needed rows
 - loaded, loading, and invalid-input states
 
 This is not a replacement for future screenshot or interaction tests. When the desktop shell loads non-sample state or gains actions, add UI-level verification around those workflows.

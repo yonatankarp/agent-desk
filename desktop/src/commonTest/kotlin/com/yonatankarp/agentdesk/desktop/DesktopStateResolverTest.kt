@@ -18,7 +18,7 @@ class DesktopStateResolverTest {
 
         val ready = assertIs<DesktopScreenState.Ready>(screenState)
         assertEquals("Sample state", ready.modeLabel)
-        assertContains(DesktopSmokeSnapshotBuilder.from(ready).flattenedText(), "Current work")
+        assertContains(DesktopSmokeSnapshotBuilder.from(ready).flattenedText(), "Work state")
     }
 
     @Test
@@ -37,8 +37,10 @@ class DesktopStateResolverTest {
         val loading = DesktopSmokeSnapshotBuilder.from(DesktopScreenState.Loading)
         val error = DesktopSmokeSnapshotBuilder.from(DesktopScreenState.Error("Configured event store could not be read."))
 
-        assertEquals(listOf("Loading operator state"), loading.sectionRows("Attention queue"))
-        assertEquals(listOf("Configured event store could not be read."), error.sectionRows("Attention queue"))
+        assertEquals(listOf("Loading operator state"), loading.sectionRows("Decision queue"))
+        assertEquals(listOf("Configured event store could not be read."), error.sectionRows("Decision queue"))
+        assertEquals(listOf("Replay status: loading operator state."), loading.sectionRows("Replay status"))
+        assertEquals(listOf("Blocked/error: Configured event store could not be read."), error.sectionRows("Replay status"))
     }
 
     @Test

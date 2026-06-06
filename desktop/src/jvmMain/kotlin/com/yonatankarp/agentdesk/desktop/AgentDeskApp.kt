@@ -71,6 +71,12 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 Header(screenState)
+                SectionPanel(
+                    title = "Replay status",
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    ReplayStatus(screenState)
+                }
 
                 Row(
                     modifier = Modifier.fillMaxSize(),
@@ -83,7 +89,7 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
                         SectionPanel(
-                            title = "Current work",
+                            title = "Work state",
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth(),
@@ -92,7 +98,7 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
                         }
 
                         SectionPanel(
-                            title = "Recent events",
+                            title = "Read-only timeline",
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth(),
@@ -102,7 +108,7 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
                     }
 
                     SectionPanel(
-                        title = "Attention queue",
+                        title = "Decision queue",
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -177,6 +183,18 @@ private fun SectionPanel(
         ) {
             content()
         }
+    }
+}
+
+@Composable
+private fun ReplayStatus(screenState: DesktopScreenState) {
+    DesktopReplayStatus.rows(screenState).forEach { row ->
+        Text(
+            text = row,
+            color = Palette.TextSecondary,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+        )
     }
 }
 
