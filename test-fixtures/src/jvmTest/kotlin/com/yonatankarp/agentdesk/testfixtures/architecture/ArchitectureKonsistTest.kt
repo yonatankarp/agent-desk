@@ -1,6 +1,5 @@
-package com.yonatankarp.agentdesk.testfixtures
+package com.yonatankarp.agentdesk.testfixtures.architecture
 
-import com.yonatankarp.agentdesk.testfixtures.architecture.ModuleArchitectureRules
 import io.kotest.core.spec.style.FunSpec
 
 class ArchitectureKonsistTest :
