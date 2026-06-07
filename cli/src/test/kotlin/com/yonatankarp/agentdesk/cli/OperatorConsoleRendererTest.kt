@@ -74,7 +74,7 @@ class OperatorConsoleRendererTest :
                         shouldContain("Attention queue")
                         shouldContain("- agent-task:42 Run public hygiene check (Needs decision)")
                         shouldContain(
-                            "- agent-task:45 Watch long-running import (Stale Running, last event 90m before latest event)",
+                            "- agent-task:45 Watch long-running import (Stale Running, last event 1h 30m before latest event)",
                         )
                         shouldContain(
                             "- 2026-06-02T21:00:00Z work.started agent-task:42 from sample-agent - " +

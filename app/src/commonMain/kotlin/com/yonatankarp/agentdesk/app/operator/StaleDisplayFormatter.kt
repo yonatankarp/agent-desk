@@ -3,8 +3,8 @@ package com.yonatankarp.agentdesk.app.operator
 /**
  * Shared presentation for stale-attention values: humanized durations and
  * operator-friendly timestamps. Lives in `:app` so every client renders the
- * same vocabulary (the CLI still prints raw minutes; adopting this formatter
- * there is tracked follow-up work).
+ * same vocabulary — both the mobile shell and the CLI operator console derive
+ * stale durations through it.
  */
 object StaleDisplayFormatter {
     private const val MINUTES_PER_HOUR = 60L
