@@ -4,6 +4,7 @@ import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
+import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspection
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 
@@ -67,7 +68,8 @@ class OperatorConsoleRenderer {
             val item = state.workItems.firstOrNull { it.id == stale.workItemId }
             appendLine(
                 "- ${stale.workItemId} ${item?.title ?: "Unknown work"} " +
-                    "(Stale ${OperatorStatePresenter.presentationFor(stale.status).label}, last event ${stale.staleForMinutes}m before latest event)",
+                    "(Stale ${OperatorStatePresenter.presentationFor(stale.status).label}, " +
+                    "last event ${StaleDisplayFormatter.humanizeMinutes(stale.staleForMinutes)} before latest event)",
             )
         }
     }
