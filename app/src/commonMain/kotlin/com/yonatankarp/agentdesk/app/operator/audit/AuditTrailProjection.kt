@@ -15,7 +15,7 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 
 data class AuditEntry(
-    val id: String,
+    val id: AuditEntryId,
     val actor: Actor,
     val actorKind: AuditActorKind,
     val timestamp: EventTimestamp,
@@ -29,15 +29,31 @@ data class AuditEntry(
     val detail: String,
 ) {
     init {
-        require(id.isNotBlank()) { "Audit entry id must not be blank" }
         require(action.isNotBlank()) { "Audit action must not be blank" }
         require(correlationId.isNotBlank()) { "Audit correlation id must not be blank" }
         require(detail.isNotBlank()) { "Audit detail must not be blank" }
-        PublicSafeTextPolicy.requirePublicSafe(id, fieldName = "Audit entry id")
         PublicSafeTextPolicy.requirePublicSafe(action, fieldName = "Audit action")
         PublicSafeTextPolicy.requirePublicSafe(correlationId, fieldName = "Audit correlation id")
         PublicSafeTextPolicy.requirePublicSafe(detail, fieldName = "Audit detail")
     }
+}
+
+@JvmInline
+value class AuditEntryId private constructor(val value: String) {
+    companion object {
+        private val validPattern = "audit:[A-Za-z0-9][A-Za-z0-9._:-]{0,191}".toRegex()
+
+        fun parse(raw: String): AuditEntryId {
+            val normalized = raw.trim()
+            require(validPattern.matches(normalized)) {
+                "Audit entry id must start with audit: and use public-safe id characters"
+            }
+            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Audit entry id")
+            return AuditEntryId(normalized)
+        }
+    }
+
+    override fun toString(): String = value
 }
 
 data class AuditTimelineLine(
@@ -76,7 +92,7 @@ object AuditTrailProjector {
         recordedAt: EventTimestamp,
     ): List<AuditEntry> {
         val decisionEntry = AuditEntry(
-            id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:decision:${result.decidedAt}",
+            id = AuditEntryId.parse("audit:${result.sourceWorkItemId}:${result.action.wireName}:decision:${result.decidedAt}"),
             actor = result.actor,
             actorKind = AuditActorKind.Human,
             timestamp = result.decidedAt,
@@ -91,7 +107,7 @@ object AuditTrailProjector {
         )
 
         val actionEntry = AuditEntry(
-            id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:action:${result.decidedAt}",
+            id = AuditEntryId.parse("audit:${result.sourceWorkItemId}:${result.action.wireName}:action:${result.decidedAt}"),
             actor = result.resultingEvent?.source?.let { Actor.parse(it.value) } ?: mockAdapterActor,
             actorKind = AuditActorKind.Agent,
             // A non-executing outcome has no action event to date the entry, so it
@@ -114,7 +130,7 @@ object AuditTrailProjector {
         decision: ActionPermissionDecision,
         recordedAt: EventTimestamp,
     ): AuditEntry = AuditEntry(
-        id = "audit:${decision.target}:${decision.action}:permission:${decision.decidedAt}",
+        id = AuditEntryId.parse("audit:${decision.target}:${decision.action}:permission:${decision.decidedAt}"),
         actor = decision.actor,
         actorKind = AuditActorKind.Human,
         timestamp = decision.decidedAt,
@@ -133,7 +149,7 @@ object AuditTrailProjector {
         correlationId: String,
         recordedAt: EventTimestamp,
     ): AuditEntry = AuditEntry(
-        id = "audit:${event.id}",
+        id = AuditEntryId.parse("audit:${event.id}"),
         actor = Actor.parse(event.source.value),
         actorKind = AuditActorKind.System,
         timestamp = event.occurredAt,
@@ -152,7 +168,7 @@ object AuditTrailProjector {
     )
 
     fun systemFailure(
-        id: String,
+        id: AuditEntryId,
         actor: Actor,
         timestamp: EventTimestamp,
         recordedAt: EventTimestamp,

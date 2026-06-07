@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.app.fixtures
 import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.audit.AuditActorKind
 import com.yonatankarp.agentdesk.app.operator.audit.AuditEntry
+import com.yonatankarp.agentdesk.app.operator.audit.AuditEntryId
 import com.yonatankarp.agentdesk.app.operator.audit.AuditResult
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
@@ -20,7 +21,9 @@ internal fun auditEntry(
     result: AuditResult = AuditResult.Approved,
     actorKind: AuditActorKind = AuditActorKind.Human,
     minute: Int = 22,
-    id: String = "audit:agent-task:42:resume:${result.name.lowercase()}:${actorKind.name.lowercase()}:${eventTimestampAt(minute = minute)}",
+    id: AuditEntryId = AuditEntryId.parse(
+        "audit:agent-task:42:resume:${result.name.lowercase()}:${actorKind.name.lowercase()}:${eventTimestampAt(minute = minute)}",
+    ),
 ): AuditEntry = AuditEntry(
     id = id,
     actor = Actor.parse("operator:daily-agent"),

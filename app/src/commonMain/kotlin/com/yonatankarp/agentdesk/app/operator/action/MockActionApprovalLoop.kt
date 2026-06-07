@@ -48,6 +48,10 @@ data class MockActionApprovalResult(
     val replayStateSummary: String,
 ) {
     init {
+        require(rationale.isNotBlank()) { "Action approval rationale must not be blank" }
+        require(selection.isNotBlank()) { "Action approval selection must not be blank" }
+        PublicSafeTextPolicy.requirePublicSafe(rationale, fieldName = "Action approval rationale")
+        PublicSafeTextPolicy.requirePublicSafe(selection, fieldName = "Action approval selection")
         PublicSafeTextPolicy.requirePublicSafe(replayStateSummary, fieldName = "Action approval replay state")
     }
 }
