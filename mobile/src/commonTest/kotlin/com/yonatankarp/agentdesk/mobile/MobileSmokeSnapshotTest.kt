@@ -124,7 +124,7 @@ class MobileSmokeSnapshotTest :
             val text = MobileSmokeSnapshotBuilder.from(state).flattenedText()
 
             text shouldContain "Evidence: check-run Mobile smoke -> https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"
-            text shouldContain "Stale 90m since 2026-06-02T21:00:00Z"
+            text shouldContain "Stale 1h 30m since 2026-06-02 21:00 UTC"
             text shouldContain "Recent events"
             text shouldContain "2026-06-02T21:03:00Z [Evidence attached] agent-task:91"
             text shouldContain "Accepted event includes mobile smoke evidence."

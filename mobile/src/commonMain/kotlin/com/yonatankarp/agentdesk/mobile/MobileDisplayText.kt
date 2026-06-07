@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.mobile
 
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
+import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
@@ -68,7 +69,8 @@ internal object MobileDisplayText {
         )
     }
 
-    fun staleAttention(stale: MobileStaleAttention): String = "Stale ${stale.staleForMinutes}m since ${stale.lastEventAt}"
+    fun staleAttention(stale: MobileStaleAttention): String = "Stale ${StaleDisplayFormatter.humanizeMinutes(stale.staleForMinutes)} " +
+        "since ${StaleDisplayFormatter.humanizeTimestamp(stale.lastEventAt)}"
 
     fun workRow(item: MobileWorkItem): String = buildString {
         append("[${item.status.label}] ${item.id} ${item.title}")
