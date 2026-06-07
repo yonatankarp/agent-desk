@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.cli
+package com.yonatankarp.agentdesk.cli.input
 
 internal class CliInputException(
     val publicMessage: String,
