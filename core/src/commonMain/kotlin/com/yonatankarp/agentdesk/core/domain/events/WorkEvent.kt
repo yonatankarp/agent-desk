@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.core.domain.events
 
+import com.yonatankarp.agentdesk.core.domain.valueobjects.IdentifierGrammar
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
@@ -80,16 +81,13 @@ value class EventTimestamp private constructor(val value: String) : Comparable<E
 @JvmInline
 value class EventSource private constructor(val value: String) {
     companion object {
-        private val validPattern = "[a-z][a-z0-9]*(?:[._:-][a-z0-9]+){0,7}".toRegex()
-
-        fun parse(raw: String): EventSource {
-            val normalized = raw.trim().lowercase()
-            require(validPattern.matches(normalized)) {
-                "Event source must be a lowercase adapter-neutral identifier"
-            }
-            PublicSafeTextPolicy.requirePublicSafe(normalized, fieldName = "Event source")
-            return EventSource(normalized)
-        }
+        fun parse(raw: String): EventSource = EventSource(
+            IdentifierGrammar.normalize(
+                raw = raw,
+                fieldName = "Event source",
+                errorMessage = "Event source must be a lowercase adapter-neutral identifier",
+            ),
+        )
     }
 
     override fun toString(): String = value

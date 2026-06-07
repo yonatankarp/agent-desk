@@ -109,7 +109,7 @@ object AuditTrailProjector {
 
         val actionEntry = AuditEntry(
             id = AuditEntryId.parse("audit:${result.sourceWorkItemId}:${result.action.wireName}:action:${result.decidedAt}"),
-            actor = result.resultingEvent?.source?.let { Actor.parse(it.value) } ?: mockAdapterActor,
+            actor = result.resultingEvent?.source?.let(Actor::from) ?: mockAdapterActor,
             actorKind = AuditActorKind.Agent,
             // A non-executing outcome has no action event to date the entry, so it
             // carries the audit record time explicitly instead of the decision time.
@@ -151,7 +151,7 @@ object AuditTrailProjector {
         recordedAt: EventTimestamp,
     ): AuditEntry = AuditEntry(
         id = AuditEntryId.parse("audit:${event.id}"),
-        actor = Actor.parse(event.source.value),
+        actor = Actor.from(event.source),
         actorKind = AuditActorKind.System,
         timestamp = event.occurredAt,
         recordedAt = recordedAt,
