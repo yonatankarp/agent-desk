@@ -50,4 +50,14 @@ class ArchitectureKonsistTest :
 
             ModuleArchitectureRules.hasBlockedImport(fixture, blockedImportPrefixes) shouldBe true
         }
+
+        test("forbidden mobile JVM import guard catches concrete runtime adapter fixtures") {
+            val fixture =
+                Konsist
+                    .scopeFromFile("mobile/src/jvmTest/resources/architecture/ForbiddenMobileRuntimeAdapterImportFixture.kt")
+                    .files
+                    .single()
+
+            ModuleArchitectureRules.hasBlockedImport(fixture, blockedImportPrefixes) shouldBe true
+        }
     })
