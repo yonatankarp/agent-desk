@@ -13,6 +13,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -170,6 +171,116 @@ class LocalFileAuditRecordRepositoryTest :
 
                     error.reason shouldBe AuditStoreFailure.StoreTooLarge
                     error.message.orEmpty() shouldNotContain storePath.toString()
+                }
+            }
+
+            `when`("the file exceeds the configured size limit") {
+                then("the rejection leaks neither the path nor the configured byte counts") {
+                    val storePath = tempStorePath()
+                    Files.writeString(storePath, "x".repeat(64))
+
+                    val error = shouldThrow<AuditStoreException> {
+                        LocalFileAuditRecordRepository(storePath, maxStoreSizeBytes = 32).readAll()
+                    }
+
+                    error.reason shouldBe AuditStoreFailure.StoreTooLarge
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Configured audit store exceeds the maximum readable size")
+                        shouldNotContain(storePath.toString())
+                        shouldNotContain("32")
+                        shouldNotContain("64")
+                    }
+                }
+            }
+
+            `when`("the file is exactly at the size limit") {
+                then("the trail reads successfully") {
+                    val storePath = tempStorePath()
+                    val entry = auditEntry(minute = 10)
+                    val content = AuditRecordJson.encode(entry) + "\n"
+                    Files.writeString(storePath, content)
+
+                    val repository = LocalFileAuditRecordRepository(
+                        storePath,
+                        maxStoreSizeBytes = content.toByteArray(StandardCharsets.UTF_8).size.toLong(),
+                    )
+
+                    repository.readAll().entries.shouldContainExactly(entry)
+                }
+            }
+        }
+
+        given("a corrupt audit record in the middle of the store") {
+            `when`("the trail is read") {
+                then("read fails hard at the corrupt line and does not silently recover past it") {
+                    val storePath = tempStorePath()
+                    Files.writeString(
+                        storePath,
+                        "not-json\n" + AuditRecordJson.encode(auditEntry(minute = 10)) + "\n",
+                    )
+
+                    val error = shouldThrow<AuditStoreException> {
+                        LocalFileAuditRecordRepository(storePath).readAll()
+                    }
+
+                    assertSoftly(error) {
+                        reason shouldBe AuditStoreFailure.CorruptRecord(lineNumber = 1)
+                        message.orEmpty() shouldContain "Corrupt audit record at line 1"
+                        message.orEmpty() shouldNotContain storePath.toString()
+                    }
+                }
+            }
+        }
+
+        given("a valid final audit record without a trailing newline") {
+            `when`("another entry is appended") {
+                then("the unterminated record is isolated instead of corrupted") {
+                    val storePath = tempStorePath()
+                    val first = auditEntry(minute = 10)
+                    val second = auditEntry(minute = 20)
+                    Files.writeString(storePath, AuditRecordJson.encode(first))
+
+                    LocalFileAuditRecordRepository(storePath).append(second)
+
+                    val result = LocalFileAuditRecordRepository(storePath).readAll()
+                    result.entries.shouldContainExactly(first, second)
+                    result.trailingCorruption shouldBe null
+                }
+            }
+        }
+
+        given("an unwritable audit store target") {
+            `when`("an entry is appended") {
+                then("it fails with a path-free public-safe error") {
+                    val storePath = Files.createTempDirectory("agent-desk-audit-store-test")
+
+                    val error = shouldThrow<AuditStoreException> {
+                        LocalFileAuditRecordRepository(storePath).append(auditEntry(minute = 10))
+                    }
+
+                    error.reason shouldBe AuditStoreFailure.AppendFailed
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unable to append audit record to configured audit store")
+                        shouldNotContain(storePath.toString())
+                    }
+                }
+            }
+        }
+
+        given("an unreadable audit store target") {
+            `when`("the trail is read") {
+                then("it fails with a path-free public-safe error") {
+                    val storePath = Files.createTempDirectory("agent-desk-audit-store-test")
+
+                    val error = shouldThrow<AuditStoreException> {
+                        LocalFileAuditRecordRepository(storePath).readAll()
+                    }
+
+                    error.reason shouldBe AuditStoreFailure.Unreadable
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Unable to read configured audit store")
+                        shouldNotContain(storePath.toString())
+                    }
                 }
             }
         }

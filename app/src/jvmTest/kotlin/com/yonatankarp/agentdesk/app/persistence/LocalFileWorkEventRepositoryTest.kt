@@ -4,6 +4,7 @@ import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workBlockedEvent
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workStartedEvent
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -53,6 +54,17 @@ class LocalFileWorkEventRepositoryTest :
                     repository.append(blocked)
 
                     repository.readAll().events.shouldContainExactly(started, blocked)
+                }
+            }
+
+            `when`("the raw store bytes are inspected") {
+                then("every persisted record is public-safe") {
+                    val storePath = tempStorePath()
+                    val repository = LocalFileWorkEventRepository(storePath)
+                    repository.append(workStartedEvent())
+                    repository.append(workBlockedEvent())
+
+                    Files.readString(storePath).shouldBePublicSafe()
                 }
             }
 
