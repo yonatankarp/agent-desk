@@ -10,7 +10,7 @@ object StaleDisplayFormatter {
     private const val MINUTES_PER_HOUR = 60L
     private const val MINUTES_PER_DAY = 24L * MINUTES_PER_HOUR
 
-    private val canonicalUtcTimestamp = Regex("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}.*Z""")
+    private val canonicalUtcTimestamp = """\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z""".toRegex()
 
     fun humanizeMinutes(minutes: Long): String {
         if (minutes <= 0) {

@@ -28,5 +28,6 @@ class StaleDisplayFormatterTest :
             StaleDisplayFormatter.humanizeTimestamp("") shouldBe ""
             StaleDisplayFormatter.humanizeTimestamp("not-a-timestamp") shouldBe "not-a-timestamp"
             StaleDisplayFormatter.humanizeTimestamp("2026-06-02 21:00") shouldBe "2026-06-02 21:00"
+            StaleDisplayFormatter.humanizeTimestamp("2026-06-02T21:05garbageZ") shouldBe "2026-06-02T21:05garbageZ"
         }
     })
