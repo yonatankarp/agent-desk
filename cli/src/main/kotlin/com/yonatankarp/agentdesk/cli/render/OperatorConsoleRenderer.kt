@@ -1,4 +1,4 @@
-package com.yonatankarp.agentdesk.cli
+package com.yonatankarp.agentdesk.cli.render
 
 import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter

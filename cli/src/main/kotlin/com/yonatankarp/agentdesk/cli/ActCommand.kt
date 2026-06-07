@@ -16,6 +16,7 @@ import com.yonatankarp.agentdesk.app.persistence.AuditStoreException
 import com.yonatankarp.agentdesk.app.persistence.LocalFileAuditRecordRepository
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
+import com.yonatankarp.agentdesk.cli.input.CliInputException
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import java.nio.file.InvalidPathException
