@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.desktop
 
 import com.yonatankarp.agentdesk.app.operator.EventLine
+import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.decision.DecisionQueueProjector
@@ -58,7 +59,7 @@ object DesktopEvidenceDrilldown {
 
     private fun EventLine.evidenceRows(): List<String> = evidenceReferences
         .map { evidence ->
-            "Primary evidence: ${evidence.kind} ${evidence.label} -> ${evidence.target}"
+            "Primary evidence: ${EvidenceDisplayFormatter.format(evidence)}"
         }
         .ifEmpty {
             listOf("Evidence missing: no public-safe evidence reference was attached.")

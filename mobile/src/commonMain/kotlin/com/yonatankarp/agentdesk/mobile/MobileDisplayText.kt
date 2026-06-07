@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.mobile
 
+import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
@@ -21,7 +22,13 @@ internal object MobileDisplayText {
         attentionCount: Int,
     ): String = "$currentWorkCount current / $attentionCount attention"
 
-    fun evidenceReferences(references: List<MobileEvidenceReference>): String = references.joinToString { reference -> "${reference.kind}: ${reference.label}" }
+    fun evidenceReferences(references: List<MobileEvidenceReference>): String = references.joinToString { reference ->
+        EvidenceDisplayFormatter.format(
+            kind = reference.kind,
+            label = reference.label,
+            target = reference.target,
+        )
+    }
 
     fun staleAttention(stale: MobileStaleAttention): String = "Stale ${stale.staleForMinutes}m since ${stale.lastEventAt}"
 

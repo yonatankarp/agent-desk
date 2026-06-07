@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.audit
 
 import com.yonatankarp.agentdesk.app.operator.Actor
+import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.action.ActionPermissionDecision
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalResult
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalState
@@ -202,7 +203,7 @@ object AuditTrailProjector {
             action = entry.action,
             target = entry.target.toString(),
             result = entry.result.name,
-            evidence = "${entry.evidenceReference.kind.wireName} ${entry.evidenceReference.label} -> ${entry.evidenceReference.target}",
+            evidence = EvidenceDisplayFormatter.format(entry.evidenceReference),
             detail = entry.detail,
         )
     }
