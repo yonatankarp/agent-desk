@@ -55,18 +55,6 @@ object WorkEventJson {
         evidenceReferences = evidenceReferences.map { it.toDomain() },
     )
 
-    private fun EvidenceReference.toRecord(): EvidenceReferenceRecord = EvidenceReferenceRecord(
-        kind = kind.wireName,
-        label = label.toString(),
-        target = target.toString(),
-    )
-
-    private fun EvidenceReferenceRecord.toDomain(): EvidenceReference = EvidenceReference(
-        kind = EvidenceReferenceKind.fromWireName(kind),
-        label = EvidenceLabel.parse(label),
-        target = EvidenceTarget.parse(target),
-    )
-
     private fun WorkEventPayload.toRecord(): WorkEventPayloadRecord = when (this) {
         is WorkStartedPayload ->
             WorkEventPayloadRecord(

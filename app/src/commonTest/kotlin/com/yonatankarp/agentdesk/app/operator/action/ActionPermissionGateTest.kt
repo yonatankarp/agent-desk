@@ -26,7 +26,10 @@ class ActionPermissionGateTest :
                         ),
                     )
 
-                    val entry = AuditTrailProjector.fromPermissionDecision(decision)
+                    val entry = AuditTrailProjector.fromPermissionDecision(
+                        decision,
+                        recordedAt = EventTimestamp.parse("2026-06-06T08:05:00Z"),
+                    )
 
                     assertSoftly(decision) {
                         state shouldBe PermissionDecisionState.Approved

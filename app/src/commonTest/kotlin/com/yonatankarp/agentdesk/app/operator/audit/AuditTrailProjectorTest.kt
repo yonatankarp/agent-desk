@@ -16,6 +16,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 
 class AuditTrailProjectorTest :
@@ -45,7 +46,7 @@ class AuditTrailProjectorTest :
 
             `when`("audit entries are projected") {
                 then("they distinguish the human decision from the mock agent action") {
-                    val entries = AuditTrailProjector.fromMockActionResult(result)
+                    val entries = AuditTrailProjector.fromMockActionResult(result, recordedAt = auditRecordedAt)
 
                     entries.map { it.actorKind }.shouldContainExactly(AuditActorKind.Human, AuditActorKind.Agent)
                     entries.map { it.result }.shouldContainExactly(AuditResult.Approved, AuditResult.Approved)
@@ -57,6 +58,7 @@ class AuditTrailProjectorTest :
                     assertSoftly(decisionEntry) {
                         actor shouldBe Actor.parse("operator:daily-agent")
                         timestamp shouldBe EventTimestamp.parse("2026-06-02T21:22:00Z")
+                        recordedAt shouldBe auditRecordedAt
                         action shouldBe "decision.approve-resume"
                         target shouldBe WorkItemId.parse("agent-task:42")
                         sourceItem shouldBe WorkItemId.parse("agent-task:42")
@@ -72,8 +74,24 @@ class AuditTrailProjectorTest :
                     }
                 }
 
+                then("a non-executing outcome stamps the action entry with the audit record time, not decision time") {
+                    val rejected = MockActionApprovalLoop().decide(
+                        proposal = proposal,
+                        decision = decision(MockActionDecisionOutcome.Reject),
+                        events = events,
+                    )
+
+                    val actionEntry = AuditTrailProjector.fromMockActionResult(rejected, recordedAt = auditRecordedAt).last()
+
+                    actionEntry.timestamp shouldBe auditRecordedAt
+                    actionEntry.timestamp shouldNotBe rejected.decidedAt
+                    actionEntry.recordedAt shouldBe auditRecordedAt
+                }
+
                 then("timeline rows expose audit outcomes for detail surfaces") {
-                    val lines = AuditTrailProjector.timelineLines(AuditTrailProjector.fromMockActionResult(result))
+                    val lines = AuditTrailProjector.timelineLines(
+                        AuditTrailProjector.fromMockActionResult(result, recordedAt = auditRecordedAt),
+                    )
                     val text = lines.joinToString("\n") { line ->
                         "${line.timestamp} ${line.actor} ${line.action} ${line.target} ${line.result} ${line.evidence} ${line.detail}"
                     }
@@ -96,6 +114,7 @@ class AuditTrailProjectorTest :
                     val entry = AuditTrailProjector.fromImporterEvent(
                         event = event,
                         correlationId = "correlation:import:batch-1",
+                        recordedAt = auditRecordedAt,
                     )
 
                     assertSoftly(entry) {
@@ -118,6 +137,7 @@ class AuditTrailProjectorTest :
                         id = "audit:system:import-failed",
                         actor = Actor.parse("system:importer"),
                         timestamp = EventTimestamp.parse("2026-06-02T21:30:00Z"),
+                        recordedAt = auditRecordedAt,
                         action = "import.failed",
                         target = WorkItemId.parse("agent-task:42"),
                         sourceItem = WorkItemId.parse("agent-task:42"),
@@ -135,8 +155,10 @@ class AuditTrailProjectorTest :
         }
     })
 
-private fun decision(): MockActionDecision = MockActionDecision(
-    outcome = MockActionDecisionOutcome.Approve,
+private val auditRecordedAt = EventTimestamp.parse("2026-06-02T21:25:00Z")
+
+private fun decision(outcome: MockActionDecisionOutcome = MockActionDecisionOutcome.Approve): MockActionDecision = MockActionDecision(
+    outcome = outcome,
     actor = Actor.parse("operator:daily-agent"),
     decidedAt = EventTimestamp.parse("2026-06-02T21:22:00Z"),
     rationale = "Public-safe mock approval.",

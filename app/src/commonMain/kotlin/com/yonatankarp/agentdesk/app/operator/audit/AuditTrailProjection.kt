@@ -19,6 +19,7 @@ data class AuditEntry(
     val actor: Actor,
     val actorKind: AuditActorKind,
     val timestamp: EventTimestamp,
+    val recordedAt: EventTimestamp,
     val action: String,
     val target: WorkItemId,
     val result: AuditResult,
@@ -59,6 +60,7 @@ enum class AuditResult {
     Approved,
     Rejected,
     Deferred,
+    RequiresClarification,
     Canceled,
     Failed,
     PartialSuccess,
@@ -69,12 +71,16 @@ enum class AuditResult {
 object AuditTrailProjector {
     private val mockAdapterActor = Actor.parse("mock-action-adapter")
 
-    fun fromMockActionResult(result: MockActionApprovalResult): List<AuditEntry> {
+    fun fromMockActionResult(
+        result: MockActionApprovalResult,
+        recordedAt: EventTimestamp,
+    ): List<AuditEntry> {
         val decisionEntry = AuditEntry(
             id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:decision:${result.decidedAt}",
             actor = result.actor,
             actorKind = AuditActorKind.Human,
             timestamp = result.decidedAt,
+            recordedAt = recordedAt,
             action = "decision.${result.selection}",
             target = result.sourceWorkItemId,
             result = result.state.toAuditResult(),
@@ -88,7 +94,10 @@ object AuditTrailProjector {
             id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:action:${result.decidedAt}",
             actor = result.resultingEvent?.source?.let { Actor.parse(it.value) } ?: mockAdapterActor,
             actorKind = AuditActorKind.Agent,
-            timestamp = result.resultingEvent?.occurredAt ?: result.decidedAt,
+            // A non-executing outcome has no action event to date the entry, so it
+            // carries the audit record time explicitly instead of the decision time.
+            timestamp = result.resultingEvent?.occurredAt ?: recordedAt,
+            recordedAt = recordedAt,
             action = "mock.${result.action.wireName}",
             target = result.sourceWorkItemId,
             result = result.state.toAuditResult(),
@@ -101,11 +110,15 @@ object AuditTrailProjector {
         return listOf(decisionEntry, actionEntry)
     }
 
-    fun fromPermissionDecision(decision: ActionPermissionDecision): AuditEntry = AuditEntry(
+    fun fromPermissionDecision(
+        decision: ActionPermissionDecision,
+        recordedAt: EventTimestamp,
+    ): AuditEntry = AuditEntry(
         id = "audit:${decision.target}:${decision.action}:permission:${decision.decidedAt}",
         actor = decision.actor,
         actorKind = AuditActorKind.Human,
         timestamp = decision.decidedAt,
+        recordedAt = recordedAt,
         action = "permission.${decision.actionClass.name.lowercase()}",
         target = decision.target,
         result = decision.state.toAuditResult(),
@@ -118,11 +131,13 @@ object AuditTrailProjector {
     fun fromImporterEvent(
         event: WorkEvent,
         correlationId: String,
+        recordedAt: EventTimestamp,
     ): AuditEntry = AuditEntry(
         id = "audit:${event.id}",
         actor = Actor.parse(event.source.value),
         actorKind = AuditActorKind.System,
         timestamp = event.occurredAt,
+        recordedAt = recordedAt,
         action = "import.${event.type.wireName}",
         target = event.workItemId,
         result = AuditResult.Imported,
@@ -140,6 +155,7 @@ object AuditTrailProjector {
         id: String,
         actor: Actor,
         timestamp: EventTimestamp,
+        recordedAt: EventTimestamp,
         action: String,
         target: WorkItemId,
         sourceItem: WorkItemId,
@@ -150,6 +166,7 @@ object AuditTrailProjector {
         actor = actor,
         actorKind = AuditActorKind.System,
         timestamp = timestamp,
+        recordedAt = recordedAt,
         action = action,
         target = target,
         result = AuditResult.Failed,
@@ -188,7 +205,7 @@ object AuditTrailProjector {
         PermissionDecisionState.Approved -> AuditResult.Approved
         PermissionDecisionState.Denied -> AuditResult.Rejected
         PermissionDecisionState.Canceled -> AuditResult.Canceled
-        PermissionDecisionState.RequiresClarification -> AuditResult.Deferred
+        PermissionDecisionState.RequiresClarification -> AuditResult.RequiresClarification
         PermissionDecisionState.Unsupported -> AuditResult.Unsupported
     }
 
