@@ -45,11 +45,7 @@ object MobileOperatorStateContract {
 
     fun fromEvents(events: List<WorkEvent>): MobileOperatorState {
         val projection = WorkEventProjector.project(events)
-        val state = OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-            staleAttention = projection.staleAttention,
-        )
+        val state = OperatorState.from(projection)
 
         return fromState(
             state = state,
