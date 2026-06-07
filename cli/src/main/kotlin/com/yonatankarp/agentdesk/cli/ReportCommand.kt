@@ -33,9 +33,7 @@ internal object ReportCommand {
         val inspection = WorkItemInspector.inspect(events, workItemId)
             ?: throw CliInputException("Work item was not found.")
         val auditRead = auditStorePath?.let(::readAuditStore)
-        val trail = auditRead?.entries.orEmpty().filter { entry ->
-            entry.target == workItemId || entry.sourceItem == workItemId
-        }
+        val trail = auditRead?.entries.orEmpty().filter { entry -> entry.target == workItemId }
 
         val text = buildString {
             appendLine("Agent Desk")
