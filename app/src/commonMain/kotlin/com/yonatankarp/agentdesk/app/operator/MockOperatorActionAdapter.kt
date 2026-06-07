@@ -10,7 +10,6 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
-import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 
 class MockOperatorActionAdapter {
@@ -18,6 +17,7 @@ class MockOperatorActionAdapter {
         intent: OperatorActionIntent,
         workItemId: WorkItemId,
         events: List<WorkEvent>,
+        occurredAt: EventTimestamp,
     ): WorkEvent {
         if (intent != OperatorActionIntent.Resume) {
             throw OperatorActionException("Mock action adapter currently supports only resume.")
@@ -27,13 +27,22 @@ class MockOperatorActionAdapter {
         val item = state.workItems.firstOrNull { it.id == workItemId }
             ?: throw OperatorActionException("Work item was not found.")
 
-        if (item.status !in resumableStatuses) {
+        if (!item.status.isResumable) {
             throw OperatorActionException("Work item cannot be resumed from its current status.")
         }
 
+        // The occurredAt segment keeps action event ids unique per invocation. Long
+        // work item ids can overflow the event-id length cap; surface that as the
+        // public-safe action failure the approval loop already converts to Failed.
+        val eventId = try {
+            WorkEventId.parse("event:$workItemId:action-resume:$occurredAt")
+        } catch (exception: IllegalArgumentException) {
+            throw OperatorActionException("Mock action event id exceeds the supported length for this work item id.")
+        }
+
         return WorkEvent(
-            id = WorkEventId.parse("event:$workItemId:action-resume"),
-            occurredAt = EventTimestamp.parse("2026-06-02T21:20:00Z"),
+            id = eventId,
+            occurredAt = occurredAt,
             source = source,
             workItemId = workItemId,
             payload = WorkStartedPayload(
@@ -52,6 +61,5 @@ class MockOperatorActionAdapter {
 
     companion object {
         private val source = EventSource.parse("mock-action-adapter")
-        private val resumableStatuses = setOf(WorkStatus.NeedsDecision, WorkStatus.Blocked, WorkStatus.Waiting)
     }
 }

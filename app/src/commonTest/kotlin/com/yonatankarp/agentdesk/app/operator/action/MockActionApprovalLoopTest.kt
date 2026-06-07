@@ -56,7 +56,7 @@ class MockActionApprovalLoopTest :
                         selection shouldBe "approve-resume"
                         sourceWorkItemId shouldBe WorkItemId.parse("agent-task:42")
                         receipt.target.toString() shouldBe "mock-action:resume:approved"
-                        resultingEvent?.id.toString() shouldBe "event:agent-task:42:action-resume"
+                        resultingEvent?.id.toString() shouldBe "event:agent-task:42:action-resume:2026-06-02t21:22:00z"
                         replayStateSummary shouldContain "resulting replay event"
                     }
                 }
@@ -162,7 +162,7 @@ class MockActionApprovalLoopTest :
                     )
 
                     result.state shouldBe MockActionApprovalState.PartialSuccess
-                    result.resultingEvent?.id.toString() shouldBe "event:agent-task:42:action-resume"
+                    result.resultingEvent?.id.toString() shouldBe "event:agent-task:42:action-resume:2026-06-02t21:22:00z"
                     result.replayStateSummary shouldContain "proposal evidence was partial"
                 }
             }

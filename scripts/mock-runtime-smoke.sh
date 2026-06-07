@@ -11,6 +11,7 @@ cleanup() {
 trap cleanup EXIT
 
 EVENT_STORE="$SMOKE_DIR/events.ndjson"
+AUDIT_STORE="$SMOKE_DIR/audit.ndjson"
 CONFIG_FILE="$SMOKE_DIR/agent-desk.config.properties"
 
 run_cli() {
@@ -61,8 +62,26 @@ assert_contains "$inspect_output" "Status: Needs decision"
 assert_contains "$inspect_output" "Attention: yes"
 assert_contains "$inspect_output" "Projection warnings"
 
-action_output="$(run_cli act resume agent-task:45 --event-store "$EVENT_STORE")"
-assert_contains "$action_output" "Recorded resume action for agent-task:45 as event:agent-task:45:action-resume."
+# A bare act must be denied by the permission gate, exit 3, and still write audit evidence.
+denied_exit=0
+denied_output="$(run_cli act resume agent-task:45 --event-store "$EVENT_STORE" --audit-store "$AUDIT_STORE")" || denied_exit=$?
+if [[ "$denied_exit" -eq 0 ]]; then
+  printf 'Expected the unapproved act to exit non-zero (policy denied).\n' >&2
+  exit 1
+fi
+assert_contains "$denied_output" "Permission decision"
+assert_contains "$denied_output" "- Denied"
+assert_contains "$denied_output" "No action was recorded. Audit evidence was still written."
+assert_file_exists "$AUDIT_STORE"
+assert_contains "$(cat "$AUDIT_STORE")" '"result":"rejected"'
+
+action_output="$(run_cli act resume agent-task:45 --event-store "$EVENT_STORE" --audit-store "$AUDIT_STORE" --approve)"
+assert_contains "$action_output" "Permission decision"
+assert_contains "$action_output" "- Approved"
+assert_contains "$action_output" "Recorded event: event:agent-task:45:action-resume:"
+assert_contains "$action_output" "Audit trail (3 durable record(s))"
+assert_contains "$(cat "$AUDIT_STORE")" '"action":"permission.localwrite"'
+assert_contains "$(cat "$AUDIT_STORE")" '"action":"mock.resume"'
 
 post_action_output="$(run_cli --config "$CONFIG_FILE")"
 assert_contains "$post_action_output" "- [Running] agent-task:45 Choose retry strategy"

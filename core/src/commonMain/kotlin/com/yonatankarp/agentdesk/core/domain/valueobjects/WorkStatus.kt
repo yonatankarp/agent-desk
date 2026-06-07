@@ -23,6 +23,9 @@ enum class WorkStatus {
     val requiresHumanAttention: Boolean
         get() = this == NeedsDecision || this == Blocked
 
+    val isResumable: Boolean
+        get() = this in resumableStatuses
+
     fun canTransitionTo(next: WorkStatus): Boolean = when {
         this == next -> true
         isTerminal -> false
@@ -36,5 +39,6 @@ enum class WorkStatus {
 
     companion object {
         private val terminalStatuses = setOf(Succeeded, Failed, Canceled)
+        private val resumableStatuses = setOf(NeedsDecision, Blocked, Waiting)
     }
 }

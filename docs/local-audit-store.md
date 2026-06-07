@@ -56,8 +56,10 @@ Identical to the [local event store](local-event-store.md) discipline:
 `ActionPermissionGate.decide()` and `MockActionApprovalLoop.decide()` stay
 pure. Callers route their outcomes through `AuditTrailRecorder`, which projects
 the decision or approval result into audit entries and appends them to the
-store. Wiring the CLI `act` path through the recorder is tracked separately
-(#262); this store is the seam it will call.
+store. The CLI `act` command is the first production caller: it routes every
+invocation through the gate and records approvals, denials, and unsupported
+outcomes via the recorder (see
+[Runtime configuration](runtime-configuration.md), Mock Operator Action).
 
 The store accepts validated public-safe audit records only. Private paths,
 credentials, channel ids, raw transcripts, and runtime-specific local

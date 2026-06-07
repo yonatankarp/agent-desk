@@ -184,7 +184,7 @@ object ActionCapabilityPlanner {
         status: WorkStatus,
         evidenceReferences: List<EvidenceLine>,
     ): ActionProposal {
-        if (status !in resumableStatuses) {
+        if (!status.isResumable) {
             return ActionProposal(
                 target = target,
                 action = action,
@@ -218,6 +218,4 @@ object ActionCapabilityPlanner {
         title = title.toString(),
         status = OperatorStatePresenter.presentationFor(status).label,
     )
-
-    private val resumableStatuses = setOf(WorkStatus.NeedsDecision, WorkStatus.Blocked, WorkStatus.Waiting)
 }

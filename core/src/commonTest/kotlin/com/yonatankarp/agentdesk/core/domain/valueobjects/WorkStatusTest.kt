@@ -63,6 +63,22 @@ class WorkStatusTest :
             }
         }
 
+        given("resumable states") {
+            `when`("resumability is inspected") {
+                then("only waiting and attention states are resumable") {
+                    WorkStatus.Waiting.isResumable.shouldBeTrue()
+                    WorkStatus.NeedsDecision.isResumable.shouldBeTrue()
+                    WorkStatus.Blocked.isResumable.shouldBeTrue()
+
+                    WorkStatus.Queued.isResumable.shouldBeFalse()
+                    WorkStatus.Running.isResumable.shouldBeFalse()
+                    WorkStatus.Succeeded.isResumable.shouldBeFalse()
+                    WorkStatus.Failed.isResumable.shouldBeFalse()
+                    WorkStatus.Canceled.isResumable.shouldBeFalse()
+                }
+            }
+        }
+
         given("self transitions") {
             `when`("a status transitions to itself") {
                 then("it is allowed for every status including terminal ones") {

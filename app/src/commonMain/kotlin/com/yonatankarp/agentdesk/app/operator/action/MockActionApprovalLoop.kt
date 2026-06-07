@@ -125,6 +125,7 @@ class MockActionApprovalLoop(
                 intent = proposal.action,
                 workItemId = proposal.target.workItemId,
                 events = events,
+                occurredAt = decision.decidedAt,
             )
             val state = if (proposal.evidenceReferences.isEmpty()) {
                 MockActionApprovalState.PartialSuccess
