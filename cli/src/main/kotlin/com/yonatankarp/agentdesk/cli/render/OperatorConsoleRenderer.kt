@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.cli.render
 
 import com.yonatankarp.agentdesk.app.operator.EventLine
+import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspection
@@ -113,9 +114,7 @@ class OperatorConsoleRenderer {
             return detail
         }
 
-        val evidence = evidenceReferences.joinToString("; ") { reference ->
-            "${reference.kind} ${reference.label} -> ${reference.target}"
-        }
+        val evidence = evidenceReferences.joinToString("; ", transform = EvidenceDisplayFormatter::format)
         return "$detail | evidence: $evidence"
     }
 
