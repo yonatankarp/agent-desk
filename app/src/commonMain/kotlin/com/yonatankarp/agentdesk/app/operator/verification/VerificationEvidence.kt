@@ -120,12 +120,12 @@ object CompletionEvidenceProjector {
                 .forEach { result ->
                     add("${result.name} is ${result.result.name.lowercase()}.")
                 }
-            checklist.verificationResults
-                .map { result -> result to VerificationFreshnessDeriver.derive(result.inputBinding, lastChangedAt) }
-                .filter { (_, freshness) -> freshness != VerificationFreshness.Fresh }
-                .forEach { (result, freshness) ->
+            checklist.verificationResults.forEach { result ->
+                val freshness = VerificationFreshnessDeriver.derive(result.inputBinding, lastChangedAt)
+                if (freshness != VerificationFreshness.Fresh) {
                     add("${result.name} freshness is ${freshness.name.lowercase()}.")
                 }
+            }
             checklist.knownFailures.forEach { failure ->
                 add("Known failure: $failure")
             }

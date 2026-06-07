@@ -93,9 +93,10 @@ internal object ReportCommand {
     }
 
     /**
-     * No production path binds verification evidence to the event store yet
-     * (owned by #268), so readiness honestly reports the unknown/unverified
-     * projection instead of fabricating a checklist source.
+     * No production path constructs verification evidence from the event store
+     * yet — #268 hardened the evidence model and derivation, but the
+     * events->checklist recorder is follow-up work — so readiness honestly
+     * reports the unknown/unverified projection instead of fabricating a source.
      */
     private val unboundChecklist = CompletionEvidenceChecklist(
         outcome = CompletionOutcome.Unknown,

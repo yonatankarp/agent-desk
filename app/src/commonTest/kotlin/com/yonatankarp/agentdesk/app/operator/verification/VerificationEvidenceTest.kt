@@ -52,6 +52,32 @@ class VerificationEvidenceTest :
             }
         }
 
+        given("evidence captured at the exact instant of the last change") {
+            `when`("readiness is projected") {
+                then("the inclusive boundary derives fresh, keeping it ready") {
+                    val checklist = CompletionEvidenceChecklist(
+                        outcome = CompletionOutcome.Ready,
+                        verificationAttempted = true,
+                        knownFailures = emptyList(),
+                        touchedArtifacts = emptyList(),
+                        residualRisks = emptyList(),
+                        verificationResults = listOf(
+                            verificationResult(
+                                name = "app verification tests",
+                                kind = VerificationKind.LocalTest,
+                                result = VerificationState.Passed,
+                                inputBinding = verificationBinding(capturedAtMinute = 10),
+                            ),
+                        ),
+                    )
+
+                    val readiness = CompletionEvidenceProjector.readiness(checklist, lastChangedAt = LAST_CHANGED_AT)
+
+                    readiness.state shouldBe CompletionReadinessState.Ready
+                }
+            }
+        }
+
         given("a passing result that claims no immutable input binding") {
             `when`("readiness is projected") {
                 then("the unbound evidence is treated as unknown freshness, never fresh") {
