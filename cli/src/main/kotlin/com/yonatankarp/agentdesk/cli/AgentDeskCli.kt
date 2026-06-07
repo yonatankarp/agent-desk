@@ -3,7 +3,6 @@ package com.yonatankarp.agentdesk.cli
 import com.yonatankarp.agentdesk.app.config.AgentDeskRuntimeConfigParser
 import com.yonatankarp.agentdesk.app.config.ConfigValidationException
 import com.yonatankarp.agentdesk.app.config.EventStoreLocation
-import com.yonatankarp.agentdesk.app.operator.MockOperatorActionAdapter
 import com.yonatankarp.agentdesk.app.operator.OperatorActionException
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorState
@@ -16,7 +15,6 @@ import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.persistence.LocalFileWorkEventRepository
 import com.yonatankarp.agentdesk.app.persistence.WorkEventReadResult
-import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.app.runtime.MockRuntimeWorkEventSource
 import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSource
 import com.yonatankarp.agentdesk.app.runtime.OpenClawRuntimeObservationFileSourceException
@@ -24,6 +22,7 @@ import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImportException
 import com.yonatankarp.agentdesk.app.runtime.RuntimeWorkEventImporter
 import com.yonatankarp.agentdesk.app.runtime.summary
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import java.io.IOException
@@ -32,6 +31,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
+import java.time.Instant
 import java.util.Properties
 import kotlin.system.exitProcess
 
@@ -48,6 +48,7 @@ object AgentDeskCli {
         input: InputStream = System.`in`,
         output: PrintStream = System.out,
         error: PrintStream = System.err,
+        now: () -> EventTimestamp = { EventTimestamp.parse(Instant.now().toString()) },
     ): Int = try {
         val options = CliOptions.parse(args.toList())
         if (options.showHelp) {
@@ -104,11 +105,20 @@ object AgentDeskCli {
             is CliCommand.Act -> {
                 val eventStorePath = command.eventStorePath
                     ?: throw CliUsageException("Missing value for --event-store.")
-                val event = performMockAction(command, eventStorePath)
-                output.println(
-                    "Recorded ${command.intent.wireName} action for ${event.workItemId} " +
-                        "as ${event.id}.",
+                val auditStorePath = command.auditStorePath
+                    ?: throw CliUsageException("Missing value for --audit-store.")
+                val result = ActCommand.execute(
+                    intent = command.intent,
+                    workItemId = parseWorkItemId(command.rawWorkItemId),
+                    eventStorePath = eventStorePath,
+                    auditStorePath = auditStorePath,
+                    approve = command.approve,
+                    now = now(),
                 )
+                output.println(result.text)
+                if (result.exitCode != 0) {
+                    return result.exitCode
+                }
             }
         }
         0
@@ -156,33 +166,6 @@ object AgentDeskCli {
         throw CliInputException(exception.message ?: "Sanitized observation export could not be imported.")
     } catch (exception: RuntimeWorkEventImportException) {
         throw CliInputException(exception.message ?: "Runtime events could not be imported.")
-    }
-
-    private fun performMockAction(
-        command: CliCommand.Act,
-        path: String,
-    ): WorkEvent = try {
-        val location = EventStoreLocation.parse(path)
-        val repository = LocalFileWorkEventRepository(Path.of(location.value))
-        val event = MockOperatorActionAdapter().perform(
-            intent = command.intent,
-            workItemId = parseWorkItemId(command.rawWorkItemId),
-            events = repository.readAll().events,
-        )
-        repository.append(event)
-        event
-    } catch (exception: ConfigValidationException) {
-        throw CliInputException("Invalid event store location: ${exception.message}")
-    } catch (exception: InvalidPathException) {
-        throw CliInputException("Configured event store could not be updated.")
-    } catch (exception: SecurityException) {
-        throw CliInputException("Configured event store could not be updated.")
-    } catch (exception: WorkEventStoreException) {
-        throw CliInputException(exception.message ?: "Configured event store could not be updated.")
-    } catch (exception: OperatorActionException) {
-        throw CliInputException(exception.message ?: "Mock operator action could not be applied.")
-    } catch (exception: OperatorStateProjectionException) {
-        throw CliInputException(exception.message ?: "Mock operator action could not read operator state.")
     }
 
     private fun CliOptions.toOperatorState(input: InputStream): OperatorState = when (mode) {
@@ -330,7 +313,7 @@ object AgentDeskCli {
           agent-desk [--sample]
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
-          agent-desk act resume <work-item-id> --event-store <file>
+          agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
           agent-desk inspect <work-item-id> [--sample]
           agent-desk inspect <work-item-id> --events <file>
           agent-desk inspect <work-item-id> --stdin
@@ -345,10 +328,15 @@ object AgentDeskCli {
           import-openclaw-observations
                           Import a sanitized observation export into a local event store.
           act resume <work-item-id>
-                          Append a public-safe mock resume action event to a local event store.
+                          Route a public-safe mock resume through the permission gate and
+                          approval loop, recording the decision and durable audit evidence.
+                          Without --approve the gate denies and the denial is audited (exit 3).
           inspect        Render one sanitized work item by id.
           --event-store <file>
                           Local event store target for import commands or act.
+          --audit-store <file>
+                          Local audit store target for act decisions and outcomes.
+          --approve       Approve the gated action explicitly. Only valid with act.
           --observations <file>
                           Sanitized observation export for import-openclaw-observations.
           --sample        Render built-in public-safe sample state.
@@ -461,6 +449,32 @@ private data class CliOptions(
                         index += 1
                     }
 
+                    "--audit-store" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --audit-store.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --audit-store.")
+                        }
+                        command = when (val selectedCommand = command) {
+                            is CliCommand.Act -> {
+                                if (selectedCommand.auditStorePath != null) {
+                                    throw CliUsageException("Choose only one audit store.")
+                                }
+                                selectedCommand.copy(auditStorePath = path)
+                            }
+
+                            else -> throw CliUsageException("--audit-store is only valid with act.")
+                        }
+                        index += 1
+                    }
+
+                    "--approve" -> {
+                        command = when (val selectedCommand = command) {
+                            is CliCommand.Act -> selectedCommand.copy(approve = true)
+                            else -> throw CliUsageException("--approve is only valid with act.")
+                        }
+                    }
+
                     "--observations" -> {
                         val path = args.getOrNull(index + 1)
                             ?: throw CliUsageException("Missing value for --observations.")
@@ -523,6 +537,9 @@ private data class CliOptions(
             if (command is CliCommand.Act && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
+            if (command is CliCommand.Act && command.auditStorePath == null) {
+                throw CliUsageException("Missing value for --audit-store.")
+            }
             if (
                 (
                     command is CliCommand.ImportMockRuntime ||
@@ -572,6 +589,8 @@ private sealed interface CliCommand {
         val intent: OperatorActionIntent,
         val rawWorkItemId: String,
         val eventStorePath: String? = null,
+        val auditStorePath: String? = null,
+        val approve: Boolean = false,
     ) : CliCommand
 }
 
@@ -584,11 +603,3 @@ private sealed interface CliInputMode {
 
     data class Config(val path: String) : CliInputMode
 }
-
-private class CliInputException(
-    val publicMessage: String,
-) : RuntimeException(publicMessage)
-
-private class CliUsageException(
-    val publicMessage: String,
-) : RuntimeException(publicMessage)

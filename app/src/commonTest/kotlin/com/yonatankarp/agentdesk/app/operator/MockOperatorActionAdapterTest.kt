@@ -3,12 +3,14 @@ package com.yonatankarp.agentdesk.app.operator
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures.workItemId
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
+import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 
 class MockOperatorActionAdapterTest :
@@ -17,7 +19,7 @@ class MockOperatorActionAdapterTest :
             val adapter = MockOperatorActionAdapter()
 
             `when`("resume is requested for a blocked work item") {
-                then("it emits a sanitized resume event") {
+                then("it emits a sanitized resume event stamped with the invocation instant") {
                     val event = adapter.perform(
                         intent = OperatorActionIntent.Resume,
                         workItemId = workItemId,
@@ -25,13 +27,39 @@ class MockOperatorActionAdapterTest :
                             started()
                             blocked()
                         },
+                        occurredAt = eventTimestampAt(minute = 20),
                     )
 
-                    event.id.toString() shouldBe "event:agent-task:42:action-resume"
+                    event.id.toString() shouldBe "event:agent-task:42:action-resume:2026-06-02t21:20:00z"
+                    event.occurredAt shouldBe eventTimestampAt(minute = 20)
                     event.source.toString() shouldBe "mock-action-adapter"
                     event.workItemId shouldBe workItemId
                     (event.payload as WorkStartedPayload).summary.toString() shouldBe "Mock operator requested resume."
                     event.evidenceReferences.map { it.target.toString() }.shouldContainExactly("mock-action:resume")
+                }
+            }
+
+            `when`("resume is performed at two different instants") {
+                then("the event ids are unique per invocation") {
+                    val events = workEvents {
+                        started()
+                        blocked()
+                    }
+
+                    val first = adapter.perform(
+                        intent = OperatorActionIntent.Resume,
+                        workItemId = workItemId,
+                        events = events,
+                        occurredAt = eventTimestampAt(minute = 20),
+                    )
+                    val second = adapter.perform(
+                        intent = OperatorActionIntent.Resume,
+                        workItemId = workItemId,
+                        events = events,
+                        occurredAt = eventTimestampAt(minute = 21),
+                    )
+
+                    first.id shouldNotBe second.id
                 }
             }
 
@@ -45,6 +73,7 @@ class MockOperatorActionAdapterTest :
                                 started()
                                 blocked()
                             },
+                            occurredAt = eventTimestampAt(minute = 20),
                         )
                     }
 
@@ -63,6 +92,7 @@ class MockOperatorActionAdapterTest :
                                 started()
                                 blocked()
                             },
+                            occurredAt = eventTimestampAt(minute = 20),
                         )
                     }
 
@@ -81,6 +111,7 @@ class MockOperatorActionAdapterTest :
                                 started()
                                 succeeded()
                             },
+                            occurredAt = eventTimestampAt(minute = 20),
                         )
                     }
 

@@ -123,12 +123,26 @@ The canonical replay smoke creates a temporary sanitized event store, imports th
 
 ## Mock Operator Action
 
-The first operator action loop is also mock-only and local-store backed:
+The first operator action loop is also mock-only and local-store backed, and it
+routes through the permission gate, approval loop, and durable audit trail:
 
 ```bash
-./gradlew :cli:run --args='act resume agent-task:45 --event-store agent-desk-events.ndjson'
+./gradlew :cli:run --args='act resume agent-task:45 --event-store agent-desk-events.ndjson --audit-store agent-desk-audit.ndjson --approve'
 ```
 
-The command reads the configured event store, projects current operator state, verifies that the selected work item exists and is resumable, then appends a sanitized `work.started` result event from `mock-action-adapter`. The mock adapter currently accepts only `resume`; unsupported intents such as `stop` are rejected with public-safe errors instead of touching any private runtime integration.
+The command reads the configured event store, projects current operator state,
+plans a proposal for the selected work item, and routes it through the
+permission gate. Without `--approve` the gate denies the local action, the
+denial is appended to the configured audit store, and the command exits with
+code 3 (policy denied; distinct from input errors). With `--approve` the
+approval loop performs the mock resume, appends a sanitized `work.started`
+result event from `mock-action-adapter` (with a per-invocation unique event
+id), and records the decision and outcome to the audit store described in
+[Local audit store](local-audit-store.md). The mock adapter currently accepts
+only `resume`; unsupported intents such as `stop` are denied fail-closed with
+public-safe output and still produce audit evidence.
+
+Store files are runtime artifacts; `*.ndjson` is gitignored so local stores
+never enter the public repository.
 
 Action result evidence uses sanitized note targets such as `mock-action:resume`. It must not include local paths, service identifiers, raw transcripts, channel ids, or private runtime details.
