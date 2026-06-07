@@ -11,6 +11,9 @@ local.properties
 *.tmp
 .DS_Store
 
+# Local event/audit store files are runtime artifacts, never project source.
+*.ndjson
+
 # OpenClaw runtime files are private workspace context, not project source.
 .openclaw/
 
