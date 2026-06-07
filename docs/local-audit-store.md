@@ -12,7 +12,7 @@ streams with different projections.
 Each line is one compact `AuditRecordJson` record of a validated `AuditEntry`:
 
 ```json
-{"id":"audit:agent-task:42:resume:decision:2026-06-02T21:22:00Z","actor":"operator:daily-agent","actorKind":"human","timestamp":"2026-06-02T21:22:00Z","recordedAt":"2026-06-02T21:25:00Z","action":"decision.approve-resume","target":"agent-task:42","result":"approved","sourceItem":"agent-task:42","correlationId":"correlation:agent-task:42:resume:2026-06-02T21:22:00Z","evidenceReference":{"kind":"sanitized-note","label":"Mock action Approved","target":"mock-action:resume:approved"},"detail":"Public-safe mock approval."}
+{"id":"audit:agent-task:42:resume:decision:2026-06-02T21:22:00Z","actor":"operator:daily-agent","actorKind":"human","timestamp":"2026-06-02T21:22:00Z","recordedAt":"2026-06-02T21:23:00Z","action":"decision.approve-resume","target":"agent-task:42","result":"approved","sourceItem":"agent-task:42","correlationId":"correlation:agent-task:42:resume:2026-06-02T21:22:00Z","evidenceReference":{"kind":"sanitized-note","label":"Mock action Approved","target":"mock-action:resume:approved"},"detail":"Public-safe mock approval."}
 ```
 
 `timestamp` is the time of the underlying fact (decision time for decision
@@ -43,7 +43,9 @@ Identical to the [local event store](local-event-store.md) discipline:
   non-public-safe content past load; it fails as a corrupt record instead.
 - Torn trailing records (interrupted appends) recover the committed prefix and
   block further appends until the store is repaired; mid-file or
-  newline-terminated corruption fails hard with a line-numbered error.
+  newline-terminated corruption fails hard with a line-numbered error. Repair
+  is a deliberate read-only operator action — see the torn-record section of
+  the [local event store](local-event-store.md) for the recovery guidance.
 - Reads enforce a maximum store size (10 MiB by default,
   constructor-configurable).
 - Error messages refer to the configured audit store and never echo paths,

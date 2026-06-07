@@ -7,8 +7,9 @@ import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 
 /**
  * Appends projected audit entries to the durable audit store. The permission
- * gate and approval loop stay pure; callers route their outcomes through this
- * recorder so every decision — including denials and failures — is persisted.
+ * gate and approval loop stay pure; this recorder is the seam callers route
+ * outcomes through so every decision — including denials and failures — is
+ * persisted. The first production caller is the act-routing slice (#262).
  */
 class AuditTrailRecorder(
     private val repository: AuditRecordRepository,

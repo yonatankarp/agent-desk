@@ -13,14 +13,14 @@ import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
 
 /**
  * Deterministic audit-entry factory on the canonical fixture day. Vary only the
- * fields a test pins; ids stay unique per (result, minute) so append tests can
- * write several entries without colliding.
+ * fields a test pins; ids stay unique per (result, actorKind, minute) so append
+ * tests can write several entries without colliding.
  */
 internal fun auditEntry(
     result: AuditResult = AuditResult.Approved,
     actorKind: AuditActorKind = AuditActorKind.Human,
     minute: Int = 22,
-    id: String = "audit:agent-task:42:resume:${result.name.lowercase()}:${eventTimestampAt(minute = minute)}",
+    id: String = "audit:agent-task:42:resume:${result.name.lowercase()}:${actorKind.name.lowercase()}:${eventTimestampAt(minute = minute)}",
 ): AuditEntry = AuditEntry(
     id = id,
     actor = Actor.parse("operator:daily-agent"),

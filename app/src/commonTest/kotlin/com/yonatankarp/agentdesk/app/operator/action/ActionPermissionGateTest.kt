@@ -141,9 +141,15 @@ class ActionPermissionGateTest :
                         ),
                     )
 
+                    val entry = AuditTrailProjector.fromPermissionDecision(
+                        decision,
+                        recordedAt = EventTimestamp.parse("2026-06-06T08:05:00Z"),
+                    )
+
                     decision.state shouldBe PermissionDecisionState.RequiresClarification
                     decision.behavior shouldBe PermissionGateBehavior.RequireClarification
                     decision.logSummary shouldContain "no action is allowed"
+                    entry.result shouldBe AuditResult.RequiresClarification
                 }
             }
 
