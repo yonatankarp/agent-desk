@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.MockOperatorActionAdapter
 import com.yonatankarp.agentdesk.app.operator.OperatorActionException
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
@@ -14,17 +15,14 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 
 data class MockActionDecision(
     val outcome: MockActionDecisionOutcome,
-    val actor: String,
-    val decidedAt: String,
+    val actor: Actor,
+    val decidedAt: EventTimestamp,
     val rationale: String,
     val selection: String,
 ) {
     init {
-        EventTimestamp.parse(decidedAt)
-        require(actor.isNotBlank()) { "Action decision actor must not be blank" }
         require(rationale.isNotBlank()) { "Action decision rationale must not be blank" }
         require(selection.isNotBlank()) { "Action decision selection must not be blank" }
-        PublicSafeTextPolicy.requirePublicSafe(actor, fieldName = "Action decision actor")
         PublicSafeTextPolicy.requirePublicSafe(rationale, fieldName = "Action decision rationale")
         PublicSafeTextPolicy.requirePublicSafe(selection, fieldName = "Action decision selection")
     }
@@ -39,11 +37,11 @@ enum class MockActionDecisionOutcome {
 
 data class MockActionApprovalResult(
     val state: MockActionApprovalState,
-    val actor: String,
-    val decidedAt: String,
+    val actor: Actor,
+    val decidedAt: EventTimestamp,
     val rationale: String,
     val selection: String,
-    val sourceWorkItemId: String,
+    val sourceWorkItemId: WorkItemId,
     val action: OperatorActionIntent,
     val receipt: EvidenceReference,
     val resultingEvent: WorkEvent?,
@@ -121,7 +119,7 @@ class MockActionApprovalLoop(
         return try {
             val event = adapter.perform(
                 intent = proposal.action,
-                workItemId = WorkItemId.parse(proposal.target.workItemId),
+                workItemId = proposal.target.workItemId,
                 events = events,
             )
             val state = if (proposal.evidenceReferences.isEmpty()) {

@@ -1,9 +1,11 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
 import com.yonatankarp.agentdesk.app.fixtures.projectedWorkItem
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.audit.AuditResult
 import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailProjector
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -169,8 +171,8 @@ class ActionPermissionGateTest :
                             intentSummary = "Resume local mock work.",
                             approval = ActionPermissionApproval(
                                 outcome = PermissionApprovalOutcome.Approve,
-                                actor = "operator:reviewer",
-                                decidedAt = "2026-06-06T09:30:00Z",
+                                actor = Actor.parse("operator:reviewer"),
+                                decidedAt = EventTimestamp.parse("2026-06-06T09:30:00Z"),
                                 rationale = "Reviewed the public-safe proposal.",
                             ),
                         ),
@@ -178,8 +180,8 @@ class ActionPermissionGateTest :
 
                     assertSoftly(decision) {
                         state shouldBe PermissionDecisionState.Approved
-                        actor shouldBe "operator:reviewer"
-                        decidedAt shouldBe "2026-06-06T09:30:00Z"
+                        actor shouldBe Actor.parse("operator:reviewer")
+                        decidedAt shouldBe EventTimestamp.parse("2026-06-06T09:30:00Z")
                     }
                 }
             }
@@ -266,8 +268,8 @@ private fun request(
 ): ActionPermissionRequest = ActionPermissionRequest(
     proposal = proposal,
     actionClass = actionClass,
-    actor = "operator",
-    requestedAt = "2026-06-06T08:00:00Z",
+    actor = Actor.parse("operator"),
+    requestedAt = EventTimestamp.parse("2026-06-06T08:00:00Z"),
     intentSummary = intentSummary,
     ambiguous = ambiguous,
     approval = approval,
@@ -275,8 +277,8 @@ private fun request(
 
 private fun approval(outcome: PermissionApprovalOutcome): ActionPermissionApproval = ActionPermissionApproval(
     outcome = outcome,
-    actor = "operator",
-    decidedAt = "2026-06-06T08:01:00Z",
+    actor = Actor.parse("operator"),
+    decidedAt = EventTimestamp.parse("2026-06-06T08:01:00Z"),
     rationale = "Operator chose a public-safe permission outcome.",
 )
 
@@ -303,7 +305,7 @@ private fun unsupportedProposal(): ActionProposal = ActionCapabilityPlanner.unsu
 
 private fun blockedTarget(): ActionTarget = blockedItem().let { item ->
     ActionTarget(
-        workItemId = item.id.toString(),
+        workItemId = item.id,
         title = item.title.toString(),
         status = item.status.name,
     )

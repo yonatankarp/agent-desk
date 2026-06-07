@@ -1,9 +1,11 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
@@ -48,7 +50,7 @@ class MockActionApprovalLoopTest :
                         state shouldBe MockActionApprovalState.Approved
                         rationale shouldBe "Public-safe mock approval."
                         selection shouldBe "approve-resume"
-                        sourceWorkItemId shouldBe "agent-task:42"
+                        sourceWorkItemId shouldBe WorkItemId.parse("agent-task:42")
                         receipt.target.toString() shouldBe "mock-action:resume:approved"
                         resultingEvent?.id.toString() shouldBe "event:agent-task:42:action-resume"
                         replayStateSummary shouldContain "resulting replay event"
@@ -184,8 +186,8 @@ private fun decision(
     selection: String = "approve-resume",
 ): MockActionDecision = MockActionDecision(
     outcome = outcome,
-    actor = "operator:daily-agent",
-    decidedAt = "2026-06-02T21:22:00Z",
+    actor = Actor.parse("operator:daily-agent"),
+    decidedAt = EventTimestamp.parse("2026-06-02T21:22:00Z"),
     rationale = rationale,
     selection = selection,
 )
