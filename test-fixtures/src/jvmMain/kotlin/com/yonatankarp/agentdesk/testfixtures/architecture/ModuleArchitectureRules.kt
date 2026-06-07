@@ -64,9 +64,13 @@ object ModuleArchitectureRules {
     }
 
     /**
-     * Asserts that production files residing in exactly [packageName] import nothing
-     * matching [blockedImportPrefixes]. Used to pin one-directional layering between
-     * sub-packages inside a module.
+     * Asserts that production files residing in exactly [packageName] (descendant
+     * packages are not matched) import nothing matching [blockedImportPrefixes].
+     * Used to pin one-directional layering between sub-packages inside a module.
+     * `strict = true` makes an empty filtered scope a hard failure instead of a
+     * vacuous pass, so a renamed or emptied sub-package cannot silently disable
+     * the rule. Import-based: fully-qualified inline references without an import
+     * statement are not detected.
      */
     fun assertSubPackageDoesNotImport(
         moduleName: String,
@@ -79,7 +83,7 @@ object ModuleArchitectureRules {
                 .scopeFromProject(moduleName = moduleName, sourceSetName = sourceSet)
                 .files
                 .filter { it.packagee?.name == packageName }
-                .assertTrue { file ->
+                .assertTrue(strict = true) { file ->
                     !hasBlockedImport(file, blockedImportPrefixes)
                 }
         }
@@ -89,6 +93,8 @@ object ModuleArchitectureRules {
      * True when [file] imports a type declared directly in [packageName] — the prefix
      * matches and exactly one segment remains, so sub-packages of [packageName] do not
      * count. Used to forbid sub-packages from reaching back to root-package types.
+     * Import-based: fully-qualified inline references without an import statement are
+     * not detected.
      */
     fun hasImportFromExactPackage(
         file: KoFileDeclaration,
@@ -98,6 +104,11 @@ object ModuleArchitectureRules {
             !import.name.removePrefix("$packageName.").contains(".")
     }
 
+    /**
+     * Asserts that production files residing in exactly [packageName] import no type
+     * declared directly in [forbiddenExactPackage]. `strict = true` keeps an empty
+     * filtered scope a hard failure (see [assertSubPackageDoesNotImport]).
+     */
     fun assertSubPackageDoesNotImportExactPackage(
         moduleName: String,
         sourceSets: List<String>,
@@ -109,7 +120,7 @@ object ModuleArchitectureRules {
                 .scopeFromProject(moduleName = moduleName, sourceSetName = sourceSet)
                 .files
                 .filter { it.packagee?.name == packageName }
-                .assertTrue { file ->
+                .assertTrue(strict = true) { file ->
                     !hasImportFromExactPackage(file, forbiddenExactPackage)
                 }
         }

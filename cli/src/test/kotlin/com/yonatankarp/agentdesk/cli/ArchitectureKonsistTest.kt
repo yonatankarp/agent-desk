@@ -89,6 +89,7 @@ class ArchitectureKonsistTest :
                     .single()
 
             ModuleArchitectureRules.hasBlockedImport(fixture, inputBlockedSiblingPrefixes).shouldBeTrue()
+            ModuleArchitectureRules.hasBlockedImport(fixture, renderBlockedSiblingPrefixes).shouldBeTrue()
             ModuleArchitectureRules.hasImportFromExactPackage(fixture, CLI_ROOT_PACKAGE).shouldBeTrue()
         }
     })
