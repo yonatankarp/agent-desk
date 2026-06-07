@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.webp" alt="Agent Desk — visualizing agentic flows" width="480">
+</p>
+
 # Agent Desk
 
 Agent Desk is a public-safe, local-first supervisor console for delegated AI work.
