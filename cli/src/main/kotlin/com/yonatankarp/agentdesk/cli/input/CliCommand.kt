@@ -21,4 +21,9 @@ internal sealed interface CliCommand {
         val auditStorePath: String? = null,
         val approve: Boolean = false,
     ) : CliCommand
+
+    data class Report(
+        val rawWorkItemId: String,
+        val auditStorePath: String? = null,
+    ) : CliCommand
 }

@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.cli
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.PrintStream
 
 /** Shared CLI test harness: runs the real dispatcher with captured streams and a fixed clock. */
@@ -20,13 +21,18 @@ internal data class UsageErrorCase(
 internal fun runCli(
     vararg args: String,
     input: String = "",
+): CliRunResult = runCli(args = args, input = ByteArrayInputStream(input.encodeToByteArray()))
+
+internal fun runCli(
+    vararg args: String,
+    input: InputStream,
 ): CliRunResult {
     val output = ByteArrayOutputStream()
     val error = ByteArrayOutputStream()
     val exitCode =
         AgentDeskCli.run(
             args = args.toList().toTypedArray(),
-            input = ByteArrayInputStream(input.encodeToByteArray()),
+            input = input,
             output = PrintStream(output),
             error = PrintStream(error),
             now = { EventTimestamp.parse("2026-06-06T09:30:00Z") },
@@ -143,11 +149,42 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("--audit-store", "audit.ndjson"),
-        expectedErrors = listOf("--audit-store is only valid with act."),
+        expectedErrors = listOf("--audit-store is only valid with act or report."),
     ),
     UsageErrorCase(
         args = listOf("import-mock-runtime", "--audit-store", "audit.ndjson"),
-        expectedErrors = listOf("--audit-store is only valid with act."),
+        expectedErrors = listOf("--audit-store is only valid with act or report."),
+    ),
+    UsageErrorCase(
+        args = listOf("report"),
+        expectedErrors = listOf("Missing work item id for report."),
+    ),
+    UsageErrorCase(
+        args = listOf("report", "--events"),
+        expectedErrors = listOf("Missing work item id for report."),
+    ),
+    UsageErrorCase(
+        args = listOf("report", "agent-task:42", "inspect", "agent-task:43"),
+        expectedErrors = listOf("Choose only one command.", "Run with --help for usage."),
+    ),
+    UsageErrorCase(
+        args = listOf(
+            "report",
+            "agent-task:42",
+            "--audit-store",
+            "audit-one.ndjson",
+            "--audit-store",
+            "audit-two.ndjson",
+        ),
+        expectedErrors = listOf("Choose only one audit store."),
+    ),
+    UsageErrorCase(
+        args = listOf("report", "agent-task:42", "--event-store", "store.ndjson"),
+        expectedErrors = listOf("--event-store is only valid with import commands or act."),
+    ),
+    UsageErrorCase(
+        args = listOf("report", "agent-task:42", "--approve"),
+        expectedErrors = listOf("--approve is only valid with act."),
     ),
     UsageErrorCase(
         args = listOf("--approve"),

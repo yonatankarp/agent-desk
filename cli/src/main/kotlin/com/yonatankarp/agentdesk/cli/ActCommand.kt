@@ -1,7 +1,5 @@
 package com.yonatankarp.agentdesk.cli
 
-import com.yonatankarp.agentdesk.app.config.ConfigValidationException
-import com.yonatankarp.agentdesk.app.config.EventStoreLocation
 import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.OperatorActionException
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
@@ -9,6 +7,7 @@ import com.yonatankarp.agentdesk.app.operator.OperatorStateProjectionException
 import com.yonatankarp.agentdesk.app.operator.action.ActOnWorkItem
 import com.yonatankarp.agentdesk.app.operator.action.ActOutcome
 import com.yonatankarp.agentdesk.app.operator.action.PermissionGateBehavior
+import com.yonatankarp.agentdesk.app.operator.audit.AuditDisplayLabels
 import com.yonatankarp.agentdesk.app.operator.audit.AuditEntry
 import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailProjector
 import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailRecorder
@@ -19,8 +18,6 @@ import com.yonatankarp.agentdesk.app.persistence.WorkEventStoreException
 import com.yonatankarp.agentdesk.cli.input.CliInputException
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
-import java.nio.file.InvalidPathException
-import java.nio.file.Path
 
 /**
  * The operator-reachable action path: routes an act invocation through the
@@ -84,17 +81,6 @@ internal object ActCommand {
         throw CliInputException(exception.message ?: "Mock operator action could not read operator state.")
     }
 
-    private fun parseStorePath(
-        path: String,
-        label: String,
-    ): Path = try {
-        Path.of(EventStoreLocation.parse(path).value)
-    } catch (exception: ConfigValidationException) {
-        throw CliInputException("Invalid $label store location: ${exception.message}")
-    } catch (_: InvalidPathException) {
-        throw CliInputException("Configured $label store could not be updated.")
-    }
-
     private fun render(
         intent: OperatorActionIntent,
         workItemId: WorkItemId,
@@ -106,9 +92,9 @@ internal object ActCommand {
         when (outcome) {
             is ActOutcome.Executed -> {
                 appendProposal(intent, workItemId, outcome.proposal.target.status, outcome.proposal.expectedEffect)
-                appendDecision(outcome.decision.state.name, outcome.decision.logSummary)
+                appendDecision(AuditDisplayLabels.labelFor(outcome.decision.state), outcome.decision.logSummary)
                 appendLine("Outcome")
-                appendLine("- ${outcome.result.state.name}")
+                appendLine("- ${AuditDisplayLabels.labelFor(outcome.result.state)}")
                 appendLine("- ${outcome.result.replayStateSummary}")
                 appendLine("- Recorded event: ${outcome.recordedEvent.id}")
                 appendLine()
@@ -117,9 +103,9 @@ internal object ActCommand {
 
             is ActOutcome.NotExecuted -> {
                 appendProposal(intent, workItemId, outcome.proposal.target.status, outcome.proposal.expectedEffect)
-                appendDecision(outcome.decision.state.name, outcome.decision.logSummary)
+                appendDecision(AuditDisplayLabels.labelFor(outcome.decision.state), outcome.decision.logSummary)
                 appendLine("Outcome")
-                outcome.approvalState?.let { state -> appendLine("- ${state.name}") }
+                outcome.approvalState?.let { state -> appendLine("- ${AuditDisplayLabels.labelFor(state)}") }
                 appendLine("- No action was recorded. Audit evidence was still written.")
                 appendLine()
                 appendAuditTrail(outcome.auditEntries)
