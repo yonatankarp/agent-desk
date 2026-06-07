@@ -41,7 +41,7 @@ The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which
 The shell renders a read-only `Timeline` section below recent events: a status
 line with the projection's state markers, entries grouped by time window, and
 per-entry rows that stack timestamp, type, work item id, state label, summary,
-and evidence vertically so dense data wraps instead of scrolling horizontally
+the terminal outcome (when the projector recorded one), and evidence vertically so dense data wraps instead of scrolling horizontally
 (a Konsist rule forbids `horizontalScroll` in mobile production code).
 
 Each timeline entry is a disclosure: tapping the row toggles an inline

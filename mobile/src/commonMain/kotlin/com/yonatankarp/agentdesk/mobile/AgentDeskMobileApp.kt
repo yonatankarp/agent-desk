@@ -347,6 +347,14 @@ private fun MobileTimelineRow(
             fontSize = 12.sp,
             lineHeight = 17.sp,
         )
+        entry.completionSummary?.let { completion ->
+            Text(
+                text = completion,
+                color = colorForCompletionSummary(completion),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
         if (entry.evidenceReferences.isNotEmpty()) {
             Text(
                 text = MobileDisplayText.evidenceReferences(entry.evidenceReferences),
@@ -386,6 +394,12 @@ private fun colorForTimelineState(stateLabel: String): Color = when (stateLabel)
     "Failed" -> MobilePalette.Failure
     "Completed" -> MobilePalette.Success
     "Stale", "Not done", "Partial" -> MobilePalette.Attention
+    else -> MobilePalette.TextMuted
+}
+
+private fun colorForCompletionSummary(completionSummary: String): Color = when (completionSummary) {
+    "Successful outcome" -> MobilePalette.Success
+    "Failed outcome" -> MobilePalette.Failure
     else -> MobilePalette.TextMuted
 }
 

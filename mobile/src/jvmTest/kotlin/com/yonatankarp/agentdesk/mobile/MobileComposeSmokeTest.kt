@@ -19,6 +19,7 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
 import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
 import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.string.shouldContain
 
 // ExperimentalTestApi opt-in is tracked debt: see issue #279 — remove when
 // Compose Multiplatform stabilizes the test API.
@@ -88,6 +89,27 @@ class MobileComposeSmokeTest :
 
                 onNodeWithText("Details ▾").performClick()
                 onNodeWithText(provenance).assertDoesNotExist()
+                onNodeWithText("Successful outcome").assertDoesNotExist()
+            }
+        }
+
+        test("terminal timeline rows render the projector outcome on both surfaces") {
+            runComposeUiTest {
+                val state = MobileOperatorStateContract.fromEvents(
+                    workEvents {
+                        started()
+                        succeeded()
+                    },
+                )
+                val terminalEntry = state.timeline.first { it.completionSummary != null }
+
+                setContent {
+                    AgentDeskMobileApp(state)
+                }
+
+                onNodeWithText("Timeline").performScrollTo().assertIsDisplayed()
+                onNodeWithText(terminalEntry.completionSummary!!).performScrollTo().assertIsDisplayed()
+                MobileDisplayText.timelineRow(terminalEntry) shouldContain terminalEntry.completionSummary!!
             }
         }
 
