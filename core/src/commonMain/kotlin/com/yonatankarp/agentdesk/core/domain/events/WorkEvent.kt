@@ -43,6 +43,11 @@ value class EventTimestamp private constructor(val value: String) : Comparable<E
         private val rfc3339UtcPattern =
             """\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z""".toRegex()
 
+        /**
+         * Parses an RFC 3339 UTC instant and canonicalizes fractional seconds by trimming
+         * trailing zeros (`.500Z` -> `.5Z`, `.000Z` -> no fraction), so equal instants
+         * written at different precision compare equal.
+         */
         fun parse(raw: String): EventTimestamp {
             val normalized = raw.trim()
             require(rfc3339UtcPattern.matches(normalized)) {
