@@ -63,6 +63,27 @@ class MockOperatorActionAdapterTest :
                 }
             }
 
+            `when`("the work item id is too long for the composed event id") {
+                then("it fails with a public-safe action error instead of crashing") {
+                    val longId = WorkItemId.parse("a".repeat(64))
+
+                    val error = shouldThrow<OperatorActionException> {
+                        adapter.perform(
+                            intent = OperatorActionIntent.Resume,
+                            workItemId = longId,
+                            events = workEvents {
+                                started(workItemId = longId.value)
+                                blocked(workItemId = longId.value)
+                            },
+                            occurredAt = eventTimestampAt(minute = 20),
+                        )
+                    }
+
+                    error.message.orEmpty().shouldBePublicSafe()
+                    error.message shouldContain "exceeds the supported length"
+                }
+            }
+
             `when`("an unsupported action is requested") {
                 then("it rejects without exposing private context") {
                     val error = shouldThrow<OperatorActionException> {

@@ -55,11 +55,11 @@ internal object ActCommand {
         approve: Boolean,
         now: EventTimestamp,
     ): ActOutcome = try {
-        val eventLocation = parseStoreLocation(eventStorePath, label = "event")
-        val auditLocation = parseStoreLocation(auditStorePath, label = "audit")
+        val eventPath = parseStorePath(eventStorePath, label = "event")
+        val auditPath = parseStorePath(auditStorePath, label = "audit")
         val outcome = ActOnWorkItem(
-            eventRepository = LocalFileWorkEventRepository(Path.of(eventLocation.value)),
-            auditRecorder = AuditTrailRecorder(LocalFileAuditRecordRepository(Path.of(auditLocation.value))),
+            eventRepository = LocalFileWorkEventRepository(eventPath),
+            auditRecorder = AuditTrailRecorder(LocalFileAuditRecordRepository(auditPath)),
         ).act(
             intent = intent,
             workItemId = workItemId,
@@ -71,10 +71,8 @@ internal object ActCommand {
             throw CliInputException("Work item was not found.")
         }
         outcome
-    } catch (_: InvalidPathException) {
-        throw CliInputException("Configured event store could not be updated.")
     } catch (_: SecurityException) {
-        throw CliInputException("Configured event store could not be updated.")
+        throw CliInputException("Configured action stores could not be updated.")
     } catch (exception: WorkEventStoreException) {
         throw CliInputException(exception.message ?: "Configured event store could not be updated.")
     } catch (exception: AuditStoreException) {
@@ -85,13 +83,15 @@ internal object ActCommand {
         throw CliInputException(exception.message ?: "Mock operator action could not read operator state.")
     }
 
-    private fun parseStoreLocation(
+    private fun parseStorePath(
         path: String,
         label: String,
-    ): EventStoreLocation = try {
-        EventStoreLocation.parse(path)
+    ): Path = try {
+        Path.of(EventStoreLocation.parse(path).value)
     } catch (exception: ConfigValidationException) {
         throw CliInputException("Invalid $label store location: ${exception.message}")
+    } catch (_: InvalidPathException) {
+        throw CliInputException("Configured $label store could not be updated.")
     }
 
     private fun render(

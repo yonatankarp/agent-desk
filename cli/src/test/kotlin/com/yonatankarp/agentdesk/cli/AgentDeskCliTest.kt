@@ -669,6 +669,7 @@ class AgentDeskCliTest :
                     val auditRecords = auditFile.readLines()
                     auditRecords shouldHaveSize 1
                     auditRecords.single() shouldContain "\"result\":\"rejected\""
+                    auditRecords.single().shouldBePublicSafe()
                 }
             }
 
@@ -695,7 +696,7 @@ class AgentDeskCliTest :
                     result.output shouldContain "unavailable for the work item"
                     result.output.shouldBePublicSafe()
                     eventFile.readLines() shouldHaveSize 2
-                    auditFile.readLines() shouldHaveSize 1
+                    auditFile.readLines().single().shouldBePublicSafe()
                 }
             }
 

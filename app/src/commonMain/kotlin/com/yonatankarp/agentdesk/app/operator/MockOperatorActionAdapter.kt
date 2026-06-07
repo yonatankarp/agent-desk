@@ -31,9 +31,17 @@ class MockOperatorActionAdapter {
             throw OperatorActionException("Work item cannot be resumed from its current status.")
         }
 
+        // The occurredAt segment keeps action event ids unique per invocation. Long
+        // work item ids can overflow the event-id length cap; surface that as the
+        // public-safe action failure the approval loop already converts to Failed.
+        val eventId = try {
+            WorkEventId.parse("event:$workItemId:action-resume:$occurredAt")
+        } catch (exception: IllegalArgumentException) {
+            throw OperatorActionException("Mock action event id exceeds the supported length for this work item id.")
+        }
+
         return WorkEvent(
-            // The occurredAt segment keeps action event ids unique per invocation.
-            id = WorkEventId.parse("event:$workItemId:action-resume:$occurredAt"),
+            id = eventId,
             occurredAt = occurredAt,
             source = source,
             workItemId = workItemId,
