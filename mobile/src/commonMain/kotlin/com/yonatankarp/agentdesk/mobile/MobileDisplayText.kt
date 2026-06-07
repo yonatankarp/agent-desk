@@ -2,8 +2,10 @@ package com.yonatankarp.agentdesk.mobile
 
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 
 internal object MobileDisplayText {
@@ -11,11 +13,47 @@ internal object MobileDisplayText {
     const val CURRENT_WORK_TITLE = "Current work"
     const val ATTENTION_QUEUE_TITLE = "Attention queue"
     const val RECENT_EVENTS_TITLE = "Recent events"
+    const val TIMELINE_TITLE = "Timeline"
     const val PROJECTION_WARNINGS_TITLE = "Projection warnings"
 
     const val NO_CURRENT_WORK = "No current work"
     const val NO_ITEMS_NEED_ATTENTION = "No items need attention"
     const val NO_RECENT_ACCEPTED_EVENTS = "No recent accepted events"
+    const val NO_TIMELINE_ENTRIES = "No timeline entries"
+
+    const val DETAILS_DISCLOSURE_COLLAPSED = "Details ▸"
+    const val DETAILS_DISCLOSURE_EXPANDED = "Details ▾"
+    const val EVIDENCE_MISSING = "Evidence missing: no public-safe evidence reference was attached."
+    const val RELATED_EVENTS_NONE = "Related events: none"
+    const val REDACTED_EVIDENCE = "Redacted evidence: raw provider payloads are not rendered."
+
+    fun timelineStatus(markers: List<String>): String = "Status: ${markers.joinToString()}"
+
+    fun timelineRow(entry: MobileTimelineEntry): String = buildString {
+        append("${entry.occurredAt} [${entry.type}] ${entry.workItemId} from ${entry.source} [${entry.stateLabel}] - ${entry.summary}")
+        entry.completionSummary?.let { completion -> append(" ($completion)") }
+        if (entry.evidenceReferences.isNotEmpty()) {
+            append(" | Evidence: ${evidenceReferences(entry.evidenceReferences)}")
+        }
+    }
+
+    fun evidenceDetailRows(detail: MobileEvidenceDetail): List<String> = buildList {
+        add("Source: ${detail.source}")
+        add("Timestamp: ${detail.timestamp}")
+        add("Summary: ${detail.summary}")
+        add("Provenance: ${detail.provenance}")
+        if (detail.evidenceReferences.isEmpty()) {
+            add(EVIDENCE_MISSING)
+        } else {
+            add("Evidence: ${evidenceReferences(detail.evidenceReferences)}")
+        }
+        if (detail.relatedEvents.isEmpty()) {
+            add(RELATED_EVENTS_NONE)
+        } else {
+            add("Related events: ${detail.relatedEvents.joinToString { related -> related.type }}")
+        }
+        add(REDACTED_EVIDENCE)
+    }
 
     fun summary(
         currentWorkCount: Int,

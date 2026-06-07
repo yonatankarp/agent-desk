@@ -5,5 +5,6 @@ data class MobileEventLine(
     val type: String,
     val workItemId: String,
     val detail: String,
+    val source: String = "",
     val evidenceReferences: List<MobileEvidenceReference> = emptyList(),
 )

@@ -4,7 +4,9 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
@@ -14,6 +16,8 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.core.spec.style.FunSpec
 
 // ExperimentalTestApi opt-in is tracked debt: see issue #279 — remove when
@@ -54,6 +58,68 @@ class MobileComposeSmokeTest :
                 onNodeWithText("No current work").assertIsDisplayed()
                 onNodeWithText("No items need attention").assertIsDisplayed()
                 onNodeWithText("No recent accepted events").assertIsDisplayed()
+            }
+        }
+
+        test("timeline detail expands and collapses as a read-only disclosure") {
+            runComposeUiTest {
+                val state = MobileOperatorStateContract.fromEvents(
+                    workEvents {
+                        started()
+                        blocked(evidence = listOf(sanitizedNoteEvidence("Blocked context", "docs/blocked-context.md")))
+                    },
+                )
+
+                setContent {
+                    AgentDeskMobileApp(state)
+                }
+
+                val provenance = "Provenance: replay event event:agent-task:42:blocked"
+                onNodeWithText("Timeline").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Status: Read-only, Blocked").performScrollTo().assertIsDisplayed()
+                onNodeWithText(provenance).assertDoesNotExist()
+
+                onAllNodesWithText("Details ▸")[1].performScrollTo().performClick()
+                onNodeWithText("Details ▾").performScrollTo().assertIsDisplayed()
+                onNodeWithText(provenance).performScrollTo().assertIsDisplayed()
+                onNodeWithText("Source: mock-adapter").assertIsDisplayed()
+                onNodeWithText("Related events: work.started").assertIsDisplayed()
+                onNodeWithText("Redacted evidence: raw provider payloads are not rendered.").assertIsDisplayed()
+
+                onNodeWithText("Details ▾").performClick()
+                onNodeWithText(provenance).assertDoesNotExist()
+            }
+        }
+
+        test("dense timeline rows render long identifiers without clipping affordances") {
+            runComposeUiTest {
+                val longId = "a".repeat(60) + ":42"
+                val state = MobileOperatorStateContract.fromEvents(
+                    workEvents {
+                        started(
+                            workItemId = longId,
+                            title = "Dense data wrap check",
+                            summary = "A deliberately long summary line that must wrap onto multiple lines on a narrow viewport instead of clipping.",
+                        )
+                        blocked(
+                            workItemId = longId,
+                            evidence = listOf(
+                                sanitizedNoteEvidence(
+                                    "Dense evidence label",
+                                    "docs/very/deep/path/to/a/sanitized-evidence-note-with-a-long-name.md",
+                                ),
+                            ),
+                        )
+                    },
+                )
+
+                setContent {
+                    AgentDeskMobileApp(state)
+                }
+
+                onNodeWithText("Timeline").performScrollTo().assertIsDisplayed()
+                onAllNodesWithText(longId).onFirst().assertIsDisplayed()
+                onNodeWithText("Status: Read-only, Blocked").performScrollTo().assertIsDisplayed()
             }
         }
 

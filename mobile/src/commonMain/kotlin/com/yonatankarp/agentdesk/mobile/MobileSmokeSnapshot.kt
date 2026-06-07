@@ -5,6 +5,7 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 
 data class MobileSmokeSnapshot(
@@ -55,6 +56,20 @@ object MobileSmokeSnapshotBuilder {
                     rows = state.recentEvents.toEventRows(),
                 ),
             )
+            add(
+                MobileSmokeSection(
+                    title = MobileDisplayText.TIMELINE_TITLE,
+                    rows = state.timeline.toTimelineRows(state.timelineStatusMarkers),
+                ),
+            )
+            state.evidenceDetails.firstOrNull()?.let { detail ->
+                add(
+                    MobileSmokeSection(
+                        title = MobileDisplayText.timelineRow(state.timeline.first()),
+                        rows = MobileDisplayText.evidenceDetailRows(detail),
+                    ),
+                )
+            }
             if (state.projectionWarnings.isNotEmpty()) {
                 add(
                     MobileSmokeSection(
@@ -95,6 +110,14 @@ object MobileSmokeSnapshotBuilder {
         }
 
         return map { event -> event.describe() }
+    }
+
+    private fun List<MobileTimelineEntry>.toTimelineRows(markers: List<String>): List<String> {
+        if (isEmpty()) {
+            return listOf(MobileDisplayText.NO_TIMELINE_ENTRIES)
+        }
+
+        return listOf(MobileDisplayText.timelineStatus(markers)) + map { entry -> MobileDisplayText.timelineRow(entry) }
     }
 
     private fun List<MobileProjectionWarning>.toWarningRows(): List<String> = map { warning -> "${warning.eventId} - ${warning.reason}" }

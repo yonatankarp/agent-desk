@@ -3,11 +3,13 @@ package com.yonatankarp.agentdesk.mobile
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStatusPresentation
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -29,6 +31,8 @@ class MobileSmokeSnapshotTest :
             text shouldNotContain "Resume"
             text shouldNotContain "Approve"
             text shouldNotContain "Stop"
+            text shouldNotContain "Retry"
+            text shouldNotContain "Cancel"
         }
 
         test("snapshot includes stale markers evidence references and projection warnings") {
@@ -91,6 +95,30 @@ class MobileSmokeSnapshotTest :
                         reason = "Cannot transition work item agent-task:91 from Succeeded to Blocked",
                     ),
                 ),
+                timeline = listOf(
+                    MobileTimelineEntry(
+                        eventId = "event:agent-task:91:started",
+                        occurredAt = "2026-06-02T21:00:00Z",
+                        timeWindow = "2026-06-02",
+                        source = "mock-adapter",
+                        workItemId = "agent-task:91",
+                        type = "work.started",
+                        statusLabel = "Running",
+                        stateLabel = "Read-only",
+                        summary = "Agent is checking accepted events.",
+                        completionSummary = null,
+                    ),
+                ),
+                timelineStatusMarkers = listOf("Read-only"),
+                evidenceDetails = listOf(
+                    MobileEvidenceDetail(
+                        eventId = "event:agent-task:91:started",
+                        source = "mock-adapter",
+                        timestamp = "2026-06-02T21:00:00Z",
+                        summary = "Agent is checking accepted events.",
+                        provenance = "replay event event:agent-task:91:started",
+                    ),
+                ),
             )
 
             val text = MobileSmokeSnapshotBuilder.from(state).flattenedText()
@@ -102,6 +130,15 @@ class MobileSmokeSnapshotTest :
             text shouldContain "Accepted event includes mobile smoke evidence."
             text shouldContain "Projection warnings"
             text shouldContain "event:agent-task:91:blocked-after-success"
+            text shouldContain "Status: Read-only"
+            text shouldContain "2026-06-02T21:00:00Z [work.started] agent-task:91 from mock-adapter [Read-only]"
+            text shouldContain "Provenance: replay event event:agent-task:91:started"
+            text shouldContain "Related events: none"
+            text shouldContain "Redacted evidence: raw provider payloads are not rendered."
+            text shouldNotContain "Resume"
+            text shouldNotContain "Approve"
+            text shouldNotContain "Stop"
+            text shouldNotContain "Retry"
         }
 
         test("empty snapshot keeps read-only sections visible") {
@@ -116,6 +153,7 @@ class MobileSmokeSnapshotTest :
             snapshot.sectionRows("Current work") shouldBe listOf("No current work")
             snapshot.sectionRows("Attention queue") shouldBe listOf("No items need attention")
             snapshot.sectionRows("Recent events") shouldBe listOf("No recent accepted events")
+            snapshot.sectionRows("Timeline") shouldBe listOf("No timeline entries")
         }
 
         test("mobile status tone colors are exhaustive for operator tones") {

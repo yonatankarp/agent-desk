@@ -41,6 +41,17 @@ class ArchitectureKonsistTest :
             )
         }
 
+        test("mobile production layout never uses horizontal scrolling") {
+            listOf("commonMain", "jvmMain").forEach { sourceSet ->
+                Konsist
+                    .scopeFromProject(moduleName = "mobile", sourceSetName = sourceSet)
+                    .files
+                    .forEach { file ->
+                        file.text.contains("horizontalScroll(") shouldBe false
+                    }
+            }
+        }
+
         test("forbidden mobile JVM import guard catches client fixtures") {
             val fixture =
                 Konsist
