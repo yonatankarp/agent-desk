@@ -1,41 +1,37 @@
 package com.yonatankarp.agentdesk.app.operator.action
 
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 
 data class ActionPermissionRequest(
     val proposal: ActionProposal,
     val actionClass: PermissionedActionClass,
-    val actor: String,
-    val requestedAt: String,
+    val actor: Actor,
+    val requestedAt: EventTimestamp,
     val intentSummary: String,
     val ambiguous: Boolean = false,
     val approval: ActionPermissionApproval? = null,
 ) {
     init {
-        EventTimestamp.parse(requestedAt)
-        require(actor.isNotBlank()) { "Permission actor must not be blank." }
         require(intentSummary.isNotBlank()) { "Permission intent summary must not be blank." }
-        PublicSafeTextPolicy.requirePublicSafe(actor, fieldName = "Permission actor")
         PublicSafeTextPolicy.requirePublicSafe(intentSummary, fieldName = "Permission intent summary")
     }
 }
 
 data class ActionPermissionApproval(
     val outcome: PermissionApprovalOutcome,
-    val actor: String,
-    val decidedAt: String,
+    val actor: Actor,
+    val decidedAt: EventTimestamp,
     val rationale: String,
 ) {
     init {
-        EventTimestamp.parse(decidedAt)
-        require(actor.isNotBlank()) { "Permission approval actor must not be blank." }
         require(rationale.isNotBlank()) { "Permission approval rationale must not be blank." }
-        PublicSafeTextPolicy.requirePublicSafe(actor, fieldName = "Permission approval actor")
         PublicSafeTextPolicy.requirePublicSafe(rationale, fieldName = "Permission approval rationale")
     }
 }
@@ -44,22 +40,17 @@ data class ActionPermissionDecision(
     val state: PermissionDecisionState,
     val actionClass: PermissionedActionClass,
     val behavior: PermissionGateBehavior,
-    val actor: String,
-    val decidedAt: String,
+    val actor: Actor,
+    val decidedAt: EventTimestamp,
     val action: String,
-    val target: String,
+    val target: WorkItemId,
     val receipt: EvidenceReference,
     val logSummary: String,
 ) {
     init {
-        EventTimestamp.parse(decidedAt)
-        require(actor.isNotBlank()) { "Permission decision actor must not be blank." }
         require(action.isNotBlank()) { "Permission decision action must not be blank." }
-        require(target.isNotBlank()) { "Permission decision target must not be blank." }
         require(logSummary.isNotBlank()) { "Permission decision summary must not be blank." }
-        PublicSafeTextPolicy.requirePublicSafe(actor, fieldName = "Permission decision actor")
         PublicSafeTextPolicy.requirePublicSafe(action, fieldName = "Permission decision action")
-        PublicSafeTextPolicy.requirePublicSafe(target, fieldName = "Permission decision target")
         PublicSafeTextPolicy.requirePublicSafe(logSummary, fieldName = "Permission decision summary")
     }
 }
@@ -210,8 +201,8 @@ object ActionPermissionGate {
         request: ActionPermissionRequest,
         state: PermissionDecisionState,
         behavior: PermissionGateBehavior,
-        actor: String = request.actor,
-        decidedAt: String = request.requestedAt,
+        actor: Actor = request.actor,
+        decidedAt: EventTimestamp = request.requestedAt,
         summary: String,
     ): ActionPermissionDecision = ActionPermissionDecision(
         state = state,

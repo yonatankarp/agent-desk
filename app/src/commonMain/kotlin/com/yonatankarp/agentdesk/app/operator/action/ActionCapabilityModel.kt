@@ -5,6 +5,7 @@ import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
 data class ActionProposal(
@@ -42,15 +43,13 @@ data class ActionProposal(
 }
 
 data class ActionTarget(
-    val workItemId: String,
+    val workItemId: WorkItemId,
     val title: String,
     val status: String,
 ) {
     init {
-        require(workItemId.isNotBlank()) { "Action target work item id must not be blank" }
         require(title.isNotBlank()) { "Action target title must not be blank" }
         require(status.isNotBlank()) { "Action target status must not be blank" }
-        PublicSafeTextPolicy.requirePublicSafe(workItemId, fieldName = "Action target work item id")
         PublicSafeTextPolicy.requirePublicSafe(title, fieldName = "Action target title")
         PublicSafeTextPolicy.requirePublicSafe(status, fieldName = "Action target status")
     }
@@ -215,7 +214,7 @@ object ActionCapabilityPlanner {
     }
 
     private fun WorkItem.toActionTarget(): ActionTarget = ActionTarget(
-        workItemId = id.toString(),
+        workItemId = id,
         title = title.toString(),
         status = OperatorStatePresenter.presentationFor(status).label,
     )

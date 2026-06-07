@@ -1,6 +1,9 @@
 package com.yonatankarp.agentdesk.app.operator.decision
 
 import com.yonatankarp.agentdesk.app.fixtures.operatorState
+import com.yonatankarp.agentdesk.core.domain.events.EventSource
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
@@ -26,9 +29,9 @@ class DecisionQueueProjectorTest :
                     assertSoftly {
                         projection.states.shouldContainExactly(DecisionQueueItemState.Pending)
                         item.id shouldBe "decision:event:agent-task:42:needs-decision"
-                        item.workItemId shouldBe "agent-task:42"
+                        item.workItemId shouldBe WorkItemId.parse("agent-task:42")
                         item.request.prompt shouldBe "Operator decision needed."
-                        item.request.source shouldBe "mock-adapter"
+                        item.request.source shouldBe EventSource.parse("mock-adapter")
                         item.request.risk shouldBe DecisionRisk.ReadOnly
                         item.request.urgency shouldBe DecisionUrgency.Normal
                         item.request.recommendedOptionId shouldBe "inspect-evidence"
@@ -70,7 +73,7 @@ class DecisionQueueProjectorTest :
                     val item = DecisionQueueProjector.project(state).items.single()
 
                     item.state shouldBe DecisionQueueItemState.Superseded
-                    item.updatedAt shouldBe "2026-06-02T21:10:00Z"
+                    item.updatedAt shouldBe EventTimestamp.parse("2026-06-02T21:10:00Z")
                     item.unavailableReason shouldContain "later replay state superseded"
                 }
             }
@@ -95,7 +98,7 @@ class DecisionQueueProjectorTest :
                             consequences = "No action is executed.",
                             risk = DecisionRisk.ReadOnly,
                             evidenceReferences = emptyList(),
-                            source = "mock-adapter",
+                            source = EventSource.parse("mock-adapter"),
                             expiresAt = null,
                             urgency = DecisionUrgency.Normal,
                         )
