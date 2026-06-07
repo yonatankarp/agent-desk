@@ -460,7 +460,10 @@ internal object MobilePalette {
     val Line = Color(0xFFE1E5EA)
     val TextPrimary = Color(0xFF1D252D)
     val TextSecondary = Color(0xFF4B5563)
-    val TextMuted = Color(0xFF6B7280)
+
+    // 5.49:1 on Row, 5.94:1 on Surface, 5.59:1 on Background — WCAG AA for
+    // the 10-12sp muted text (#318); pinned by MobilePaletteContrastTest.
+    val TextMuted = Color(0xFF5E6470)
     val Accent = Color(0xFF0F766E)
     val Attention = Color(0xFFA16207)
     val Blocked = Color(0xFFB45309)

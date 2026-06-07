@@ -188,7 +188,7 @@ class MobileComposeSmokeTest :
                 }
 
                 onAllNodesWithText("check-run Mobile smoke -> https://github.com/yonatankarp/agent-desk/actions/runs/26937983933").assertCountEquals(3)
-                onNodeWithText("Stale 90m since 2026-06-02T21:00:00Z").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Stale 1h 30m since 2026-06-02 21:00 UTC").performScrollTo().assertIsDisplayed()
                 onNodeWithText("Evidence attached").performScrollTo().assertIsDisplayed()
                 onNodeWithText("Projection warnings").performScrollTo().assertIsDisplayed()
                 onNodeWithText("Cannot transition work item agent-task:91 from Succeeded to Blocked")
