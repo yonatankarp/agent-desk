@@ -50,8 +50,9 @@ internal class AppendOnlyNdjsonStore<R : Any, ID : Any>(
                                 recoveredRecordCount = snapshot.records.size,
                             )
                         }
-                        if (idOf(record) in snapshot.recordIds) {
-                            throw failures.duplicateId(id = idOf(record), lineNumber = null)
+                        val recordId = idOf(record)
+                        if (recordId in snapshot.recordIds) {
+                            throw failures.duplicateId(id = recordId, lineNumber = null)
                         }
 
                         channel.position(channel.size())

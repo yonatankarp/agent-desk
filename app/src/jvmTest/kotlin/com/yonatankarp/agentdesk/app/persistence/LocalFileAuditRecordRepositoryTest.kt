@@ -97,6 +97,30 @@ class LocalFileAuditRecordRepositoryTest :
             }
         }
 
+        given("duplicate audit record ids already in the store") {
+            `when`("the trail is read") {
+                then("read rejects the store with a line-numbered error that never echoes the id") {
+                    val storePath = tempStorePath()
+                    val entry = auditEntry(minute = 10)
+                    Files.writeString(
+                        storePath,
+                        AuditRecordJson.encode(entry) + "\n" + AuditRecordJson.encode(entry) + "\n",
+                    )
+
+                    val error = shouldThrow<AuditStoreException> {
+                        LocalFileAuditRecordRepository(storePath).readAll()
+                    }
+
+                    assertSoftly(error) {
+                        reason shouldBe AuditStoreFailure.DuplicateRecordId(lineNumber = 2)
+                        message.orEmpty() shouldContain "line 2"
+                        message.orEmpty() shouldNotContain entry.id.toString()
+                        message.orEmpty() shouldNotContain storePath.toString()
+                    }
+                }
+            }
+        }
+
         given("a torn trailing audit record") {
             `when`("the trail is read") {
                 then("the committed prefix is recovered with a public-safe warning") {
