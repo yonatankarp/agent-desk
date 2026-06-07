@@ -1,6 +1,8 @@
 package com.yonatankarp.agentdesk.app.operator.verification
 
-import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
+import com.yonatankarp.agentdesk.app.fixtures.verificationBinding
+import com.yonatankarp.agentdesk.app.fixtures.verificationResult
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
@@ -9,11 +11,14 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
+private val LAST_CHANGED_AT = EventTimestamp.parse("2026-06-02T21:10:00Z")
+
 class VerificationEvidenceTest :
     BehaviorSpec({
-        given("fresh passing evidence") {
+        given("passing evidence bound to content verified after the last change") {
             `when`("a completion checklist is projected") {
                 then("it becomes ready") {
+                    val freshBinding = verificationBinding(capturedAtMinute = 20)
                     val checklist = CompletionEvidenceChecklist(
                         outcome = CompletionOutcome.Ready,
                         verificationAttempted = true,
@@ -23,33 +28,23 @@ class VerificationEvidenceTest :
                         ),
                         residualRisks = emptyList(),
                         verificationResults = listOf(
-                            verification(
+                            verificationResult(
                                 name = "app verification tests",
                                 kind = VerificationKind.LocalTest,
                                 result = VerificationState.Passed,
+                                inputBinding = freshBinding,
                             ),
-                            verification(
+                            verificationResult(
                                 name = "CI Gradle Build",
                                 kind = VerificationKind.CiCheck,
                                 result = VerificationState.Passed,
                                 outputReference = "github-actions:gradle-build",
-                            ),
-                            verification(
-                                name = "mock runtime smoke",
-                                kind = VerificationKind.SmokeRun,
-                                result = VerificationState.Passed,
-                                outputReference = "artifact:mock-runtime-smoke",
-                            ),
-                            verification(
-                                name = "manual QA review",
-                                kind = VerificationKind.ManualQa,
-                                result = VerificationState.Passed,
-                                outputReference = "sanitized-note:manual-qa",
+                                inputBinding = freshBinding,
                             ),
                         ),
                     )
 
-                    val readiness = CompletionEvidenceProjector.readiness(checklist)
+                    val readiness = CompletionEvidenceProjector.readiness(checklist, lastChangedAt = LAST_CHANGED_AT)
 
                     readiness.state shouldBe CompletionReadinessState.Ready
                     readiness.reasons shouldContain "All recorded verification evidence is fresh and passing."
@@ -57,9 +52,64 @@ class VerificationEvidenceTest :
             }
         }
 
-        given("failed, skipped, stale, and unknown verification") {
+        given("evidence captured at the exact instant of the last change") {
             `when`("readiness is projected") {
-                then("it explains why completion is not ready") {
+                then("the inclusive boundary derives fresh, keeping it ready") {
+                    val checklist = CompletionEvidenceChecklist(
+                        outcome = CompletionOutcome.Ready,
+                        verificationAttempted = true,
+                        knownFailures = emptyList(),
+                        touchedArtifacts = emptyList(),
+                        residualRisks = emptyList(),
+                        verificationResults = listOf(
+                            verificationResult(
+                                name = "app verification tests",
+                                kind = VerificationKind.LocalTest,
+                                result = VerificationState.Passed,
+                                inputBinding = verificationBinding(capturedAtMinute = 10),
+                            ),
+                        ),
+                    )
+
+                    val readiness = CompletionEvidenceProjector.readiness(checklist, lastChangedAt = LAST_CHANGED_AT)
+
+                    readiness.state shouldBe CompletionReadinessState.Ready
+                }
+            }
+        }
+
+        given("a passing result that claims no immutable input binding") {
+            `when`("readiness is projected") {
+                then("the unbound evidence is treated as unknown freshness, never fresh") {
+                    val checklist = CompletionEvidenceChecklist(
+                        outcome = CompletionOutcome.Ready,
+                        verificationAttempted = true,
+                        knownFailures = emptyList(),
+                        touchedArtifacts = emptyList(),
+                        residualRisks = emptyList(),
+                        verificationResults = listOf(
+                            verificationResult(
+                                name = "app verification tests",
+                                kind = VerificationKind.LocalTest,
+                                result = VerificationState.Passed,
+                                inputBinding = null,
+                            ),
+                        ),
+                    )
+
+                    val readiness = CompletionEvidenceProjector.readiness(checklist, lastChangedAt = LAST_CHANGED_AT)
+
+                    assertSoftly(readiness) {
+                        state shouldBe CompletionReadinessState.NotReady
+                        reasons shouldContain "app verification tests freshness is unknown."
+                    }
+                }
+            }
+        }
+
+        given("evidence whose input was captured before the last change") {
+            `when`("readiness is projected") {
+                then("freshness is derived as stale, not the caller's claim") {
                     val checklist = CompletionEvidenceChecklist(
                         outcome = CompletionOutcome.Ready,
                         verificationAttempted = true,
@@ -67,33 +117,32 @@ class VerificationEvidenceTest :
                         touchedArtifacts = listOf("desktop/src/jvmMain/kotlin/com/yonatankarp/agentdesk/desktop/AgentDeskApp.kt"),
                         residualRisks = listOf("Manual screenshot evidence is stale."),
                         verificationResults = listOf(
-                            verification(
+                            verificationResult(
                                 name = "Windows Compose Build",
                                 kind = VerificationKind.CiCheck,
                                 result = VerificationState.Failed,
                                 failureSummary = "Gradle task failed.",
                             ),
-                            verification(
+                            verificationResult(
                                 name = "mobile smoke",
                                 kind = VerificationKind.SmokeRun,
                                 result = VerificationState.Skipped,
                             ),
-                            verification(
+                            verificationResult(
                                 name = "manual QA review",
                                 kind = VerificationKind.ManualQa,
                                 result = VerificationState.Passed,
-                                freshness = VerificationFreshness.Stale,
+                                inputBinding = verificationBinding(capturedAtMinute = 5),
                             ),
-                            verification(
+                            verificationResult(
                                 name = "coverage report",
                                 kind = VerificationKind.CiCheck,
                                 result = VerificationState.Unknown,
-                                freshness = VerificationFreshness.Unknown,
                             ),
                         ),
                     )
 
-                    val readiness = CompletionEvidenceProjector.readiness(checklist)
+                    val readiness = CompletionEvidenceProjector.readiness(checklist, lastChangedAt = LAST_CHANGED_AT)
 
                     assertSoftly(readiness) {
                         state shouldBe CompletionReadinessState.NotReady
@@ -121,6 +170,7 @@ class VerificationEvidenceTest :
                             residualRisks = emptyList(),
                             verificationResults = emptyList(),
                         ),
+                        lastChangedAt = LAST_CHANGED_AT,
                     )
 
                     readiness.state shouldBe CompletionReadinessState.Blocked
@@ -134,7 +184,7 @@ class VerificationEvidenceTest :
             `when`("a failed result omits failure summary") {
                 then("it is rejected") {
                     val error = shouldThrow<IllegalArgumentException> {
-                        verification(
+                        verificationResult(
                             name = "failing check",
                             kind = VerificationKind.LocalTest,
                             result = VerificationState.Failed,
@@ -151,7 +201,7 @@ class VerificationEvidenceTest :
                     val unsafeName = "Read " + "/" + "home/user/private.log"
 
                     val error = shouldThrow<IllegalArgumentException> {
-                        verification(
+                        verificationResult(
                             name = unsafeName,
                             kind = VerificationKind.LocalTest,
                             result = VerificationState.Passed,
@@ -162,24 +212,16 @@ class VerificationEvidenceTest :
                     error.message.orEmpty() shouldNotContain unsafeName
                 }
             }
+
+            `when`("a content digest is not a 64-character lowercase hex string") {
+                then("it is rejected without echoing the value") {
+                    assertSoftly {
+                        shouldThrow<IllegalArgumentException> { ContentDigest.parseSha256("") }
+                        shouldThrow<IllegalArgumentException> { ContentDigest.parseSha256("XYZ") }
+                        shouldThrow<IllegalArgumentException> { ContentDigest.parseSha256("A".repeat(64)) }
+                        shouldThrow<IllegalArgumentException> { ContentDigest.parseSha256("a".repeat(63)) }
+                    }
+                }
+            }
         }
     })
-
-private fun verification(
-    name: String,
-    kind: VerificationKind,
-    result: VerificationState,
-    durationMillis: Long? = 1_200,
-    outputReference: String = "artifact:verification-output",
-    failureSummary: String? = null,
-    freshness: VerificationFreshness = VerificationFreshness.Fresh,
-): VerificationResult = VerificationResult(
-    name = name,
-    kind = kind,
-    result = result,
-    durationMillis = durationMillis,
-    outputReference = outputReference,
-    failureSummary = failureSummary,
-    freshness = freshness,
-    evidenceReference = sanitizedNoteEvidence("Verification evidence", outputReference),
-)

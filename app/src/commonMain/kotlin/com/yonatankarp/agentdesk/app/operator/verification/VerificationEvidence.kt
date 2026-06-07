@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator.verification
 
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
 
@@ -10,8 +11,8 @@ data class VerificationResult(
     val durationMillis: Long?,
     val outputReference: String,
     val failureSummary: String?,
-    val freshness: VerificationFreshness,
     val evidenceReference: EvidenceReference,
+    val inputBinding: VerificationInputBinding? = null,
 ) {
     init {
         require(name.isNotBlank()) { "Verification result name must not be blank" }
@@ -97,7 +98,16 @@ enum class CompletionReadinessState {
 }
 
 object CompletionEvidenceProjector {
-    fun readiness(checklist: CompletionEvidenceChecklist): CompletionReadinessIndicator {
+    /**
+     * Derives readiness from a checklist. Freshness is computed per result from
+     * its input binding against [lastChangedAt] (the work item's last change),
+     * not read from a caller-supplied claim — unbound or unverifiable evidence
+     * is conservatively unknown and never contributes a fresh/passing signal.
+     */
+    fun readiness(
+        checklist: CompletionEvidenceChecklist,
+        lastChangedAt: EventTimestamp? = null,
+    ): CompletionReadinessIndicator {
         val reasons = buildList {
             if (!checklist.verificationAttempted) {
                 add("Verification was not attempted.")
@@ -110,11 +120,12 @@ object CompletionEvidenceProjector {
                 .forEach { result ->
                     add("${result.name} is ${result.result.name.lowercase()}.")
                 }
-            checklist.verificationResults
-                .filter { it.freshness != VerificationFreshness.Fresh }
-                .forEach { result ->
-                    add("${result.name} freshness is ${result.freshness.name.lowercase()}.")
+            checklist.verificationResults.forEach { result ->
+                val freshness = VerificationFreshnessDeriver.derive(result.inputBinding, lastChangedAt)
+                if (freshness != VerificationFreshness.Fresh) {
+                    add("${result.name} freshness is ${freshness.name.lowercase()}.")
                 }
+            }
             checklist.knownFailures.forEach { failure ->
                 add("Known failure: $failure")
             }
