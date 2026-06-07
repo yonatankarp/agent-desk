@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator
 
+import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -41,6 +42,22 @@ class ActorTest :
                     }
 
                     error.message.orEmpty() shouldNotContain channelId
+                }
+            }
+
+            `when`("a validated event source is converted") {
+                then("it becomes an actor without re-validating the grammar") {
+                    listOf(
+                        "mock",
+                        "mock-adapter",
+                        "openclaw.local",
+                        "operator:daily-agent",
+                        "agent_task",
+                    ).forEach { raw ->
+                        val source = EventSource.parse(raw)
+
+                        Actor.from(source) shouldBe Actor.parse(raw)
+                    }
                 }
             }
         }
