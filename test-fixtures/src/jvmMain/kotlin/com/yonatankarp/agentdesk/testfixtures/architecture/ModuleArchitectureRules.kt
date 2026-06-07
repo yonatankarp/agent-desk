@@ -42,6 +42,26 @@ object ModuleArchitectureRules {
         }
     }
 
+    fun assertNoBlockedImportsInPackages(
+        moduleName: String,
+        sourceSets: List<String>,
+        packageNames: List<String>,
+        blockedImportPrefixes: List<String>,
+    ) {
+        sourceSets.forEach { sourceSet ->
+            val packageFiles = Konsist
+                .scopeFromProject(moduleName = moduleName, sourceSetName = sourceSet)
+                .files
+                .filter { file -> packageNames.any { packageName -> file.hasPackage(packageName) } }
+            check(packageFiles.isNotEmpty()) {
+                "No $moduleName/$sourceSet files matched packages: ${packageNames.joinToString()}"
+            }
+            packageFiles.assertTrue { file ->
+                !hasBlockedImport(file, blockedImportPrefixes)
+            }
+        }
+    }
+
     fun assertKotestOnly(
         moduleName: String,
         testSourceSets: List<String>,
