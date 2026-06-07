@@ -62,7 +62,9 @@ Stop a timeboxed run before the clock expires when credentials, external setup, 
 After every merged or reviewed slice, run a short discovery audit before moving on. The audit should inspect:
 
 - the original issue acceptance criteria and whether any gap remains
+- closed-issue completion evidence: verify the merged code/docs against each acceptance criterion with cited files, tests, PR checks, or issue/PR comments; "merged" alone is not "done"
 - the final PR diff, tests, CI checks, docs impact, and user-facing behavior
+- operator wiki freshness whenever the slice touched an operator-facing surface, workflow, runbook, or public/operator documentation
 - CodeRabbit findings or review comments when available
 - package/module boundaries, suspicious dependencies, TODO/FIXME notes, and recently touched areas
 - docs claims compared with the code shape
