@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator.audit
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
@@ -8,14 +9,14 @@ import com.yonatankarp.agentdesk.app.operator.action.ActionCapabilityPlanner
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalLoop
 import com.yonatankarp.agentdesk.app.operator.action.MockActionDecision
 import com.yonatankarp.agentdesk.app.operator.action.MockActionDecisionOutcome
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
 class AuditTrailProjectorTest :
     BehaviorSpec({
@@ -54,17 +55,17 @@ class AuditTrailProjectorTest :
                     val actionEntry = entries.last()
 
                     assertSoftly(decisionEntry) {
-                        actor shouldBe "operator:daily-agent"
-                        timestamp shouldBe "2026-06-02T21:22:00Z"
+                        actor shouldBe Actor.parse("operator:daily-agent")
+                        timestamp shouldBe EventTimestamp.parse("2026-06-02T21:22:00Z")
                         action shouldBe "decision.approve-resume"
-                        target shouldBe "agent-task:42"
-                        sourceItem shouldBe "agent-task:42"
+                        target shouldBe WorkItemId.parse("agent-task:42")
+                        sourceItem shouldBe WorkItemId.parse("agent-task:42")
                         evidenceReference.target.toString() shouldBe "mock-action:resume:approved"
                         detail shouldBe "Public-safe mock approval."
                     }
 
                     assertSoftly(actionEntry) {
-                        actor shouldBe "mock-action-adapter"
+                        actor shouldBe Actor.parse("mock-action-adapter")
                         action shouldBe "mock.resume"
                         evidenceReference.target.toString() shouldBe "mock-action:resume"
                         detail shouldContain "resulting replay event"
@@ -99,9 +100,9 @@ class AuditTrailProjectorTest :
 
                     assertSoftly(entry) {
                         actorKind shouldBe AuditActorKind.System
-                        actor shouldBe "mock-adapter"
+                        actor shouldBe Actor.parse("mock-adapter")
                         action shouldBe "import.work.blocked"
-                        target shouldBe "agent-task:42"
+                        target shouldBe WorkItemId.parse("agent-task:42")
                         result shouldBe AuditResult.Imported
                         correlationId shouldBe "correlation:import:batch-1"
                         detail shouldContain "Imported sanitized replay event"
@@ -115,11 +116,11 @@ class AuditTrailProjectorTest :
                 then("it remains public-safe and inspectable") {
                     val entry = AuditTrailProjector.systemFailure(
                         id = "audit:system:import-failed",
-                        actor = "system:importer",
-                        timestamp = "2026-06-02T21:30:00Z",
+                        actor = Actor.parse("system:importer"),
+                        timestamp = EventTimestamp.parse("2026-06-02T21:30:00Z"),
                         action = "import.failed",
-                        target = "agent-task:42",
-                        sourceItem = "agent-task:42",
+                        target = WorkItemId.parse("agent-task:42"),
+                        sourceItem = WorkItemId.parse("agent-task:42"),
                         correlationId = "correlation:import:batch-1",
                         detail = "Importer rejected an unsafe sanitized observation.",
                     )
@@ -132,36 +133,12 @@ class AuditTrailProjectorTest :
                 }
             }
         }
-
-        given("audit validation") {
-            `when`("private details are provided") {
-                then("it rejects without echoing the unsafe value") {
-                    val unsafeActor = "agent:" + "/" + "home/user/private.log"
-
-                    val error = shouldThrow<IllegalArgumentException> {
-                        AuditTrailProjector.systemFailure(
-                            id = "audit:system:unsafe",
-                            actor = unsafeActor,
-                            timestamp = "2026-06-02T21:30:00Z",
-                            action = "import.failed",
-                            target = "agent-task:42",
-                            sourceItem = "agent-task:42",
-                            correlationId = "correlation:import:batch-1",
-                            detail = "Importer rejected unsafe input.",
-                        )
-                    }
-
-                    error.message.orEmpty() shouldContain "Audit actor"
-                    error.message.orEmpty() shouldNotContain unsafeActor
-                }
-            }
-        }
     })
 
 private fun decision(): MockActionDecision = MockActionDecision(
     outcome = MockActionDecisionOutcome.Approve,
-    actor = "operator:daily-agent",
-    decidedAt = "2026-06-02T21:22:00Z",
+    actor = Actor.parse("operator:daily-agent"),
+    decidedAt = EventTimestamp.parse("2026-06-02T21:22:00Z"),
     rationale = "Public-safe mock approval.",
     selection = "approve-resume",
 )

@@ -39,7 +39,7 @@ class ActionCapabilityPlannerTest :
                     )
 
                     assertSoftly(proposal) {
-                        target.workItemId shouldBe "agent-task:42"
+                        target.workItemId shouldBe WorkItemId.parse("agent-task:42")
                         capability.state shouldBe ActionCapabilityState.PreviewOnly
                         capability.disabledReason shouldBe null
                         riskClass shouldBe ActionRiskClass.ReadOnly
@@ -112,7 +112,7 @@ class ActionCapabilityPlannerTest :
             `when`("an external send or account action is represented") {
                 then("it stays unavailable and proposal-only") {
                     val target = ActionTarget(
-                        workItemId = "agent-task:42",
+                        workItemId = WorkItemId.parse("agent-task:42"),
                         title = "Review operator action",
                         status = "Blocked",
                     )
@@ -138,7 +138,7 @@ class ActionCapabilityPlannerTest :
             `when`("an adapter cannot represent an action") {
                 then("it returns an unsupported disabled proposal") {
                     val target = ActionTarget(
-                        workItemId = "agent-task:42",
+                        workItemId = WorkItemId.parse("agent-task:42"),
                         title = "Review operator action",
                         status = "Blocked",
                     )
@@ -164,7 +164,7 @@ class ActionCapabilityPlannerTest :
                     val unsafeTitle = "Read " + "/" + "home/user/private.log"
                     val error = shouldThrow<IllegalArgumentException> {
                         ActionTarget(
-                            workItemId = "agent-task:42",
+                            workItemId = WorkItemId.parse("agent-task:42"),
                             title = unsafeTitle,
                             status = "Blocked",
                         )
@@ -180,7 +180,7 @@ class ActionCapabilityPlannerTest :
                     val error = shouldThrow<IllegalArgumentException> {
                         ActionProposal(
                             target = ActionTarget(
-                                workItemId = "agent-task:42",
+                                workItemId = WorkItemId.parse("agent-task:42"),
                                 title = "Review operator action",
                                 status = "Blocked",
                             ),

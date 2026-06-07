@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator.audit
 
+import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.action.ActionPermissionDecision
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalResult
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalState
@@ -11,34 +12,28 @@ import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
 import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 
 data class AuditEntry(
     val id: String,
-    val actor: String,
+    val actor: Actor,
     val actorKind: AuditActorKind,
-    val timestamp: String,
+    val timestamp: EventTimestamp,
     val action: String,
-    val target: String,
+    val target: WorkItemId,
     val result: AuditResult,
-    val sourceItem: String,
+    val sourceItem: WorkItemId,
     val correlationId: String,
     val evidenceReference: EvidenceReference,
     val detail: String,
 ) {
     init {
-        EventTimestamp.parse(timestamp)
         require(id.isNotBlank()) { "Audit entry id must not be blank" }
-        require(actor.isNotBlank()) { "Audit actor must not be blank" }
         require(action.isNotBlank()) { "Audit action must not be blank" }
-        require(target.isNotBlank()) { "Audit target must not be blank" }
-        require(sourceItem.isNotBlank()) { "Audit source item must not be blank" }
         require(correlationId.isNotBlank()) { "Audit correlation id must not be blank" }
         require(detail.isNotBlank()) { "Audit detail must not be blank" }
         PublicSafeTextPolicy.requirePublicSafe(id, fieldName = "Audit entry id")
-        PublicSafeTextPolicy.requirePublicSafe(actor, fieldName = "Audit actor")
         PublicSafeTextPolicy.requirePublicSafe(action, fieldName = "Audit action")
-        PublicSafeTextPolicy.requirePublicSafe(target, fieldName = "Audit target")
-        PublicSafeTextPolicy.requirePublicSafe(sourceItem, fieldName = "Audit source item")
         PublicSafeTextPolicy.requirePublicSafe(correlationId, fieldName = "Audit correlation id")
         PublicSafeTextPolicy.requirePublicSafe(detail, fieldName = "Audit detail")
     }
@@ -72,6 +67,8 @@ enum class AuditResult {
 }
 
 object AuditTrailProjector {
+    private val mockAdapterActor = Actor.parse("mock-action-adapter")
+
     fun fromMockActionResult(result: MockActionApprovalResult): List<AuditEntry> {
         val decisionEntry = AuditEntry(
             id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:decision:${result.decidedAt}",
@@ -89,9 +86,9 @@ object AuditTrailProjector {
 
         val actionEntry = AuditEntry(
             id = "audit:${result.sourceWorkItemId}:${result.action.wireName}:action:${result.decidedAt}",
-            actor = result.resultingEvent?.source?.toString() ?: "mock-action-adapter",
+            actor = result.resultingEvent?.source?.let { Actor.parse(it.value) } ?: mockAdapterActor,
             actorKind = AuditActorKind.Agent,
-            timestamp = result.resultingEvent?.occurredAt?.toString() ?: result.decidedAt,
+            timestamp = result.resultingEvent?.occurredAt ?: result.decidedAt,
             action = "mock.${result.action.wireName}",
             target = result.sourceWorkItemId,
             result = result.state.toAuditResult(),
@@ -123,13 +120,13 @@ object AuditTrailProjector {
         correlationId: String,
     ): AuditEntry = AuditEntry(
         id = "audit:${event.id}",
-        actor = event.source.toString(),
+        actor = Actor.parse(event.source.value),
         actorKind = AuditActorKind.System,
-        timestamp = event.occurredAt.toString(),
+        timestamp = event.occurredAt,
         action = "import.${event.type.wireName}",
-        target = event.workItemId.toString(),
+        target = event.workItemId,
         result = AuditResult.Imported,
-        sourceItem = event.workItemId.toString(),
+        sourceItem = event.workItemId,
         correlationId = correlationId,
         evidenceReference = event.evidenceReferences.firstOrNull()
             ?: sanitizedNote(
@@ -141,11 +138,11 @@ object AuditTrailProjector {
 
     fun systemFailure(
         id: String,
-        actor: String,
-        timestamp: String,
+        actor: Actor,
+        timestamp: EventTimestamp,
         action: String,
-        target: String,
-        sourceItem: String,
+        target: WorkItemId,
+        sourceItem: WorkItemId,
         correlationId: String,
         detail: String,
     ): AuditEntry = AuditEntry(
@@ -167,10 +164,10 @@ object AuditTrailProjector {
 
     fun timelineLines(entries: List<AuditEntry>): List<AuditTimelineLine> = entries.map { entry ->
         AuditTimelineLine(
-            timestamp = entry.timestamp,
+            timestamp = entry.timestamp.toString(),
             actor = "${entry.actorKind.name.lowercase()}:${entry.actor}",
             action = entry.action,
-            target = entry.target,
+            target = entry.target.toString(),
             result = entry.result.name,
             evidence = "${entry.evidenceReference.kind.wireName} ${entry.evidenceReference.label} -> ${entry.evidenceReference.target}",
             detail = entry.detail,

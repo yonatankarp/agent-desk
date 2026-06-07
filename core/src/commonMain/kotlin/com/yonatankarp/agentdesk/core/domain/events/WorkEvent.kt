@@ -36,8 +36,10 @@ value class WorkEventId private constructor(val value: String) {
 }
 
 @JvmInline
-value class EventTimestamp private constructor(val value: String) {
+value class EventTimestamp private constructor(val value: String) : Comparable<EventTimestamp> {
     companion object {
+        private const val SECONDS_LENGTH = 19
+        private const val FRACTION_DIGITS = 9
         private val rfc3339UtcPattern =
             """\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?Z""".toRegex()
 
@@ -46,9 +48,26 @@ value class EventTimestamp private constructor(val value: String) {
             require(rfc3339UtcPattern.matches(normalized)) {
                 "Event timestamp must be an RFC 3339 UTC instant, for example 2026-06-02T21:00:00Z"
             }
-            return EventTimestamp(normalized)
+            return EventTimestamp(canonical(normalized))
+        }
+
+        private fun canonical(value: String): String {
+            val fraction = value.substring(SECONDS_LENGTH).removeSuffix("Z").trimEnd('0').trimEnd('.')
+            return value.take(SECONDS_LENGTH) + fraction + "Z"
         }
     }
+
+    override fun compareTo(other: EventTimestamp): Int {
+        val secondsOrder = value.take(SECONDS_LENGTH).compareTo(other.value.take(SECONDS_LENGTH))
+        if (secondsOrder != 0) return secondsOrder
+        return paddedFraction().compareTo(other.paddedFraction())
+    }
+
+    private fun paddedFraction(): String = value
+        .substring(SECONDS_LENGTH)
+        .removePrefix(".")
+        .removeSuffix("Z")
+        .padEnd(FRACTION_DIGITS, '0')
 
     override fun toString(): String = value
 }

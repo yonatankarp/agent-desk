@@ -32,7 +32,7 @@ object DesktopEvidenceDrilldown {
         val event = state.events.last()
         val line = OperatorStatePresenter.eventLines(state).last()
         val decisions = DecisionQueueProjector.project(state).items
-        val decision = decisions.lastOrNull { it.workItemId == line.workItemId }
+        val decision = decisions.lastOrNull { it.workItemId.toString() == line.workItemId }
         val relatedEvents = OperatorStatePresenter.eventLines(state).filter { it.workItemId == line.workItemId }
         val evidenceRows = line.evidenceRows()
 

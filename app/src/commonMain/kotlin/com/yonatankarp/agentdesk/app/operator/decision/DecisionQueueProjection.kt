@@ -3,10 +3,12 @@ package com.yonatankarp.agentdesk.app.operator.decision
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
+import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.PublicSafeTextPolicy
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
 data class DecisionQueueProjection(
@@ -16,9 +18,9 @@ data class DecisionQueueProjection(
 
 data class DecisionQueueItem(
     val id: String,
-    val workItemId: String,
-    val requestedAt: String,
-    val updatedAt: String,
+    val workItemId: WorkItemId,
+    val requestedAt: EventTimestamp,
+    val updatedAt: EventTimestamp,
     val status: String,
     val state: DecisionQueueItemState,
     val request: DecisionRequest,
@@ -32,8 +34,8 @@ data class DecisionRequest(
     val consequences: String,
     val risk: DecisionRisk,
     val evidenceReferences: List<EvidenceLine>,
-    val source: String,
-    val expiresAt: String?,
+    val source: EventSource,
+    val expiresAt: EventTimestamp?,
     val urgency: DecisionUrgency,
 ) {
     init {
@@ -45,10 +47,8 @@ data class DecisionRequest(
         require(recommendedOptionId == null || options.any { it.id == recommendedOptionId }) {
             "Recommended decision option must reference a provided option"
         }
-        expiresAt?.let(EventTimestamp::parse)
         PublicSafeTextPolicy.requirePublicSafe(prompt, fieldName = "Decision prompt")
         PublicSafeTextPolicy.requirePublicSafe(consequences, fieldName = "Decision consequences")
-        PublicSafeTextPolicy.requirePublicSafe(source, fieldName = "Decision source")
     }
 }
 
@@ -58,7 +58,7 @@ data class DecisionOption(
     val consequence: String,
 ) {
     init {
-        require(id.matches(optionIdPattern)) {
+        require(id.matches(WorkItemId.validPattern)) {
             "Decision option id must be lowercase letters, numbers, '.', '_', ':', or '-'"
         }
         require(label.isNotBlank()) { "Decision option label must not be blank" }
@@ -66,10 +66,6 @@ data class DecisionOption(
         PublicSafeTextPolicy.requirePublicSafe(id, fieldName = "Decision option id")
         PublicSafeTextPolicy.requirePublicSafe(label, fieldName = "Decision option label")
         PublicSafeTextPolicy.requirePublicSafe(consequence, fieldName = "Decision option consequence")
-    }
-
-    companion object {
-        private val optionIdPattern = "[a-z0-9][a-z0-9._:-]{0,63}".toRegex()
     }
 }
 
@@ -100,18 +96,17 @@ object DecisionQueueProjector {
         state: OperatorState,
         now: EventTimestamp? = null,
     ): DecisionQueueProjection {
-        val workItemsById = state.workItems.associateBy { it.id.toString() }
-        val staleWorkItemIds = state.staleAttention.mapTo(mutableSetOf()) { it.workItemId.toString() }
+        val workItemsById = state.workItems.associateBy { it.id }
+        val staleWorkItemIds = state.staleAttention.mapTo(mutableSetOf()) { it.workItemId }
         val latestEventAtByWorkItem = state.events
-            .groupBy { it.workItemId.toString() }
-            .mapValues { (_, events) -> events.maxOf { it.occurredAt.toString() } }
+            .groupBy { it.workItemId }
+            .mapValues { (_, events) -> events.maxOf { it.occurredAt } }
         val items = state.events
             .filter { it.payload is WorkNeedsDecisionPayload }
             .map { event ->
-                val workItemId = event.workItemId.toString()
+                val workItemId = event.workItemId
                 val workItem = workItemsById[workItemId]
                 val status = workItem?.status
-                val source = event.source.toString()
                 val evidence = event.evidenceReferences.map { reference ->
                     EvidenceLine(
                         kind = reference.kind.wireName,
@@ -131,8 +126,8 @@ object DecisionQueueProjector {
                 DecisionQueueItem(
                     id = "decision:${event.id}",
                     workItemId = workItemId,
-                    requestedAt = event.occurredAt.toString(),
-                    updatedAt = latestEventAtByWorkItem[workItemId] ?: event.occurredAt.toString(),
+                    requestedAt = event.occurredAt,
+                    updatedAt = latestEventAtByWorkItem[workItemId] ?: event.occurredAt,
                     status = status?.let(OperatorStatePresenter::presentationFor)?.label ?: "Read-only",
                     state = itemState,
                     request = request,
@@ -178,7 +173,7 @@ object DecisionQueueProjector {
             consequences = "This projection records decision semantics only; it does not execute actions or write to providers.",
             risk = DecisionRisk.ReadOnly,
             evidenceReferences = evidenceReferences,
-            source = source.toString(),
+            source = source,
             expiresAt = null,
             urgency = if (isStale) DecisionUrgency.Stale else DecisionUrgency.Normal,
         )
@@ -188,7 +183,7 @@ object DecisionQueueProjector {
         status: WorkStatus?,
         now: EventTimestamp?,
     ): DecisionQueueItemState = when {
-        expiresAt != null && now != null && expiresAt <= now.toString() -> DecisionQueueItemState.Expired
+        expiresAt != null && now != null && expiresAt <= now -> DecisionQueueItemState.Expired
         status == WorkStatus.NeedsDecision && evidenceReferences.isEmpty() -> DecisionQueueItemState.InsufficientEvidence
         status == WorkStatus.NeedsDecision -> DecisionQueueItemState.Pending
         else -> DecisionQueueItemState.Superseded
