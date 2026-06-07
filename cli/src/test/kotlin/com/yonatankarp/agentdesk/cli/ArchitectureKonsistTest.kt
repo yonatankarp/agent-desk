@@ -10,6 +10,7 @@ private val blockedImportPrefixes =
         "com.yonatankarp.agentdesk.adapter.",
         "com.yonatankarp.agentdesk.openclaw.",
         "com.yonatankarp.agentdesk.runtime.",
+        "com.yonatankarp.agentdesk.app.runtime.OpenClaw",
         "com.yonatankarp.agentdesk.desktop.",
         "com.yonatankarp.agentdesk.ui.",
     )
@@ -70,6 +71,16 @@ class ArchitectureKonsistTest :
                 moduleName = "cli",
                 testSourceSets = listOf("test"),
             )
+        }
+
+        test("forbidden cli import guard catches concrete runtime adapter fixtures") {
+            val fixture =
+                Konsist
+                    .scopeFromFile("cli/src/test/resources/architecture/ForbiddenCliImportFixture.kt")
+                    .files
+                    .single()
+
+            ModuleArchitectureRules.hasBlockedImport(fixture, blockedImportPrefixes).shouldBeTrue()
         }
 
         test("forbidden cli input layer import guard catches sibling and root fixtures") {

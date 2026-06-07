@@ -12,6 +12,7 @@ private val blockedImportPrefixes =
         "com.yonatankarp.agentdesk.desktop.",
         "com.yonatankarp.agentdesk.openclaw.",
         "com.yonatankarp.agentdesk.runtime.",
+        "com.yonatankarp.agentdesk.app.runtime.OpenClaw",
         "com.yonatankarp.agentdesk.ui.",
     )
 
