@@ -85,6 +85,21 @@ object AgentDeskCli {
                 output.println(renderer.render(inspection))
             }
 
+            is CliCommand.Report -> {
+                val workItemId = parseWorkItemId(command.rawWorkItemId)
+                val read = options.toWorkEventRead(input)
+                read.trailingCorruption?.let { corruption ->
+                    error.println("Warning: ${corruption.publicSafeMessage()}")
+                }
+                val result = ReportCommand.execute(
+                    workItemId = workItemId,
+                    events = read.events,
+                    auditStorePath = command.auditStorePath,
+                )
+                result.warning?.let { warning -> error.println("Warning: $warning") }
+                output.println(result.text)
+            }
+
             is CliCommand.Act -> {
                 val eventStorePath = command.eventStorePath
                     ?: throw CliUsageException("Missing value for --event-store.")
@@ -123,6 +138,7 @@ object AgentDeskCli {
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
           agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
+          agent-desk report <work-item-id> --events <file> [--audit-store <file>]
           agent-desk inspect <work-item-id> [--sample]
           agent-desk inspect <work-item-id> --events <file>
           agent-desk inspect <work-item-id> --stdin
@@ -140,11 +156,16 @@ object AgentDeskCli {
                           Route a public-safe mock resume through the permission gate and
                           approval loop, recording the decision and durable audit evidence.
                           Without --approve the gate denies and the denial is audited (exit 3).
+          report <work-item-id>
+                          Render the readiness/verification projection for one work
+                          item and read back the durable audit trail recorded by act.
+                          Read-only: neither store is modified.
           inspect        Render one sanitized work item by id.
           --event-store <file>
                           Local event store target for import commands or act.
           --audit-store <file>
-                          Local audit store target for act decisions and outcomes.
+                          Local audit store target for act decisions and outcomes,
+                          or the store to read back with report.
           --approve       Approve the gated action explicitly. Only valid with act.
           --observations <file>
                           Sanitized observation export for import-openclaw-observations.

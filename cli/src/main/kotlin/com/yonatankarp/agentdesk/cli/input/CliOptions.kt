@@ -50,6 +50,19 @@ internal data class CliOptions(
                         command = CliCommand.ImportOpenClawObservations()
                     }
 
+                    "report" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        val workItemId = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing work item id for report.")
+                        if (workItemId.startsWith("-")) {
+                            throw CliUsageException("Missing work item id for report.")
+                        }
+                        command = CliCommand.Report(workItemId)
+                        index += 1
+                    }
+
                     "act" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -120,7 +133,14 @@ internal data class CliOptions(
                                 selectedCommand.copy(auditStorePath = path)
                             }
 
-                            else -> throw CliUsageException("--audit-store is only valid with act.")
+                            is CliCommand.Report -> {
+                                if (selectedCommand.auditStorePath != null) {
+                                    throw CliUsageException("Choose only one audit store.")
+                                }
+                                selectedCommand.copy(auditStorePath = path)
+                            }
+
+                            else -> throw CliUsageException("--audit-store is only valid with act or report.")
                         }
                         index += 1
                     }

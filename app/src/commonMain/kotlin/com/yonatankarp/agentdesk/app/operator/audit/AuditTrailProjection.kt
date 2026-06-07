@@ -202,7 +202,7 @@ object AuditTrailProjector {
             actor = "${entry.actorKind.name.lowercase()}:${entry.actor}",
             action = entry.action,
             target = entry.target.toString(),
-            result = entry.result.name,
+            result = AuditDisplayLabels.labelFor(entry.result),
             evidence = EvidenceDisplayFormatter.format(entry.evidenceReference),
             detail = entry.detail,
         )

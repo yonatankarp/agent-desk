@@ -64,3 +64,14 @@ outcomes via the recorder (see
 The store accepts validated public-safe audit records only. Private paths,
 credentials, channel ids, raw transcripts, and runtime-specific local
 identifiers must never reach an append.
+
+## Reading
+
+`AuditRecordRepository.readAll()` is the read seam: it returns the committed
+entries plus an optional public-safe torn-trailing-record signal, and never
+mutates the store. The CLI `report` command is the operator-reachable read
+consumer: `agent-desk report <work-item-id> --events <file> --audit-store
+<file>` renders the work item's readiness projection and the recorded gate,
+loop, and action records grouped by correlation id. Read errors surface the
+store's public-safe messages (line numbers and failure class only, never the
+path or record content).

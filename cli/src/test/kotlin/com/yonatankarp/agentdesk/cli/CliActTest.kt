@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import kotlin.io.path.readLines
 
@@ -37,6 +38,8 @@ class CliActTest :
                     actionResult.output shouldContain "Audit trail (3 durable record(s))"
                     actionResult.output shouldContain "permission.localwrite"
                     actionResult.output shouldContain "mock.resume"
+                    actionResult.output shouldContain "- Partial success"
+                    actionResult.output shouldNotContain "PartialSuccess"
                     actionResult.output.shouldBePublicSafe()
                     actionResult.error shouldBe ""
                     eventFile.readLines().map { it.substringAfter("\"type\":\"").substringBefore("\"") } shouldBe
