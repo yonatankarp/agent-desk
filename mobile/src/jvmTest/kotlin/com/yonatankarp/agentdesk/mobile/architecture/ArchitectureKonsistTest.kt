@@ -12,6 +12,7 @@ private val blockedImportPrefixes =
         "com.yonatankarp.agentdesk.desktop.",
         "com.yonatankarp.agentdesk.openclaw.",
         "com.yonatankarp.agentdesk.runtime.",
+        "com.yonatankarp.agentdesk.app.runtime.OpenClaw",
         "com.yonatankarp.agentdesk.ui.",
     )
 
@@ -44,6 +45,16 @@ class ArchitectureKonsistTest :
             val fixture =
                 Konsist
                     .scopeFromFile("mobile/src/jvmTest/resources/architecture/ForbiddenMobileJvmImportFixture.kt")
+                    .files
+                    .single()
+
+            ModuleArchitectureRules.hasBlockedImport(fixture, blockedImportPrefixes) shouldBe true
+        }
+
+        test("forbidden mobile JVM import guard catches concrete runtime adapter fixtures") {
+            val fixture =
+                Konsist
+                    .scopeFromFile("mobile/src/jvmTest/resources/architecture/ForbiddenMobileRuntimeAdapterImportFixture.kt")
                     .files
                     .single()
 
