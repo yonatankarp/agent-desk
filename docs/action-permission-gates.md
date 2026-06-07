@@ -27,9 +27,15 @@ until a future adapter deliberately implements execution.
 Unsupported or disabled proposals are denied even when approval is present.
 Ambiguous requests require clarification and allow no action. Permission
 decisions retain class, behavior, state, actor, target, action, receipt, and a
-compact public-safe summary. The audit projection persists state, actor, target,
-action, receipt, and uses the public-safe summary as detail; gate behavior is
-available on the decision object, not as a separate audit column. Logs do not
+compact public-safe summary. The audit projection maps each decision — including
+denials, cancellations, clarification requests, and unsupported outcomes — to an
+audit entry carrying actor, target, action, result, receipt, and the public-safe
+summary as detail; gate behavior is available on the decision object, not as a
+separate audit column. `AuditTrailRecorder` appends those entries to the durable
+local audit store described in [Local audit store](local-audit-store.md), so the
+trail is reconstructable after process exit. Each entry carries its own
+`recordedAt` timestamp alongside the decision or action time; an entry never
+silently reuses decision time as action time. Logs and persisted records do not
 store private content.
 
 Non-goals for this slice: live external sends, executor wiring, account changes,

@@ -12,6 +12,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Canonical sanitized replay](canonical-sanitized-replay.md): repeatable public-safe replay proof for timeline-ready and decision-queue-ready state.
 - [Runtime adapter scope decision](runtime-adapter-scope-decision.md): accepted first non-mock adapter scope and public-safe follow-up boundaries.
 - [Local event store](local-event-store.md): JVM-local newline-delimited JSON event persistence.
+- [Local audit store](local-audit-store.md): durable append-only persistence for permission decisions and approval outcomes.
 - [Local-first smoke suite](local-first-smoke-suite.md): Makefile-backed core loop smoke without external services.
 - [Milestone readiness report](milestone-readiness-report.md): release readiness template and checklist.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
