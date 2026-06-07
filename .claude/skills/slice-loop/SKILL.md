@@ -7,6 +7,8 @@ description: Use when asked to run the autonomous issue-processing loop, work th
 
 Drive the issue → discuss → implement → judge → simplify → PR → merge loop with the repo's role team. This skill owns sequencing and mechanics only. Policy lives in the binding docs and wins on any conflict: `AGENTS.md` (run contract, stop conditions, branch policy, Discovery, reports) and `docs/roles.md` (role duties).
 
+Role agents are defined in `.claude/agents/` (`manager`, `architect`, `developer`, `qa`, `compliance`, `security`, `designer`, `reviewer`, `discovery`, `docs-operator`). Spawn each role with its matching subagent type instead of an ad-hoc prompt; the spawn prompt supplies only the phase (discuss/judge), the issue or diff, and the transcript path.
+
 ## Budget argument
 
 - `2h` (timebox, per AGENTS.md Timeboxed Runs) | `3` (issue count) | `all` (until backlog empty) | none → one issue.
