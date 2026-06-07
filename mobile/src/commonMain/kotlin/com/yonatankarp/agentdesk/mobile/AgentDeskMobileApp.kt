@@ -4,6 +4,7 @@ package com.yonatankarp.agentdesk.mobile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -29,9 +34,11 @@ import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 
 @Composable
@@ -76,6 +83,38 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                         MobileEmptyRow(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
                     } else {
                         state.recentEvents.forEach { event -> MobileEventRow(event) }
+                    }
+                }
+                MobileSection(title = MobileDisplayText.TIMELINE_TITLE) {
+                    if (state.timeline.isEmpty()) {
+                        MobileEmptyRow(MobileDisplayText.NO_TIMELINE_ENTRIES)
+                    } else {
+                        if (state.timelineStatusMarkers.isNotEmpty()) {
+                            Text(
+                                text = MobileDisplayText.timelineStatus(state.timelineStatusMarkers),
+                                color = MobilePalette.TextMuted,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                            )
+                        }
+                        val detailsByEventId = state.evidenceDetails.associateBy { detail -> detail.eventId }
+                        var previousWindow: String? = null
+                        state.timeline.forEach { entry ->
+                            if (entry.timeWindow != previousWindow) {
+                                previousWindow = entry.timeWindow
+                                Text(
+                                    text = entry.timeWindow,
+                                    color = MobilePalette.TextMuted,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                )
+                            }
+                            MobileTimelineRow(
+                                entry = entry,
+                                detail = detailsByEventId[entry.eventId],
+                            )
+                        }
                     }
                 }
                 if (state.projectionWarnings.isNotEmpty()) {
@@ -258,6 +297,96 @@ private fun MobileEventRow(event: MobileEventLine) {
             )
         }
     }
+}
+
+@Composable
+private fun MobileTimelineRow(
+    entry: MobileTimelineEntry,
+    detail: MobileEvidenceDetail?,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    // The whole row is a disclosure toggle: dense fields stack vertically and
+    // wrap, never sharing a SpaceBetween row that could clip on narrow screens.
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(4.dp))
+            .background(MobilePalette.Row)
+            .clickable { expanded = !expanded }
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = entry.occurredAt,
+            color = MobilePalette.TextMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+        )
+        Text(
+            text = entry.type,
+            color = MobilePalette.Accent,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            text = entry.workItemId,
+            color = MobilePalette.TextMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+        Text(
+            text = entry.stateLabel,
+            color = colorForTimelineState(entry.stateLabel),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+        )
+        Text(
+            text = entry.summary,
+            color = MobilePalette.TextSecondary,
+            fontSize = 12.sp,
+            lineHeight = 17.sp,
+        )
+        if (entry.evidenceReferences.isNotEmpty()) {
+            Text(
+                text = MobileDisplayText.evidenceReferences(entry.evidenceReferences),
+                color = MobilePalette.TextMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            )
+        }
+        if (detail != null) {
+            Text(
+                text = if (expanded) {
+                    MobileDisplayText.DETAILS_DISCLOSURE_EXPANDED
+                } else {
+                    MobileDisplayText.DETAILS_DISCLOSURE_COLLAPSED
+                },
+                color = MobilePalette.TextMuted,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            if (expanded) {
+                MobileDisplayText.evidenceDetailRows(detail).forEach { row ->
+                    Text(
+                        text = row,
+                        color = MobilePalette.TextSecondary,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 10.sp,
+                        lineHeight = 15.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun colorForTimelineState(stateLabel: String): Color = when (stateLabel) {
+    "Blocked" -> MobilePalette.Blocked
+    "Failed" -> MobilePalette.Failure
+    "Completed" -> MobilePalette.Success
+    "Stale", "Not done", "Partial" -> MobilePalette.Attention
+    else -> MobilePalette.TextMuted
 }
 
 @Composable

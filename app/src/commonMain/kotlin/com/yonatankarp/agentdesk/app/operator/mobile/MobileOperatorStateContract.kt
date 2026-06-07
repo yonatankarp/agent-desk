@@ -1,8 +1,12 @@
 package com.yonatankarp.agentdesk.app.operator.mobile
 
+import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineEntryState
+import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineProjector
+import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineStateMarker
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
@@ -17,6 +21,32 @@ object MobileOperatorStateContract {
     ): MobileOperatorState {
         val evidenceByWorkItem = state.latestEvidenceByWorkItem()
         val workItemsById = state.workItems.associateBy { it.id.toString() }
+        val recentEvents = OperatorStatePresenter.eventLines(state).map { line ->
+            MobileEventLine(
+                occurredAt = line.occurredAt,
+                type = line.type,
+                workItemId = line.workItemId,
+                detail = line.detail,
+                source = line.source,
+                evidenceReferences = line.evidenceReferences.toMobileReferences(),
+            )
+        }
+        val timelineProjection = ReadOnlyTimelineProjector.project(state)
+        val timeline = timelineProjection.entries.map { entry ->
+            MobileTimelineEntry(
+                eventId = entry.eventId,
+                occurredAt = entry.occurredAt,
+                timeWindow = entry.timeWindow,
+                source = entry.source,
+                workItemId = entry.workItemId,
+                type = entry.type,
+                statusLabel = entry.status,
+                stateLabel = entry.state.toMobileLabel(),
+                summary = entry.summary,
+                completionSummary = entry.completionSummary,
+                evidenceReferences = entry.evidenceReferences.toMobileReferences(),
+            )
+        }
 
         return MobileOperatorState(
             currentWork = state.workItems
@@ -24,23 +54,55 @@ object MobileOperatorStateContract {
                 .map { item -> item.toMobileWorkItem(evidenceByWorkItem[item.id.toString()].orEmpty()) },
             attentionQueue = state.attentionItems(evidenceByWorkItem) +
                 state.staleAttentionItems(workItemsById, evidenceByWorkItem),
-            recentEvents = OperatorStatePresenter.eventLines(state).map { line ->
-                MobileEventLine(
-                    occurredAt = line.occurredAt,
-                    type = line.type,
-                    workItemId = line.workItemId,
-                    detail = line.detail,
-                    evidenceReferences = line.evidenceReferences.map { evidence ->
-                        MobileEvidenceReference(
-                            kind = evidence.kind,
-                            label = evidence.label,
-                            target = evidence.target,
-                        )
-                    },
-                )
-            },
+            recentEvents = recentEvents,
             projectionWarnings = projectionWarnings,
+            timeline = timeline,
+            timelineStatusMarkers = timelineProjection.stateMarkers.map { it.toMobileLabel() },
+            evidenceDetails = timeline.map { entry -> entry.toEvidenceDetail(recentEvents) },
         )
+    }
+
+    private fun List<EvidenceLine>.toMobileReferences(): List<MobileEvidenceReference> = map { evidence ->
+        MobileEvidenceReference(
+            kind = evidence.kind,
+            label = evidence.label,
+            target = evidence.target,
+        )
+    }
+
+    private fun MobileTimelineEntry.toEvidenceDetail(
+        recentEvents: List<MobileEventLine>,
+    ): MobileEvidenceDetail = MobileEvidenceDetail(
+        eventId = eventId,
+        source = source,
+        timestamp = occurredAt,
+        summary = summary,
+        provenance = "replay event $eventId",
+        evidenceReferences = evidenceReferences,
+        relatedEvents = recentEvents.filter { line ->
+            line.workItemId == workItemId && !(line.occurredAt == occurredAt && line.type == type)
+        },
+    )
+
+    private fun ReadOnlyTimelineEntryState.toMobileLabel(): String = when (this) {
+        ReadOnlyTimelineEntryState.ReadOnly -> "Read-only"
+        ReadOnlyTimelineEntryState.NotDone -> "Not done"
+        ReadOnlyTimelineEntryState.Blocked -> "Blocked"
+        ReadOnlyTimelineEntryState.Failed -> "Failed"
+        ReadOnlyTimelineEntryState.Completed -> "Completed"
+        ReadOnlyTimelineEntryState.Partial -> "Partial"
+        ReadOnlyTimelineEntryState.Stale -> "Stale"
+    }
+
+    private fun ReadOnlyTimelineStateMarker.toMobileLabel(): String = when (this) {
+        ReadOnlyTimelineStateMarker.Empty -> "Empty"
+        ReadOnlyTimelineStateMarker.ReadOnly -> "Read-only"
+        ReadOnlyTimelineStateMarker.NotDone -> "Not done"
+        ReadOnlyTimelineStateMarker.Blocked -> "Blocked"
+        ReadOnlyTimelineStateMarker.Failed -> "Failed"
+        ReadOnlyTimelineStateMarker.Completed -> "Completed"
+        ReadOnlyTimelineStateMarker.Partial -> "Partial"
+        ReadOnlyTimelineStateMarker.Stale -> "Stale"
     }
 
     fun fromEvents(events: List<WorkEvent>): MobileOperatorState {

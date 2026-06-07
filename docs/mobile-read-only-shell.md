@@ -34,4 +34,21 @@ Run the sample-only shell in a phone-sized desktop window:
 ./gradlew :mobile:run
 ```
 
-The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which should contain the `Current work` and `Attention queue` sections with sanitized sample work only.
+The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which should contain the `Current work`, `Attention queue`, and `Timeline` sections with sanitized sample work only.
+
+## Timeline and Evidence Detail
+
+The shell renders a read-only `Timeline` section below recent events: a status
+line with the projection's state markers, entries grouped by time window, and
+per-entry rows that stack timestamp, type, work item id, state label, summary,
+and evidence vertically so dense data wraps instead of scrolling horizontally
+(a Konsist rule forbids `horizontalScroll` in mobile production code).
+
+Each timeline entry is a disclosure: tapping the row toggles an inline
+`Details` block showing the sanitized evidence detail (source, timestamp,
+summary, provenance as `replay event <id>`, evidence references, related
+events) plus the redaction line stating raw provider payloads are never
+rendered. The disclosure is deliberately not styled as a button — nothing on
+the mobile surface is an action. The capability matrix in
+[Mobile read-only contract](mobile-read-only-contract.md) records which
+capabilities are desktop-only, mobile read-only, or future mobile actions.

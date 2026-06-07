@@ -6,11 +6,14 @@ import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
 import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
 import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -120,6 +123,77 @@ class MobileOperatorStateContractTest :
                                 eventId = "event:agent-task:42:blocked-after-success",
                                 reason = "Cannot transition work item agent-task:42 from Succeeded to Blocked",
                             )
+                    }
+                }
+            }
+        }
+
+        given("stored events for the read-only timeline") {
+            `when`("the mobile contract is derived from events") {
+                then("timeline entries carry source, state labels, and status markers") {
+                    val state = MobileOperatorStateContract.fromEvents(
+                        workEvents {
+                            started()
+                            blocked(evidence = listOf(sanitizedNoteEvidence("Blocked context", "docs/blocked-context.md")))
+                        },
+                    )
+
+                    val entry = state.timeline.last()
+                    assertSoftly {
+                        state.timeline shouldHaveSize 2
+                        entry.source shouldBe "mock-adapter"
+                        entry.type shouldBe "work.blocked"
+                        entry.stateLabel shouldBe "Blocked"
+                        entry.statusLabel shouldBe "Blocked"
+                        entry.timeWindow shouldBe "2026-06-02"
+                        entry.evidenceReferences.single().target shouldBe "docs/blocked-context.md"
+                        state.timelineStatusMarkers.shouldContainExactly("Read-only", "Blocked")
+                        state.recentEvents.last().source shouldBe "mock-adapter"
+                    }
+                }
+            }
+        }
+
+        given("stored events for evidence detail") {
+            `when`("the mobile contract is derived from events") {
+                then("the detail exposes source, timestamp, summary, provenance, and related items") {
+                    val state = MobileOperatorStateContract.fromEvents(
+                        workEvents {
+                            started()
+                            blocked(evidence = listOf(sanitizedNoteEvidence("Blocked context", "docs/blocked-context.md")))
+                        },
+                    )
+
+                    val detail = state.evidenceDetails.last()
+                    assertSoftly {
+                        detail.source shouldBe "mock-adapter"
+                        detail.timestamp shouldBe state.timeline.last().occurredAt
+                        detail.summary shouldBe state.timeline.last().summary
+                        detail.provenance shouldBe "replay event event:agent-task:42:blocked"
+                        detail.evidenceReferences.single().target shouldBe "docs/blocked-context.md"
+                        detail.relatedEvents.single().type shouldBe "work.started"
+                    }
+                }
+
+                then("an isolated event yields empty related items and the flattened surface stays public-safe") {
+                    val state = MobileOperatorStateContract.fromEvents(
+                        workEvents {
+                            started()
+                        },
+                    )
+
+                    val detail = state.evidenceDetails.single()
+                    assertSoftly {
+                        detail.relatedEvents shouldBe emptyList()
+                        detail.evidenceReferences shouldBe emptyList()
+                        buildString {
+                            state.timeline.forEach { entry ->
+                                appendLine("${entry.occurredAt} ${entry.source} ${entry.type} ${entry.stateLabel} ${entry.summary}")
+                            }
+                            state.evidenceDetails.forEach { lineDetail ->
+                                appendLine("${lineDetail.source} ${lineDetail.timestamp} ${lineDetail.summary} ${lineDetail.provenance}")
+                            }
+                        }.shouldBePublicSafe()
                     }
                 }
             }
