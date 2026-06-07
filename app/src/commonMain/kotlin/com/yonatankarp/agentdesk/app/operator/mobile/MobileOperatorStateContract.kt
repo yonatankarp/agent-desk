@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator.mobile
 
+import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
@@ -27,13 +28,7 @@ object MobileOperatorStateContract {
                 workItemId = line.workItemId,
                 detail = line.detail,
                 source = line.source,
-                evidenceReferences = line.evidenceReferences.map { evidence ->
-                    MobileEvidenceReference(
-                        kind = evidence.kind,
-                        label = evidence.label,
-                        target = evidence.target,
-                    )
-                },
+                evidenceReferences = line.evidenceReferences.toMobileReferences(),
             )
         }
         val timelineProjection = ReadOnlyTimelineProjector.project(state)
@@ -49,13 +44,7 @@ object MobileOperatorStateContract {
                 stateLabel = entry.state.toMobileLabel(),
                 summary = entry.summary,
                 completionSummary = entry.completionSummary,
-                evidenceReferences = entry.evidenceReferences.map { evidence ->
-                    MobileEvidenceReference(
-                        kind = evidence.kind,
-                        label = evidence.label,
-                        target = evidence.target,
-                    )
-                },
+                evidenceReferences = entry.evidenceReferences.toMobileReferences(),
             )
         }
 
@@ -70,6 +59,14 @@ object MobileOperatorStateContract {
             timeline = timeline,
             timelineStatusMarkers = timelineProjection.stateMarkers.map { it.toMobileLabel() },
             evidenceDetails = timeline.map { entry -> entry.toEvidenceDetail(recentEvents) },
+        )
+    }
+
+    private fun List<EvidenceLine>.toMobileReferences(): List<MobileEvidenceReference> = map { evidence ->
+        MobileEvidenceReference(
+            kind = evidence.kind,
+            label = evidence.label,
+            target = evidence.target,
         )
     }
 

@@ -381,7 +381,7 @@ private fun MobileTimelineRow(
     }
 }
 
-internal fun colorForTimelineState(stateLabel: String): Color = when (stateLabel) {
+private fun colorForTimelineState(stateLabel: String): Color = when (stateLabel) {
     "Blocked" -> MobilePalette.Blocked
     "Failed" -> MobilePalette.Failure
     "Completed" -> MobilePalette.Success
