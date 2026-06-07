@@ -59,6 +59,19 @@ class AuditRecordJsonTest :
                 }
             }
 
+            `when`("the audit id is malformed") {
+                then("decode rejects it through the typed id parser") {
+                    val tampered = AuditRecordJson.encode(auditEntry())
+                        .replace("\"id\":\"audit:", "\"id\":\"not-audit:")
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        AuditRecordJson.decode(tampered)
+                    }
+
+                    error.message.orEmpty() shouldContain "Audit entry id"
+                }
+            }
+
             `when`("the result carries an unknown wire name") {
                 then("decode rejects it") {
                     val tampered = AuditRecordJson.encode(auditEntry(result = AuditResult.Rejected))

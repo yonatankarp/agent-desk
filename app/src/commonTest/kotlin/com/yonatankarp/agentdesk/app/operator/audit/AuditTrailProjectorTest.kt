@@ -134,7 +134,7 @@ class AuditTrailProjectorTest :
             `when`("it is recorded") {
                 then("it remains public-safe and inspectable") {
                     val entry = AuditTrailProjector.systemFailure(
-                        id = "audit:system:import-failed",
+                        id = AuditEntryId.parse("audit:system:import-failed"),
                         actor = Actor.parse("system:importer"),
                         timestamp = EventTimestamp.parse("2026-06-02T21:30:00Z"),
                         recordedAt = auditRecordedAt,

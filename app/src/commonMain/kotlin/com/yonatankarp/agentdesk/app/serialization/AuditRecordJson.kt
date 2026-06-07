@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.app.serialization
 import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.audit.AuditActorKind
 import com.yonatankarp.agentdesk.app.operator.audit.AuditEntry
+import com.yonatankarp.agentdesk.app.operator.audit.AuditEntryId
 import com.yonatankarp.agentdesk.app.operator.audit.AuditResult
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
@@ -27,7 +28,7 @@ object AuditRecordJson {
     fun decode(raw: String): AuditEntry = json.decodeFromString<AuditRecordRecord>(raw).toDomain()
 
     private fun toRecord(entry: AuditEntry): AuditRecordRecord = AuditRecordRecord(
-        id = entry.id,
+        id = entry.id.toString(),
         actor = entry.actor.toString(),
         actorKind = entry.actorKind.wireName(),
         timestamp = entry.timestamp.toString(),
@@ -42,7 +43,7 @@ object AuditRecordJson {
     )
 
     private fun AuditRecordRecord.toDomain(): AuditEntry = AuditEntry(
-        id = id,
+        id = AuditEntryId.parse(id),
         actor = Actor.parse(actor),
         actorKind = actorKind.toActorKind(),
         timestamp = EventTimestamp.parse(timestamp),
