@@ -10,10 +10,7 @@ object WorkItemInspector {
         workItemId: WorkItemId,
     ): WorkItemInspection? {
         val projection = WorkEventProjector.project(events)
-        val state = OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-        )
+        val state = OperatorState.from(projection)
         val eventsById = events.associateBy { it.id }
         val warnings = projection.ignoredEvents.mapNotNull { issue ->
             val event = eventsById[issue.eventId]
