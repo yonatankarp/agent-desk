@@ -72,9 +72,6 @@ object SampleOperatorState {
             )
 
         val projection = WorkEventProjector.project(events)
-        return OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-        )
+        return OperatorState.from(projection)
     }
 }

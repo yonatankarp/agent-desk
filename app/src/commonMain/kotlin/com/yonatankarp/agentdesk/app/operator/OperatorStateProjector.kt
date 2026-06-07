@@ -11,10 +11,6 @@ object OperatorStateProjector {
             throw OperatorStateProjectionException("Invalid event sequence: ${issue.reason}.")
         }
 
-        return OperatorState(
-            workItems = projection.workItems,
-            events = projection.recentEvents,
-            staleAttention = projection.staleAttention,
-        )
+        return OperatorState.from(projection)
     }
 }
