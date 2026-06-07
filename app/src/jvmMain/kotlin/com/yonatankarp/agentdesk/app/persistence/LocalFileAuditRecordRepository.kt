@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.persistence
 
 import com.yonatankarp.agentdesk.app.operator.audit.AuditEntry
+import com.yonatankarp.agentdesk.app.operator.audit.AuditEntryId
 import com.yonatankarp.agentdesk.app.serialization.AuditRecordJson
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -81,7 +82,7 @@ class LocalFileAuditRecordRepository(
         val endsWithoutNewline = text.isNotEmpty() && !text.endsWith("\n")
         val lines = text.split("\n")
 
-        val seenIds = mutableSetOf<String>()
+        val seenIds = mutableSetOf<AuditEntryId>()
         val entries = mutableListOf<AuditEntry>()
         var trailingCorruption: TornTrailingAuditRecord? = null
         lines.forEachIndexed { index, line ->
@@ -160,7 +161,7 @@ class LocalFileAuditRecordRepository(
 
     private data class AuditStoreSnapshot(
         val entries: List<AuditEntry>,
-        val entryIds: MutableSet<String>,
+        val entryIds: MutableSet<AuditEntryId>,
         val trailingCorruption: TornTrailingAuditRecord? = null,
         val endsWithoutNewline: Boolean = false,
     )

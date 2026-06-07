@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.app.persistence
 
 import com.yonatankarp.agentdesk.app.fixtures.auditEntry
+import com.yonatankarp.agentdesk.app.operator.audit.AuditEntryId
 import com.yonatankarp.agentdesk.app.operator.audit.AuditResult
 import com.yonatankarp.agentdesk.app.serialization.AuditRecordJson
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
@@ -71,8 +72,14 @@ class LocalFileAuditRecordRepositoryTest :
                     val repository = LocalFileAuditRecordRepository(storePath)
                     val verbose = EventTimestamp.parse("2026-06-02T21:10:00.500Z")
                     val canonical = EventTimestamp.parse("2026-06-02T21:10:00.5Z")
-                    val first = auditEntry(minute = 10, id = "audit:agent-task:42:resume:decision:$verbose")
-                    val second = auditEntry(minute = 20, id = "audit:agent-task:42:resume:decision:$canonical")
+                    val first = auditEntry(
+                        minute = 10,
+                        id = AuditEntryId.parse("audit:agent-task:42:resume:decision:$verbose"),
+                    )
+                    val second = auditEntry(
+                        minute = 20,
+                        id = AuditEntryId.parse("audit:agent-task:42:resume:decision:$canonical"),
+                    )
 
                     repository.append(first)
                     val error = shouldThrow<AuditStoreException> {
@@ -82,7 +89,7 @@ class LocalFileAuditRecordRepositoryTest :
                     assertSoftly(error) {
                         reason shouldBe AuditStoreFailure.DuplicateRecordId()
                         message.orEmpty() shouldContain "Duplicate audit record id"
-                        message.orEmpty() shouldNotContain first.id
+                        message.orEmpty() shouldNotContain first.id.toString()
                         message.orEmpty() shouldNotContain storePath.toString()
                     }
                 }

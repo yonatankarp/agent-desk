@@ -6,6 +6,10 @@ import com.yonatankarp.agentdesk.app.operator.OperatorActionIntent
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceLabel
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReference
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceReferenceKind
+import com.yonatankarp.agentdesk.core.domain.events.EvidenceTarget
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
@@ -177,6 +181,25 @@ class MockActionApprovalLoopTest :
                     error.message.orEmpty() shouldNotContain unsafeRationale
                 }
             }
+
+            `when`("approval result text is unsafe before projection") {
+                then("it rejects rationale and selection at construction") {
+                    val unsafeRationale = "Read " + "/" + "home/user/private.log"
+
+                    val rationaleError = shouldThrow<IllegalArgumentException> {
+                        approvalResult(rationale = unsafeRationale)
+                    }
+
+                    rationaleError.message.orEmpty() shouldContain "Action approval rationale"
+                    rationaleError.message.orEmpty() shouldNotContain unsafeRationale
+
+                    val selectionError = shouldThrow<IllegalArgumentException> {
+                        approvalResult(selection = "channel:1511446818880225483")
+                    }
+
+                    selectionError.message.orEmpty() shouldContain "Action approval selection"
+                }
+            }
         }
     })
 
@@ -191,3 +214,31 @@ private fun decision(
     rationale = rationale,
     selection = selection,
 )
+
+private fun approvalResult(
+    rationale: String = "Public-safe mock approval.",
+    selection: String = "approve-resume",
+): MockActionApprovalResult {
+    val item = WorkItem(
+        id = WorkItemId.parse("agent-task:42"),
+        title = WorkItemTitle.parse("Review operator action"),
+        status = WorkStatus.Blocked,
+    )
+
+    return MockActionApprovalResult(
+        state = MockActionApprovalState.Approved,
+        actor = Actor.parse("operator:daily-agent"),
+        decidedAt = EventTimestamp.parse("2026-06-02T21:22:00Z"),
+        rationale = rationale,
+        selection = selection,
+        sourceWorkItemId = item.id,
+        action = OperatorActionIntent.Resume,
+        receipt = EvidenceReference(
+            kind = EvidenceReferenceKind.SanitizedNote,
+            label = EvidenceLabel.parse("Approval receipt"),
+            target = EvidenceTarget.parse("mock-action:resume:approved"),
+        ),
+        resultingEvent = null,
+        replayStateSummary = "Recorded mock resume action.",
+    )
+}
