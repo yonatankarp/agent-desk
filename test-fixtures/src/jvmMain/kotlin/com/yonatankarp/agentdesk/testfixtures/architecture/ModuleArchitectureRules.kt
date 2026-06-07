@@ -62,4 +62,56 @@ object ModuleArchitectureRules {
     ): Boolean = file.hasImport { import ->
         blockedImportPrefixes.any { import.name.startsWith(it) }
     }
+
+    /**
+     * Asserts that production files residing in exactly [packageName] import nothing
+     * matching [blockedImportPrefixes]. Used to pin one-directional layering between
+     * sub-packages inside a module.
+     */
+    fun assertSubPackageDoesNotImport(
+        moduleName: String,
+        sourceSets: List<String>,
+        packageName: String,
+        blockedImportPrefixes: List<String>,
+    ) {
+        sourceSets.forEach { sourceSet ->
+            Konsist
+                .scopeFromProject(moduleName = moduleName, sourceSetName = sourceSet)
+                .files
+                .filter { it.packagee?.name == packageName }
+                .assertTrue { file ->
+                    !hasBlockedImport(file, blockedImportPrefixes)
+                }
+        }
+    }
+
+    /**
+     * True when [file] imports a type declared directly in [packageName] — the prefix
+     * matches and exactly one segment remains, so sub-packages of [packageName] do not
+     * count. Used to forbid sub-packages from reaching back to root-package types.
+     */
+    fun hasImportFromExactPackage(
+        file: KoFileDeclaration,
+        packageName: String,
+    ): Boolean = file.hasImport { import ->
+        import.name.startsWith("$packageName.") &&
+            !import.name.removePrefix("$packageName.").contains(".")
+    }
+
+    fun assertSubPackageDoesNotImportExactPackage(
+        moduleName: String,
+        sourceSets: List<String>,
+        packageName: String,
+        forbiddenExactPackage: String,
+    ) {
+        sourceSets.forEach { sourceSet ->
+            Konsist
+                .scopeFromProject(moduleName = moduleName, sourceSetName = sourceSet)
+                .files
+                .filter { it.packagee?.name == packageName }
+                .assertTrue { file ->
+                    !hasImportFromExactPackage(file, forbiddenExactPackage)
+                }
+        }
+    }
 }
