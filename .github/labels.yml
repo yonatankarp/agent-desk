@@ -36,7 +36,7 @@
   description: Narrow implementable vertical slice
 - name: blocked
   color: "#b60205"
-  description: Waiting on owner decision or external setup
+  description: "Cannot be picked up: waiting on external setup or another issue"
 - name: decision
   color: "#5319e7"
   description: Product or architecture decision needed
