@@ -8,7 +8,7 @@ import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspection
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 
-class OperatorConsoleRenderer {
+class OperatorConsoleRenderer(private val color: AnsiStatusColor = AnsiStatusColor(enabled = false)) {
     fun render(state: OperatorState): String = buildString {
         appendLine("Agent Desk")
         appendLine()
@@ -45,7 +45,8 @@ class OperatorConsoleRenderer {
         }
 
         workItems.forEach { item ->
-            appendLine("- [${OperatorStatePresenter.presentationFor(item.status).label}] ${item.id} ${item.title}")
+            val presentation = OperatorStatePresenter.presentationFor(item.status)
+            appendLine("- [${color.colorize(presentation.label, presentation.tone)}] ${item.id} ${item.title}")
             item.summary?.let { summary ->
                 appendLine("  $summary")
             }
@@ -62,7 +63,8 @@ class OperatorConsoleRenderer {
         }
 
         attentionItems.forEach { item ->
-            appendLine("- ${item.id} ${item.title} (${OperatorStatePresenter.presentationFor(item.status).label})")
+            val presentation = OperatorStatePresenter.presentationFor(item.status)
+            appendLine("- ${item.id} ${item.title} (${color.colorize(presentation.label, presentation.tone)})")
         }
         staleItems.forEach { stale ->
             val item = state.workItems.firstOrNull { it.id == stale.workItemId }

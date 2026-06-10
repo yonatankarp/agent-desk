@@ -11,6 +11,7 @@ import com.yonatankarp.agentdesk.cli.io.importMockRuntime
 import com.yonatankarp.agentdesk.cli.io.importOpenClawObservations
 import com.yonatankarp.agentdesk.cli.io.toOperatorState
 import com.yonatankarp.agentdesk.cli.io.toWorkEventRead
+import com.yonatankarp.agentdesk.cli.render.AnsiStatusColor
 import com.yonatankarp.agentdesk.cli.render.OperatorConsoleRenderer
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import java.io.InputStream
@@ -39,11 +40,11 @@ object AgentDeskCli {
             return 0
         }
 
-        val renderer = OperatorConsoleRenderer()
         when (val command = options.command) {
             CliCommand.Dashboard -> {
                 val state = options.toOperatorState(input)
                 state.storeReadWarning?.let { warning -> error.println("Warning: $warning") }
+                val renderer = OperatorConsoleRenderer(AnsiStatusColor.fromEnvironment(isTty = System.console() != null))
                 output.println(renderer.render(state))
             }
 
@@ -82,7 +83,7 @@ object AgentDeskCli {
                 }
                 val inspection = WorkItemInspector.inspect(read.events, workItemId)
                     ?: throw CliInputException("Work item was not found.")
-                output.println(renderer.render(inspection))
+                output.println(OperatorConsoleRenderer().render(inspection))
             }
 
             is CliCommand.Report -> {
