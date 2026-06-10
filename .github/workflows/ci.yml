@@ -65,6 +65,11 @@ jobs:
         with:
           gradle-module: :cli
 
+      - name: Build design module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :design
+
       - name: Build desktop module
         uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
         with:
@@ -132,6 +137,7 @@ jobs:
             :core:koverVerify :core:koverXmlReport :core:koverHtmlReport \
             :app:koverVerify :app:koverXmlReport :app:koverHtmlReport \
             :cli:koverVerify :cli:koverXmlReport :cli:koverHtmlReport \
+            :design:koverVerify :design:koverXmlReport :design:koverHtmlReport \
             :desktop:koverVerify :desktop:koverXmlReport :desktop:koverHtmlReport \
             :mobile:koverVerify :mobile:koverXmlReport :mobile:koverHtmlReport
 
@@ -157,6 +163,14 @@ jobs:
           name: cli-coverage-report
           path: |
             cli/build/reports/kover/**
+          if-no-files-found: error
+
+      - name: Upload design coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: design-coverage-report
+          path: |
+            design/build/reports/kover/**
           if-no-files-found: error
 
       - name: Upload desktop coverage report
@@ -225,6 +239,7 @@ jobs:
                   *module_summary("core"),
                   *module_summary("app"),
                   *module_summary("cli"),
+                  *module_summary("design"),
                   *module_summary("desktop"),
                   *module_summary("mobile"),
                   "",
