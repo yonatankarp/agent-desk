@@ -11,10 +11,11 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStatusPresentation
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
 class MobileSmokeSnapshotTest :
     FunSpec({
@@ -28,11 +29,7 @@ class MobileSmokeSnapshotTest :
             text shouldContain "[Needs decision] agent-task:43 Choose adapter boundary"
             text shouldContain "[Blocked] agent-task:44 Review build failure"
             text shouldContain "agent-task:42"
-            text shouldNotContain "Resume"
-            text shouldNotContain "Approve"
-            text shouldNotContain "Stop"
-            text shouldNotContain "Retry"
-            text shouldNotContain "Cancel"
+            text.shouldHaveNoActionAffordances()
         }
 
         test("snapshot includes stale markers evidence references and projection warnings") {
@@ -135,10 +132,53 @@ class MobileSmokeSnapshotTest :
             text shouldContain "Provenance: replay event event:agent-task:91:started"
             text shouldContain "Related events: none"
             text shouldContain "Redacted evidence: raw provider payloads are not rendered."
-            text shouldNotContain "Resume"
-            text shouldNotContain "Approve"
-            text shouldNotContain "Stop"
-            text shouldNotContain "Retry"
+            text.shouldHaveNoActionAffordances()
+        }
+
+        test("canceled-terminal timeline label passes the action-verb denylist") {
+            val state = MobileOperatorState(
+                currentWork = emptyList(),
+                attentionQueue = emptyList(),
+                recentEvents = emptyList(),
+                timeline = listOf(
+                    MobileTimelineEntry(
+                        eventId = "event:agent-task:50:canceled",
+                        occurredAt = "2026-06-02T21:10:00Z",
+                        timeWindow = "2026-06-02",
+                        source = "mock-adapter",
+                        workItemId = "agent-task:50",
+                        type = "work.canceled",
+                        statusLabel = "Canceled",
+                        stateLabel = "Read-only",
+                        summary = "Run reached a canceled terminal state.",
+                        completionSummary = "Canceled outcome",
+                    ),
+                ),
+            )
+
+            val text = MobileSmokeSnapshotBuilder.from(state).flattenedText()
+
+            text shouldContain "(Canceled outcome)"
+            text.shouldHaveNoActionAffordances()
+        }
+
+        test("a real Cancel action affordance still trips the denylist") {
+            val state = MobileOperatorState(
+                currentWork = listOf(
+                    MobileWorkItem(
+                        id = "agent-task:51",
+                        title = "Cancel the deployment",
+                        summary = "Pending operator action.",
+                        status = MobileStatusPresentation(label = "Running", tone = StatusTone.Active),
+                    ),
+                ),
+                attentionQueue = emptyList(),
+                recentEvents = emptyList(),
+            )
+
+            val text = MobileSmokeSnapshotBuilder.from(state).flattenedText()
+
+            shouldThrow<AssertionError> { text.shouldHaveNoActionAffordances() }
         }
 
         test("empty snapshot keeps read-only sections visible") {
@@ -158,3 +198,16 @@ class MobileSmokeSnapshotTest :
     })
 
 private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows
+
+// Side-effecting action affordances must never render on the read-only mobile surface. Match each verb on
+// word boundaries (not as a bare substring) so a completion label such as "Canceled outcome" or an audit
+// label such as "Approved" does not false-positive while a real "Cancel"/"Approve" affordance still trips.
+private val ACTION_VERBS = listOf("Resume", "Approve", "Stop", "Retry", "Cancel")
+
+private fun String.shouldHaveNoActionAffordances() {
+    ACTION_VERBS.forEach { verb ->
+        withClue("read-only render must not expose the '$verb' action affordance") {
+            "\\b$verb\\b".toRegex().containsMatchIn(this) shouldBe false
+        }
+    }
+}
