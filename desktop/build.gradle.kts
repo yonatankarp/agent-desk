@@ -17,6 +17,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":app"))
             implementation(project(":core"))
+            implementation(project(":design"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)

@@ -2,31 +2,18 @@
 
 package com.yonatankarp.agentdesk.desktop
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +24,12 @@ import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.design.component.ActionRow
+import com.yonatankarp.agentdesk.design.component.EvidenceItem
+import com.yonatankarp.agentdesk.design.component.EventRow
+import com.yonatankarp.agentdesk.design.component.Panel
+import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
+import com.yonatankarp.agentdesk.design.theme.ThemeMode
 
 @Composable
 @Preview
@@ -51,84 +44,67 @@ fun AgentDeskApp(state: OperatorState) {
 
 @Composable
 fun AgentDeskApp(screenState: DesktopScreenState) {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            background = Palette.Background,
-            surface = Palette.Surface,
-            primary = Palette.Accent,
-            onBackground = Palette.TextPrimary,
-            onSurface = Palette.TextPrimary,
-        ),
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Palette.Background,
-        ) {
+    AgentDeskTheme(mode = ThemeMode.System) {
+        Surface(modifier = Modifier.fillMaxSize(), color = AgentDeskTheme.colors.background) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
+                modifier = Modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                Header(screenState)
-                SectionPanel(
-                    title = "Replay status",
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    ReplayStatus(screenState)
+                DesktopHeader(screenState)
+                Panel(title = "Replay status", modifier = Modifier.fillMaxWidth()) {
+                    DesktopReplayStatus.rows(screenState).forEach { row ->
+                        Text(row, color = AgentDeskTheme.colors.textSecondary, fontSize = 13.sp)
+                    }
                 }
-
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .weight(1.35f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
-                    ) {
-                        SectionPanel(
-                            title = "Work state",
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        ) {
-                            WorkList(screenState.readyState()?.workItems.orEmpty())
+                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Panel(title = "Work state", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            val items = screenState.readyState()?.workItems.orEmpty()
+                            if (items.isEmpty()) {
+                                Text("No current work", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                            } else {
+                                items.forEach { item ->
+                                    val p = OperatorStatePresenter.presentationFor(item.status)
+                                    ActionRow(id = item.id.toString(), title = item.title.toString(), tone = p.tone, statusLabel = p.label)
+                                }
+                            }
                         }
-
-                        SectionPanel(
-                            title = "Read-only timeline",
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        ) {
-                            EventTimeline(screenState.eventLines())
+                        Panel(title = "Read-only timeline", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            val lines = screenState.eventLines()
+                            if (lines.isEmpty()) {
+                                Text("No recent events", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                            } else {
+                                lines.forEachIndexed { i, line ->
+                                    EventRow(
+                                        type = line.type,
+                                        occurredAt = line.occurredAt,
+                                        detail = line.detail,
+                                        source = "${line.workItemId} from ${line.source}",
+                                        showDivider = i < lines.lastIndex,
+                                    )
+                                }
+                            }
                         }
                     }
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
-                    ) {
-                        SectionPanel(
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Panel(
                             title = "Decision queue",
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            titleColor = AgentDeskTheme.statusRole(StatusTone.Blocked).text,
                         ) {
-                            AttentionList(screenState.attentionItems(), screenState.message())
+                            val attention = screenState.attentionItems()
+                            val message = screenState.message()
+                            when {
+                                message != null -> Text(message, color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                                attention.isEmpty() -> Text("No items need a decision", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                                else -> attention.forEach { item ->
+                                    val p = OperatorStatePresenter.presentationFor(item.status)
+                                    ActionRow(id = item.id.toString(), title = item.title.toString(), tone = p.tone, statusLabel = p.label)
+                                }
+                            }
                         }
-
-                        SectionPanel(
-                            title = "Evidence drilldown",
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                        ) {
-                            EvidenceDrilldown(screenState)
+                        Panel(title = "Evidence drilldown", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                            DesktopEvidenceDrilldown.rows(screenState).forEach { row -> EvidenceItem(label = row) }
                         }
                     }
                 }
@@ -138,243 +114,15 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
 }
 
 @Composable
-private fun Header(screenState: DesktopScreenState) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom,
-    ) {
+private fun DesktopHeader(screenState: DesktopScreenState) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = "Agent Desk",
-                color = Palette.TextPrimary,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = "Local operator console",
-                color = Palette.TextMuted,
-                fontSize = 14.sp,
-            )
-            Text(
-                text = screenState.modeLabel,
-                color = Palette.TextMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-            )
+            Text("Agent Desk", color = AgentDeskTheme.colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
+            Text("Local operator console", color = AgentDeskTheme.colors.textMuted, fontSize = 14.sp)
+            Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 12.sp)
         }
-
-        Text(
-            text = screenState.summaryText(),
-            color = Palette.TextMuted,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-        )
+        Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 13.sp)
     }
-}
-
-@Composable
-private fun SectionPanel(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(Palette.Surface)
-            .border(1.dp, Palette.Line, RoundedCornerShape(6.dp)),
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            color = Palette.TextPrimary,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        HorizontalDivider(color = Palette.Line)
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun ReplayStatus(screenState: DesktopScreenState) {
-    DesktopReplayStatus.rows(screenState).forEach { row ->
-        Text(
-            text = row,
-            color = Palette.TextSecondary,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
-        )
-    }
-}
-
-@Composable
-private fun WorkList(items: List<WorkItem>) {
-    if (items.isEmpty()) {
-        EmptyLine("No current work")
-        return
-    }
-
-    items.forEach { item ->
-        WorkRow(item)
-    }
-}
-
-@Composable
-private fun AttentionList(
-    items: List<WorkItem>,
-    message: String?,
-) {
-    if (message != null) {
-        EmptyLine(message)
-        return
-    }
-    if (items.isEmpty()) {
-        EmptyLine("No items need a decision")
-        return
-    }
-
-    items.forEach { item ->
-        WorkRow(item)
-    }
-}
-
-@Composable
-private fun EvidenceDrilldown(screenState: DesktopScreenState) {
-    DesktopEvidenceDrilldown.rows(screenState).forEach { row ->
-        Text(
-            text = row,
-            color = Palette.TextSecondary,
-            fontSize = 12.sp,
-            lineHeight = 17.sp,
-        )
-    }
-}
-
-@Composable
-private fun WorkRow(item: WorkItem) {
-    val status = OperatorStatePresenter.presentationFor(item.status)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .background(Palette.Row)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            StatusDot(status.tone)
-            Text(
-                text = item.id.toString(),
-                color = Palette.TextMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = status.label,
-                color = colorFor(status.tone),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-            )
-        }
-
-        Text(
-            text = item.title.toString(),
-            color = Palette.TextPrimary,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-        )
-        item.summary?.let { summary ->
-            Text(
-                text = summary.toString(),
-                color = Palette.TextSecondary,
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-            )
-        }
-    }
-}
-
-@Composable
-private fun EventTimeline(lines: List<EventLine>) {
-    if (lines.isEmpty()) {
-        EmptyLine("No recent events")
-        return
-    }
-
-    lines.forEach { line ->
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = line.type,
-                    color = Palette.TextPrimary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = line.occurredAt,
-                    color = Palette.TextMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                )
-            }
-            Text(
-                text = "${line.workItemId} from ${line.source}",
-                color = Palette.TextMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-            )
-            Text(
-                text = line.detail,
-                color = Palette.TextSecondary,
-                fontSize = 12.sp,
-                lineHeight = 17.sp,
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyLine(text: String) {
-    Text(
-        text = text,
-        color = Palette.TextMuted,
-        fontSize = 13.sp,
-    )
-}
-
-@Composable
-private fun StatusDot(tone: StatusTone) {
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .clip(CircleShape)
-            .background(colorFor(tone)),
-    )
-}
-
-private fun colorFor(tone: StatusTone): Color = when (tone) {
-    StatusTone.Neutral -> Palette.TextMuted
-    StatusTone.Active -> Palette.Accent
-    StatusTone.Attention -> Palette.Attention
-    StatusTone.Blocked -> Palette.Blocked
-    StatusTone.Success -> Palette.Success
-    StatusTone.Failure -> Palette.Failure
 }
 
 private fun DesktopScreenState.readyState(): OperatorState? = (this as? DesktopScreenState.Ready)?.state
@@ -392,19 +140,4 @@ private fun DesktopScreenState.message(): String? = when (this) {
 private fun DesktopScreenState.summaryText(): String {
     val state = readyState() ?: return "0 active / 0 attention"
     return "${OperatorStatePresenter.activeCount(state)} active / ${OperatorStatePresenter.attentionItems(state).size} attention"
-}
-
-private object Palette {
-    val Background = Color(0xFFF7F8FA)
-    val Surface = Color(0xFFFFFFFF)
-    val Row = Color(0xFFF4F6F8)
-    val Line = Color(0xFFE1E5EA)
-    val TextPrimary = Color(0xFF1D252D)
-    val TextSecondary = Color(0xFF4B5563)
-    val TextMuted = Color(0xFF6B7280)
-    val Accent = Color(0xFF0F766E)
-    val Attention = Color(0xFFA16207)
-    val Blocked = Color(0xFFB45309)
-    val Success = Color(0xFF15803D)
-    val Failure = Color(0xFFB91C1C)
 }
