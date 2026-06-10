@@ -8,8 +8,8 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldHaveNoActionAffordances
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -166,16 +166,3 @@ class DesktopSmokeSnapshotTest :
     })
 
 private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
-
-// Side-effecting action affordances must never render on the read-only desktop surface. Match each verb on
-// word boundaries (not as a bare substring) so a completion label such as "Canceled outcome" or an audit
-// label such as "Approved" does not false-positive while a real "Cancel"/"Approve" affordance still trips.
-private val ACTION_VERBS = listOf("Resume", "Approve", "Stop", "Retry", "Cancel")
-
-private fun String.shouldHaveNoActionAffordances() {
-    ACTION_VERBS.forEach { verb ->
-        withClue("read-only render must not expose the '$verb' action affordance") {
-            "\\b$verb\\b".toRegex().containsMatchIn(this) shouldBe false
-        }
-    }
-}
