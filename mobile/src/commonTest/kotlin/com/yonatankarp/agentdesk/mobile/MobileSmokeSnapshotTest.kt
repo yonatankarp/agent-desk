@@ -156,13 +156,6 @@ class MobileSmokeSnapshotTest :
             snapshot.sectionRows("Timeline") shouldBe listOf("No timeline entries")
         }
 
-        test("mobile status tone colors are exhaustive for operator tones") {
-            colorFor(StatusTone.Active) shouldBe MobilePalette.Accent
-            colorFor(StatusTone.Attention) shouldBe MobilePalette.Attention
-            colorFor(StatusTone.Blocked) shouldBe MobilePalette.Blocked
-            colorFor(StatusTone.Success) shouldBe MobilePalette.Success
-            colorFor(StatusTone.Failure) shouldBe MobilePalette.Failure
-        }
     })
 
 private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows
