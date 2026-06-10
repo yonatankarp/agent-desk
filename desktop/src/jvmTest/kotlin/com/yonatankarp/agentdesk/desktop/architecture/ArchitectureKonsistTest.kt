@@ -34,6 +34,10 @@ class ArchitectureKonsistTest :
             )
         }
 
+        test("every desktop blocked-import prefix is load-bearing") {
+            ModuleArchitectureRules.assertEveryBlockedPrefixIsLoadBearing(blockedImportPrefixes)
+        }
+
         test("desktop test files use Kotest instead of kotlin.test or JUnit") {
             ModuleArchitectureRules.assertKotestOnly(
                 moduleName = "desktop",

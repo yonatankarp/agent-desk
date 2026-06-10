@@ -34,6 +34,10 @@ class ArchitectureKonsistTest :
             )
         }
 
+        test("every mobile blocked-import prefix is load-bearing") {
+            ModuleArchitectureRules.assertEveryBlockedPrefixIsLoadBearing(blockedImportPrefixes)
+        }
+
         test("mobile test files use Kotest instead of kotlin.test or JUnit") {
             ModuleArchitectureRules.assertKotestOnly(
                 moduleName = "mobile",
