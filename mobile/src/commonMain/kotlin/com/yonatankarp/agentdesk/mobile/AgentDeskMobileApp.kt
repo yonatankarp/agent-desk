@@ -3,7 +3,6 @@
 package com.yonatankarp.agentdesk.mobile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,11 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,21 +35,16 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorStateContract
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
+import com.yonatankarp.agentdesk.design.component.Panel
+import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
+import com.yonatankarp.agentdesk.design.theme.ThemeMode
 
 @Composable
 fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.sample()) {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            background = MobilePalette.Background,
-            surface = MobilePalette.Surface,
-            primary = MobilePalette.Accent,
-            onBackground = MobilePalette.TextPrimary,
-            onSurface = MobilePalette.TextPrimary,
-        ),
-    ) {
+    AgentDeskTheme(mode = ThemeMode.System) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MobilePalette.Background,
+            color = AgentDeskTheme.colors.background,
         ) {
             Column(
                 modifier = Modifier
@@ -64,36 +54,36 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 MobileHeader(state)
-                MobileSection(title = MobileDisplayText.CURRENT_WORK_TITLE) {
+                Panel(title = MobileDisplayText.CURRENT_WORK_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.currentWork.isEmpty()) {
                         MobileEmptyLine(MobileDisplayText.NO_CURRENT_WORK)
                     } else {
                         state.currentWork.forEach { item -> MobileWorkRow(item) }
                     }
                 }
-                MobileSection(title = MobileDisplayText.ATTENTION_QUEUE_TITLE) {
+                Panel(title = MobileDisplayText.ATTENTION_QUEUE_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.attentionQueue.isEmpty()) {
                         MobileEmptyLine(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
                     } else {
                         state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
                     }
                 }
-                MobileSection(title = MobileDisplayText.RECENT_EVENTS_TITLE) {
+                Panel(title = MobileDisplayText.RECENT_EVENTS_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.recentEvents.isEmpty()) {
                         MobileEmptyRow(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
                     } else {
                         state.recentEvents.forEach { event -> MobileEventRow(event) }
                     }
                 }
-                MobileSection(title = MobileDisplayText.TIMELINE_TITLE) {
+                Panel(title = MobileDisplayText.TIMELINE_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.timeline.isEmpty()) {
                         MobileEmptyRow(MobileDisplayText.NO_TIMELINE_ENTRIES)
                     } else {
                         if (state.timelineStatusMarkers.isNotEmpty()) {
                             Text(
                                 text = MobileDisplayText.timelineStatus(state.timelineStatusMarkers),
-                                color = MobilePalette.TextMuted,
-                                fontFamily = FontFamily.Monospace,
+                                color = AgentDeskTheme.colors.textMuted,
+                                fontFamily = AgentDeskTheme.typography.monoFamily,
                                 fontSize = 10.sp,
                             )
                         }
@@ -104,8 +94,8 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                                 previousWindow = entry.timeWindow
                                 Text(
                                     text = entry.timeWindow,
-                                    color = MobilePalette.TextMuted,
-                                    fontFamily = FontFamily.Monospace,
+                                    color = AgentDeskTheme.colors.textMuted,
+                                    fontFamily = AgentDeskTheme.typography.monoFamily,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,
                                 )
@@ -118,7 +108,7 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                     }
                 }
                 if (state.projectionWarnings.isNotEmpty()) {
-                    MobileSection(title = MobileDisplayText.PROJECTION_WARNINGS_TITLE) {
+                    Panel(title = MobileDisplayText.PROJECTION_WARNINGS_TITLE, modifier = Modifier.fillMaxWidth()) {
                         state.projectionWarnings.forEach { warning -> MobileWarningRow(warning) }
                     }
                 }
@@ -132,7 +122,7 @@ private fun MobileHeader(state: MobileOperatorState) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = MobileDisplayText.APP_TITLE,
-            color = MobilePalette.TextPrimary,
+            color = AgentDeskTheme.colors.textPrimary,
             fontSize = 24.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -141,39 +131,10 @@ private fun MobileHeader(state: MobileOperatorState) {
                 currentWorkCount = state.currentWork.size,
                 attentionCount = state.attentionQueue.size,
             ),
-            color = MobilePalette.TextMuted,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.textMuted,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 12.sp,
         )
-    }
-}
-
-@Composable
-private fun MobileSection(
-    title: String,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
-            .background(MobilePalette.Surface)
-            .border(1.dp, MobilePalette.Line, RoundedCornerShape(6.dp)),
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            color = MobilePalette.TextPrimary,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        HorizontalDivider(color = MobilePalette.Line)
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            content()
-        }
     }
 }
 
@@ -194,7 +155,7 @@ private fun MobileWorkRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .background(MobilePalette.Row)
+            .background(AgentDeskTheme.colors.row)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
@@ -204,27 +165,27 @@ private fun MobileWorkRow(
         ) {
             Text(
                 text = item.id,
-                color = MobilePalette.TextMuted,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 11.sp,
             )
             Text(
                 text = item.status.label,
-                color = colorFor(item.status.tone),
+                color = AgentDeskTheme.statusRole(item.status.tone).text,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
             )
         }
         Text(
             text = item.title,
-            color = MobilePalette.TextPrimary,
+            color = AgentDeskTheme.colors.textPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
         )
         item.summary?.let { summary ->
             Text(
                 text = summary,
-                color = MobilePalette.TextSecondary,
+                color = AgentDeskTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
             )
@@ -232,16 +193,16 @@ private fun MobileWorkRow(
         if (item.evidenceReferences.isNotEmpty()) {
             Text(
                 text = MobileDisplayText.evidenceReferences(item.evidenceReferences),
-                color = MobilePalette.TextMuted,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
             )
         }
         footer?.let {
             Text(
                 text = it,
-                color = MobilePalette.Attention,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.statusRole(StatusTone.Attention).text,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
             )
         }
@@ -254,7 +215,7 @@ private fun MobileEventRow(event: MobileEventLine) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .background(MobilePalette.Row)
+            .background(AgentDeskTheme.colors.row)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
@@ -264,35 +225,35 @@ private fun MobileEventRow(event: MobileEventLine) {
         ) {
             Text(
                 text = event.occurredAt,
-                color = MobilePalette.TextMuted,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
             )
             Text(
                 text = event.type,
-                color = MobilePalette.Accent,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.accent,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
             )
         }
         Text(
             text = event.workItemId,
-            color = MobilePalette.TextMuted,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.textMuted,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 11.sp,
         )
         Text(
             text = event.detail,
-            color = MobilePalette.TextSecondary,
+            color = AgentDeskTheme.colors.textSecondary,
             fontSize = 12.sp,
             lineHeight = 17.sp,
         )
         if (event.evidenceReferences.isNotEmpty()) {
             Text(
                 text = MobileDisplayText.evidenceReferences(event.evidenceReferences),
-                color = MobilePalette.TextMuted,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
             )
         }
@@ -311,46 +272,46 @@ private fun MobileTimelineRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .background(MobilePalette.Row)
+            .background(AgentDeskTheme.colors.row)
             .clickable { expanded = !expanded }
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = entry.occurredAt,
-            color = MobilePalette.TextMuted,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.textMuted,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 10.sp,
         )
         Text(
             text = entry.type,
-            color = MobilePalette.Accent,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.accent,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 10.sp,
             fontWeight = FontWeight.Medium,
         )
         Text(
             text = entry.workItemId,
-            color = MobilePalette.TextMuted,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.textMuted,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 11.sp,
         )
         Text(
             text = entry.stateLabel,
-            color = colorForTimelineState(entry.stateLabel),
+            color = timelineStateColor(entry.stateLabel),
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
         )
         Text(
             text = entry.summary,
-            color = MobilePalette.TextSecondary,
+            color = AgentDeskTheme.colors.textSecondary,
             fontSize = 12.sp,
             lineHeight = 17.sp,
         )
         entry.completionSummary?.let { completion ->
             Text(
                 text = completion,
-                color = colorForCompletionSummary(completion),
+                color = completionSummaryColor(completion),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -358,8 +319,8 @@ private fun MobileTimelineRow(
         if (entry.evidenceReferences.isNotEmpty()) {
             Text(
                 text = MobileDisplayText.evidenceReferences(entry.evidenceReferences),
-                color = MobilePalette.TextMuted,
-                fontFamily = FontFamily.Monospace,
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
                 fontSize = 10.sp,
             )
         }
@@ -370,7 +331,7 @@ private fun MobileTimelineRow(
                 } else {
                     MobileDisplayText.DETAILS_DISCLOSURE_COLLAPSED
                 },
-                color = MobilePalette.TextMuted,
+                color = AgentDeskTheme.colors.textMuted,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
             )
@@ -378,8 +339,8 @@ private fun MobileTimelineRow(
                 MobileDisplayText.evidenceDetailRows(detail).forEach { row ->
                     Text(
                         text = row,
-                        color = MobilePalette.TextSecondary,
-                        fontFamily = FontFamily.Monospace,
+                        color = AgentDeskTheme.colors.textSecondary,
+                        fontFamily = AgentDeskTheme.typography.monoFamily,
                         fontSize = 10.sp,
                         lineHeight = 15.sp,
                     )
@@ -389,18 +350,20 @@ private fun MobileTimelineRow(
     }
 }
 
-private fun colorForTimelineState(stateLabel: String): Color = when (stateLabel) {
-    "Blocked" -> MobilePalette.Blocked
-    "Failed" -> MobilePalette.Failure
-    "Completed" -> MobilePalette.Success
-    "Stale", "Not done", "Partial" -> MobilePalette.Attention
-    else -> MobilePalette.TextMuted
+@Composable
+private fun timelineStateColor(stateLabel: String): Color = when (stateLabel) {
+    "Blocked" -> AgentDeskTheme.statusRole(StatusTone.Blocked).text
+    "Failed" -> AgentDeskTheme.statusRole(StatusTone.Failure).text
+    "Completed" -> AgentDeskTheme.statusRole(StatusTone.Success).text
+    "Stale", "Not done", "Partial" -> AgentDeskTheme.statusRole(StatusTone.Attention).text
+    else -> AgentDeskTheme.colors.textMuted
 }
 
-private fun colorForCompletionSummary(completionSummary: String): Color = when (completionSummary) {
-    "Successful outcome" -> MobilePalette.Success
-    "Failed outcome" -> MobilePalette.Failure
-    else -> MobilePalette.TextMuted
+@Composable
+private fun completionSummaryColor(completionSummary: String): Color = when (completionSummary) {
+    "Successful outcome" -> AgentDeskTheme.statusRole(StatusTone.Success).text
+    "Failed outcome" -> AgentDeskTheme.statusRole(StatusTone.Failure).text
+    else -> AgentDeskTheme.colors.textMuted
 }
 
 @Composable
@@ -408,13 +371,13 @@ private fun MobileWarningRow(warning: MobileProjectionWarning) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = warning.eventId,
-            color = MobilePalette.TextMuted,
-            fontFamily = FontFamily.Monospace,
+            color = AgentDeskTheme.colors.textMuted,
+            fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 11.sp,
         )
         Text(
             text = warning.reason,
-            color = MobilePalette.TextSecondary,
+            color = AgentDeskTheme.colors.textSecondary,
             fontSize = 12.sp,
             lineHeight = 17.sp,
         )
@@ -428,9 +391,9 @@ private fun MobileEmptyRow(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(4.dp))
-            .background(MobilePalette.Row)
+            .background(AgentDeskTheme.colors.row)
             .padding(12.dp),
-        color = MobilePalette.TextMuted,
+        color = AgentDeskTheme.colors.textMuted,
         fontSize = 12.sp,
     )
 }
@@ -439,34 +402,7 @@ private fun MobileEmptyRow(text: String) {
 private fun MobileEmptyLine(text: String) {
     Text(
         text = text,
-        color = MobilePalette.TextMuted,
+        color = AgentDeskTheme.colors.textMuted,
         fontSize = 12.sp,
     )
-}
-
-internal fun colorFor(tone: StatusTone): Color = when (tone) {
-    StatusTone.Neutral -> MobilePalette.TextMuted
-    StatusTone.Active -> MobilePalette.Accent
-    StatusTone.Attention -> MobilePalette.Attention
-    StatusTone.Blocked -> MobilePalette.Blocked
-    StatusTone.Success -> MobilePalette.Success
-    StatusTone.Failure -> MobilePalette.Failure
-}
-
-internal object MobilePalette {
-    val Background = Color(0xFFF7F8FA)
-    val Surface = Color(0xFFFFFFFF)
-    val Row = Color(0xFFF4F6F8)
-    val Line = Color(0xFFE1E5EA)
-    val TextPrimary = Color(0xFF1D252D)
-    val TextSecondary = Color(0xFF4B5563)
-
-    // 5.49:1 on Row, 5.94:1 on Surface, 5.59:1 on Background — WCAG AA for
-    // the 10-12sp muted text (#318); pinned by MobilePaletteContrastTest.
-    val TextMuted = Color(0xFF5E6470)
-    val Accent = Color(0xFF0F766E)
-    val Attention = Color(0xFFA16207)
-    val Blocked = Color(0xFFB45309)
-    val Success = Color(0xFF15803D)
-    val Failure = Color(0xFFB91C1C)
 }
