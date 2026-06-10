@@ -155,7 +155,6 @@ class MobileSmokeSnapshotTest :
             snapshot.sectionRows("Recent events") shouldBe listOf("No recent accepted events")
             snapshot.sectionRows("Timeline") shouldBe listOf("No timeline entries")
         }
-
     })
 
 private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows
