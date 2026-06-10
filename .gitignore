@@ -29,3 +29,6 @@ USER.md
 .claude/*
 !.claude/skills/
 !.claude/agents/
+
+# Superpowers brainstorm/visual-companion scratch (local only)
+.superpowers/
