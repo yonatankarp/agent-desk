@@ -11,8 +11,8 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStatusPresentation
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
+import com.yonatankarp.agentdesk.testfixtures.matchers.shouldHaveNoActionAffordances
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -198,16 +198,3 @@ class MobileSmokeSnapshotTest :
     })
 
 private fun MobileSmokeSnapshot.sectionRows(title: String): List<String> = sections.first { it.title == title }.rows
-
-// Side-effecting action affordances must never render on the read-only mobile surface. Match each verb on
-// word boundaries (not as a bare substring) so a completion label such as "Canceled outcome" or an audit
-// label such as "Approved" does not false-positive while a real "Cancel"/"Approve" affordance still trips.
-private val ACTION_VERBS = listOf("Resume", "Approve", "Stop", "Retry", "Cancel")
-
-private fun String.shouldHaveNoActionAffordances() {
-    ACTION_VERBS.forEach { verb ->
-        withClue("read-only render must not expose the '$verb' action affordance") {
-            "\\b$verb\\b".toRegex().containsMatchIn(this) shouldBe false
-        }
-    }
-}
