@@ -8,6 +8,8 @@ import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -42,6 +44,7 @@ class DesktopSmokeSnapshotTest :
                     text shouldContain "Redacted evidence: raw provider payloads are not rendered."
                     text shouldContain
                         "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design."
+                    text.shouldHaveNoActionAffordances()
                 }
             }
 
@@ -96,6 +99,51 @@ class DesktopSmokeSnapshotTest :
                 }
             }
 
+            `when`("a work item reached a canceled terminal state") {
+                then("the canceled label passes the action-verb denylist") {
+                    val item =
+                        WorkItem(
+                            id = WorkItemId.parse("agent-task:50"),
+                            title = WorkItemTitle.parse("Roll out the migration"),
+                            status = WorkStatus.Canceled,
+                            summary = WorkSummary.parse("Run reached a canceled terminal state."),
+                        )
+
+                    val text =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Ready(
+                                state = OperatorState(workItems = listOf(item), events = emptyList()),
+                                modeLabel = "Loaded state",
+                            ),
+                        ).flattenedText()
+
+                    text shouldContain "[Canceled] agent-task:50"
+                    text.shouldHaveNoActionAffordances()
+                }
+            }
+
+            `when`("a real Cancel action affordance reaches the render") {
+                then("the action-verb denylist trips") {
+                    val item =
+                        WorkItem(
+                            id = WorkItemId.parse("agent-task:51"),
+                            title = WorkItemTitle.parse("Cancel the deployment"),
+                            status = WorkStatus.NeedsDecision,
+                            summary = WorkSummary.parse("Pending operator action."),
+                        )
+
+                    val text =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Ready(
+                                state = OperatorState(workItems = listOf(item), events = emptyList()),
+                                modeLabel = "Loaded state",
+                            ),
+                        ).flattenedText()
+
+                    shouldThrow<AssertionError> { text.shouldHaveNoActionAffordances() }
+                }
+            }
+
             `when`("inspecting the flattened sample text") {
                 then("the snapshot remains public safe") {
                     val text = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current()).flattenedText()
@@ -118,3 +166,16 @@ class DesktopSmokeSnapshotTest :
     })
 
 private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
+
+// Side-effecting action affordances must never render on the read-only desktop surface. Match each verb on
+// word boundaries (not as a bare substring) so a completion label such as "Canceled outcome" or an audit
+// label such as "Approved" does not false-positive while a real "Cancel"/"Approve" affordance still trips.
+private val ACTION_VERBS = listOf("Resume", "Approve", "Stop", "Retry", "Cancel")
+
+private fun String.shouldHaveNoActionAffordances() {
+    ACTION_VERBS.forEach { verb ->
+        withClue("read-only render must not expose the '$verb' action affordance") {
+            "\\b$verb\\b".toRegex().containsMatchIn(this) shouldBe false
+        }
+    }
+}
