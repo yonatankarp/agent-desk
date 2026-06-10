@@ -21,4 +21,10 @@ class ThemeModeTest :
             store.save(ThemeMode.Dark)
             store.load() shouldBe ThemeMode.Dark
         }
+
+        test("next cycles System -> Light -> Dark -> System") {
+            ThemeMode.System.next() shouldBe ThemeMode.Light
+            ThemeMode.Light.next() shouldBe ThemeMode.Dark
+            ThemeMode.Dark.next() shouldBe ThemeMode.System
+        }
     })
