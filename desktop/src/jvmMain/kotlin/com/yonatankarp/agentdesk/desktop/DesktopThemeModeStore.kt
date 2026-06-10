@@ -12,7 +12,7 @@ class DesktopThemeModeStore(private val file: Path) : ThemeModeStore {
 
     override fun save(mode: ThemeMode) {
         runCatching {
-            Files.createDirectories(file.parent)
+            file.parent?.let { Files.createDirectories(it) }
             Files.writeString(file, mode.name)
         }
     }
