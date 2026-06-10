@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.design.token
 
+import androidx.compose.ui.graphics.Color
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldNotBe
@@ -12,10 +13,14 @@ import io.kotest.matchers.shouldNotBe
  */
 class StatusColorsTest :
     FunSpec({
-        test("every tone resolves in light and dark") {
-            StatusTone.entries.forEach { tone ->
-                StatusColors.Light.forTone(tone) shouldNotBe null
-                StatusColors.Dark.forTone(tone) shouldNotBe null
+        test("every tone resolves to a populated role in light and dark") {
+            listOf(StatusColors.Light, StatusColors.Dark).forEach { scheme ->
+                StatusTone.entries.forEach { tone ->
+                    val role = scheme.forTone(tone)
+                    role.text shouldNotBe Color.Unspecified
+                    role.rail shouldNotBe Color.Unspecified
+                    role.pillBg shouldNotBe Color.Unspecified
+                }
             }
         }
 
@@ -29,7 +34,7 @@ class StatusColorsTest :
     })
 
 private infix fun Float.shouldBeAtLeastDelta(other: Float) {
-    require(this > other + 0.15f) {
-        "expected amber rail to be clearly distinct from red rail (got $this vs $other)"
+    if (this <= other + 0.15f) {
+        throw AssertionError("expected amber rail to be clearly distinct from red rail (got $this vs $other)")
     }
 }
