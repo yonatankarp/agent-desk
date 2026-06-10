@@ -10,6 +10,7 @@ class AnsiStatusColorTest :
     FunSpec({
         test("colorize wraps text in the tone's truecolor escape when enabled") {
             val out = AnsiStatusColor(enabled = true).colorize("Blocked", StatusTone.Blocked)
+            out[0].code shouldBe 0x1B
             out shouldContain "[38;2;"
             out shouldContain "Blocked"
             out shouldContain "[0m"
