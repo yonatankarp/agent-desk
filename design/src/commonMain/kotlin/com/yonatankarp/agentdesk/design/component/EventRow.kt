@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
-import com.yonatankarp.agentdesk.design.token.AgentDeskTypography
 
 @Composable
 fun EventRow(
@@ -28,7 +27,7 @@ fun EventRow(
     showDivider: Boolean = true,
 ) {
     val colors = AgentDeskTheme.colors
-    val mono = AgentDeskTypography().monoFamily
+    val mono = AgentDeskTheme.typography.monoFamily
     Column(modifier = modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(text = type, color = colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)

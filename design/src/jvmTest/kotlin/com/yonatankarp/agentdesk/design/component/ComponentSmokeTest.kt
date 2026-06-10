@@ -110,10 +110,12 @@ class ComponentSmokeTest :
             runComposeUiTest {
                 setContent {
                     AgentDeskTheme(mode = ThemeMode.Light) {
-                        val statusColors = AgentDeskTheme.status
-                        StatusPill(label = statusColors.neutral.text.toString(), tone = StatusTone.Neutral)
+                        // Touch the status accessor, then render a labelled pill we can assert on.
+                        AgentDeskTheme.status
+                        StatusPill(label = "Neutral", tone = StatusTone.Neutral)
                     }
                 }
+                onNodeWithText("Neutral").assertIsDisplayed()
             }
         }
     })

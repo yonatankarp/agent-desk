@@ -10,12 +10,14 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.design.token.AgentDeskColors
 import com.yonatankarp.agentdesk.design.token.AgentDeskSpacing
+import com.yonatankarp.agentdesk.design.token.AgentDeskTypography
 import com.yonatankarp.agentdesk.design.token.StatusColors
 import com.yonatankarp.agentdesk.design.token.StatusRole
 
 val LocalAgentDeskColors = staticCompositionLocalOf { AgentDeskColors.Light }
 val LocalStatusColors = staticCompositionLocalOf { StatusColors.Light }
 val LocalSpacing = staticCompositionLocalOf { AgentDeskSpacing.Default }
+val LocalAgentDeskTypography = staticCompositionLocalOf<AgentDeskTypography?> { null }
 
 object AgentDeskTheme {
     val colors: AgentDeskColors
@@ -24,6 +26,8 @@ object AgentDeskTheme {
         @Composable get() = LocalStatusColors.current
     val spacing: AgentDeskSpacing
         @Composable get() = LocalSpacing.current
+    val typography: AgentDeskTypography
+        @Composable get() = LocalAgentDeskTypography.current ?: AgentDeskTypography()
 
     @Composable
     fun statusRole(tone: StatusTone): StatusRole = LocalStatusColors.current.forTone(tone)
@@ -37,6 +41,7 @@ fun AgentDeskTheme(
     val dark = mode.resolvesToDark(isSystemInDarkTheme())
     val colors = if (dark) AgentDeskColors.Dark else AgentDeskColors.Light
     val status = if (dark) StatusColors.Dark else StatusColors.Light
+    val typography = AgentDeskTypography()
 
     val material = if (dark) {
         darkColorScheme(
@@ -60,6 +65,7 @@ fun AgentDeskTheme(
         LocalAgentDeskColors provides colors,
         LocalStatusColors provides status,
         LocalSpacing provides AgentDeskSpacing.Default,
+        LocalAgentDeskTypography provides typography,
     ) {
         MaterialTheme(colorScheme = material, content = content)
     }
