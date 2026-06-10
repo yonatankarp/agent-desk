@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
-import com.yonatankarp.agentdesk.design.token.AgentDeskTypography
 
 @Composable
 fun EvidenceItem(
@@ -24,7 +23,7 @@ fun EvidenceItem(
     modifier: Modifier = Modifier,
 ) {
     val colors = AgentDeskTheme.colors
-    val mono = AgentDeskTypography().monoFamily
+    val mono = AgentDeskTheme.typography.monoFamily
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
         Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(colors.accent))
         Text(text = label, color = colors.textSecondary, fontFamily = mono, fontSize = 12.sp)

@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
-import com.yonatankarp.agentdesk.design.token.AgentDeskTypography
 
 @Composable
 fun ActionRow(
@@ -37,7 +36,7 @@ fun ActionRow(
     val spacing = AgentDeskTheme.spacing
     val rail = AgentDeskTheme.statusRole(tone).rail
     val railPx = with(LocalDensity.current) { spacing.railWidth.toPx() }
-    val mono = AgentDeskTypography().monoFamily
+    val mono = AgentDeskTheme.typography.monoFamily
 
     Row(
         modifier = modifier

@@ -32,8 +32,8 @@ fun ThemeModeControl(
         text = "Theme: $label",
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .border(1.dp, colors.line, RoundedCornerShape(50))
             .background(colors.row)
+            .border(1.dp, colors.line, RoundedCornerShape(50))
             .clickable { onCycle(mode.next()) }
             .padding(horizontal = 12.dp, vertical = 6.dp),
         color = colors.textSecondary,
