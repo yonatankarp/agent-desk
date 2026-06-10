@@ -36,12 +36,14 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileProjectionWarning
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 import com.yonatankarp.agentdesk.design.component.Panel
+import com.yonatankarp.agentdesk.design.component.ThemeModeControl
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 import com.yonatankarp.agentdesk.design.theme.ThemeMode
 
 @Composable
 fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.sample()) {
-    AgentDeskTheme(mode = ThemeMode.System) {
+    var mode by remember { mutableStateOf(ThemeMode.System) }
+    AgentDeskTheme(mode = mode) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = AgentDeskTheme.colors.background,
@@ -53,7 +55,7 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                     .padding(horizontal = 16.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                MobileHeader(state)
+                MobileHeader(state, mode) { mode = it }
                 Panel(title = MobileDisplayText.CURRENT_WORK_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.currentWork.isEmpty()) {
                         MobileEmptyLine(MobileDisplayText.NO_CURRENT_WORK)
@@ -118,7 +120,11 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
 }
 
 @Composable
-private fun MobileHeader(state: MobileOperatorState) {
+private fun MobileHeader(
+    state: MobileOperatorState,
+    mode: ThemeMode,
+    onCycle: (ThemeMode) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = MobileDisplayText.APP_TITLE,
@@ -135,6 +141,7 @@ private fun MobileHeader(state: MobileOperatorState) {
             fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 12.sp,
         )
+        ThemeModeControl(mode = mode, onCycle = onCycle)
     }
 }
 
