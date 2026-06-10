@@ -42,7 +42,7 @@ private fun relativeLuminance(color: Color): Double {
     fun linearize(channel: Float): Double = if (channel <= 0.03928f) {
         channel / 12.92
     } else {
-        ((channel + 0.055) / 1.055).toDouble().pow(2.4)
+        ((channel + 0.055) / 1.055).pow(2.4)
     }
     return 0.2126 * linearize(color.red) + 0.7152 * linearize(color.green) + 0.0722 * linearize(color.blue)
 }
