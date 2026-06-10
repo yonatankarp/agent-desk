@@ -45,23 +45,13 @@ fun AgentDeskTheme(
     val status = if (dark) StatusColors.Dark else StatusColors.Light
     val typography = AgentDeskTypography()
 
-    val material = if (dark) {
-        darkColorScheme(
-            background = colors.background,
-            surface = colors.panel,
-            primary = colors.accent,
-            onBackground = colors.textPrimary,
-            onSurface = colors.textPrimary,
-        )
-    } else {
-        lightColorScheme(
-            background = colors.background,
-            surface = colors.panel,
-            primary = colors.accent,
-            onBackground = colors.textPrimary,
-            onSurface = colors.textPrimary,
-        )
-    }
+    val material = (if (dark) darkColorScheme() else lightColorScheme()).copy(
+        background = colors.background,
+        surface = colors.panel,
+        primary = colors.accent,
+        onBackground = colors.textPrimary,
+        onSurface = colors.textPrimary,
+    )
 
     CompositionLocalProvider(
         LocalAgentDeskColors provides colors,
