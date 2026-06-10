@@ -36,7 +36,7 @@ data class AgentDeskColors(
             panel = Color(0xFF17222F),
             line = Color(0xFF26364A),
             row = Color(0xFF1C2937),
-            rowLine = Color(0xFF26364A),
+            rowLine = Color(0xFF1F2E3F),
             textPrimary = Color(0xFFE7EFF7),
             textSecondary = Color(0xFFC2CEDC),
             // Pinned by AgentDeskContrastTest for AA on background/panel/row.
