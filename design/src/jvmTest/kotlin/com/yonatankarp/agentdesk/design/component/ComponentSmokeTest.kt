@@ -1,15 +1,18 @@
 package com.yonatankarp.agentdesk.design.component
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.font.FontFamily
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 import com.yonatankarp.agentdesk.design.theme.ThemeMode
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
 // Test-only opt-in, tracked debt #279.
 @OptIn(ExperimentalTestApi::class)
@@ -117,5 +120,19 @@ class ComponentSmokeTest :
                 }
                 onNodeWithText("Neutral").assertIsDisplayed()
             }
+        }
+
+        test("UI text defaults to the Inter family inside the theme") {
+            var defaultFamily: FontFamily? = null
+            var uiFamily: FontFamily? = null
+            runComposeUiTest {
+                setContent {
+                    AgentDeskTheme(mode = ThemeMode.Light) {
+                        defaultFamily = LocalTextStyle.current.fontFamily
+                        uiFamily = AgentDeskTheme.typography.uiFamily
+                    }
+                }
+            }
+            defaultFamily shouldBe uiFamily
         }
     })

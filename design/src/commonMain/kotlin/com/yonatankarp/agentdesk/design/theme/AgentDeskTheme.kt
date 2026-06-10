@@ -3,6 +3,7 @@
 package com.yonatankarp.agentdesk.design.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -59,6 +60,12 @@ fun AgentDeskTheme(
         LocalSpacing provides AgentDeskSpacing.Default,
         LocalAgentDeskTypography provides typography,
     ) {
-        MaterialTheme(colorScheme = material, content = content)
+        MaterialTheme(colorScheme = material) {
+            CompositionLocalProvider(
+                // Inter is the default UI font; monospace Text overrides it explicitly.
+                LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = typography.uiFamily),
+                content = content,
+            )
+        }
     }
 }
