@@ -23,7 +23,10 @@ fun main(args: Array<String>) {
             state = rememberWindowState(width = 1180.dp, height = 760.dp),
             title = "Agent Desk",
         ) {
-            AgentDeskApp(screenState)
+            AgentDeskApp(screenState, DesktopThemeModeStore(themeFile()))
         }
     }
 }
+
+private fun themeFile(): java.nio.file.Path =
+    java.nio.file.Path.of(System.getProperty("user.home"), ".agent-desk", "theme")

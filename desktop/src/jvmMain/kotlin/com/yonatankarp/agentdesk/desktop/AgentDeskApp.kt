@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -28,8 +32,11 @@ import com.yonatankarp.agentdesk.design.component.ActionRow
 import com.yonatankarp.agentdesk.design.component.EvidenceItem
 import com.yonatankarp.agentdesk.design.component.EventRow
 import com.yonatankarp.agentdesk.design.component.Panel
+import com.yonatankarp.agentdesk.design.component.ThemeModeControl
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
+import com.yonatankarp.agentdesk.design.theme.InMemoryThemeModeStore
 import com.yonatankarp.agentdesk.design.theme.ThemeMode
+import com.yonatankarp.agentdesk.design.theme.ThemeModeStore
 
 @Composable
 @Preview
@@ -43,17 +50,24 @@ fun AgentDeskApp(state: OperatorState) {
 }
 
 @Composable
-fun AgentDeskApp(screenState: DesktopScreenState) {
-    AgentDeskTheme(mode = ThemeMode.System) {
+fun AgentDeskApp(
+    screenState: DesktopScreenState,
+    themeStore: ThemeModeStore = InMemoryThemeModeStore(),
+) {
+    var mode by remember { mutableStateOf(themeStore.load()) }
+    AgentDeskTheme(mode = mode) {
         Surface(modifier = Modifier.fillMaxSize(), color = AgentDeskTheme.colors.background) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
-                DesktopHeader(screenState)
+                DesktopHeader(screenState, mode) { next ->
+                    mode = next
+                    themeStore.save(next)
+                }
                 Panel(title = "Replay status", modifier = Modifier.fillMaxWidth()) {
                     DesktopReplayStatus.rows(screenState).forEach { row ->
-                        Text(row, color = AgentDeskTheme.colors.textSecondary, fontSize = 13.sp)
+                        Text(row, color = AgentDeskTheme.colors.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
                     }
                 }
                 Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -114,14 +128,21 @@ fun AgentDeskApp(screenState: DesktopScreenState) {
 }
 
 @Composable
-private fun DesktopHeader(screenState: DesktopScreenState) {
+private fun DesktopHeader(
+    screenState: DesktopScreenState,
+    mode: ThemeMode,
+    onCycle: (ThemeMode) -> Unit,
+) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Agent Desk", color = AgentDeskTheme.colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
             Text("Local operator console", color = AgentDeskTheme.colors.textMuted, fontSize = 14.sp)
             Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 12.sp)
         }
-        Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 13.sp)
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 13.sp)
+            ThemeModeControl(mode = mode, onCycle = onCycle)
+        }
     }
 }
 

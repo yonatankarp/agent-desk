@@ -5,10 +5,14 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.design.theme.InMemoryThemeModeStore
+import com.yonatankarp.agentdesk.design.theme.ThemeMode
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
 // ExperimentalTestApi opt-in is tracked debt: see issue #279 — remove when
 // Compose Multiplatform stabilizes the test API.
@@ -64,6 +68,38 @@ class DesktopComposeSmokeTest :
 
                 onNodeWithText("Invalid configuration").assertIsDisplayed()
                 onNodeWithText("Configured operator state could not be loaded.").assertIsDisplayed()
+            }
+        }
+
+        test("theme toggle cycles mode and persists to store") {
+            val store = InMemoryThemeModeStore(ThemeMode.System)
+            runComposeUiTest {
+                setContent {
+                    AgentDeskApp(
+                        DesktopScreenState.Ready(
+                            state = OperatorState(workItems = emptyList(), events = emptyList()),
+                            modeLabel = "Toggle test",
+                        ),
+                        themeStore = store,
+                    )
+                }
+
+                onNodeWithText("Theme: Auto").assertIsDisplayed()
+                onNodeWithText("Theme: Auto").performClick()
+                onNodeWithText("Theme: Light").assertIsDisplayed()
+                store.load() shouldBe ThemeMode.Light
+                onNodeWithText("Theme: Light").performClick()
+                onNodeWithText("Theme: Dark").assertIsDisplayed()
+                store.load() shouldBe ThemeMode.Dark
+            }
+        }
+
+        test("OperatorState overload renders visible shell text") {
+            runComposeUiTest {
+                setContent {
+                    AgentDeskApp(SampleOperatorState.current())
+                }
+                onNodeWithText("Agent Desk").assertIsDisplayed()
             }
         }
     })
