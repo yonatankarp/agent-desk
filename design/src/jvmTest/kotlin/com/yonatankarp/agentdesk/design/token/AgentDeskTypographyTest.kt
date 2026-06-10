@@ -10,15 +10,12 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 class AgentDeskTypographyTest :
     FunSpec({
         test("typography families load inside a composition") {
+            var typography: AgentDeskTypography? = null
             runComposeUiTest {
-                setContent {
-                    rememberedTypography = AgentDeskTypography()
-                }
+                setContent { typography = AgentDeskTypography() }
             }
-            rememberedTypography.shouldNotBeNull()
-            rememberedTypography!!.uiFamily.shouldNotBeNull()
-            rememberedTypography!!.monoFamily.shouldNotBeNull()
+            typography.shouldNotBeNull()
+            typography!!.uiFamily.shouldNotBeNull()
+            typography!!.monoFamily.shouldNotBeNull()
         }
     })
-
-private var rememberedTypography: AgentDeskTypography? = null
