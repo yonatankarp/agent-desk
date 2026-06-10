@@ -28,5 +28,4 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun themeFile(): java.nio.file.Path =
-    java.nio.file.Path.of(System.getProperty("user.home"), ".agent-desk", "theme")
+private fun themeFile(): java.nio.file.Path = java.nio.file.Path.of(System.getProperty("user.home"), ".agent-desk", "theme")

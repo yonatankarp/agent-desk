@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package com.yonatankarp.agentdesk.design.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme

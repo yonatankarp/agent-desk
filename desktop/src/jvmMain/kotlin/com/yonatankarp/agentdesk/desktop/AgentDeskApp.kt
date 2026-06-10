@@ -29,8 +29,8 @@ import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.design.component.ActionRow
-import com.yonatankarp.agentdesk.design.component.EvidenceItem
 import com.yonatankarp.agentdesk.design.component.EventRow
+import com.yonatankarp.agentdesk.design.component.EvidenceItem
 import com.yonatankarp.agentdesk.design.component.Panel
 import com.yonatankarp.agentdesk.design.component.ThemeModeControl
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
@@ -110,7 +110,9 @@ fun AgentDeskApp(
                             val message = screenState.message()
                             when {
                                 message != null -> Text(message, color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+
                                 attention.isEmpty() -> Text("No items need a decision", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+
                                 else -> attention.forEach { item ->
                                     val p = OperatorStatePresenter.presentationFor(item.status)
                                     ActionRow(id = item.id.toString(), title = item.title.toString(), tone = p.tone, statusLabel = p.label)
