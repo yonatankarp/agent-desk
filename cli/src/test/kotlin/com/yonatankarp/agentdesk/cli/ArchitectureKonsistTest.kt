@@ -52,6 +52,14 @@ class ArchitectureKonsistTest :
             ModuleArchitectureRules.assertEveryBlockedPrefixIsLoadBearing(blockedImportPrefixes)
         }
 
+        test("every cli input-layer blocked-import prefix is load-bearing") {
+            ModuleArchitectureRules.assertEveryBlockedPrefixIsLoadBearing(inputLayerBlockedImportPrefixes)
+        }
+
+        test("every cli render-layer blocked-import prefix is load-bearing") {
+            ModuleArchitectureRules.assertEveryBlockedPrefixIsLoadBearing(renderLayerBlockedImportPrefixes)
+        }
+
         test("cli input production files do not import root, io, or render cli layers") {
             ModuleArchitectureRules.assertNoBlockedImportsInPackages(
                 moduleName = "cli",

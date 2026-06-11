@@ -123,6 +123,7 @@ object ModuleArchitectureRules {
             val syntheticImport = prefix + "Synthetic"
 
             withClue("blocked prefix '$prefix' matches no constructible import (dead guard)") {
+                syntheticImport.shouldBeConstructibleImportName()
                 importNameMatchesAnyBlockedPrefix(syntheticImport, blockedImportPrefixes).shouldBeTrue()
             }
 
@@ -132,4 +133,12 @@ object ModuleArchitectureRules {
             }
         }
     }
+
+    private fun String.shouldBeConstructibleImportName() {
+        split(".").all { segment ->
+            segment.matches(qualifiedNameSegment)
+        }.shouldBeTrue()
+    }
+
+    private val qualifiedNameSegment = Regex("[A-Za-z_][A-Za-z0-9_]*")
 }
