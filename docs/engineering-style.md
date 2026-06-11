@@ -37,7 +37,8 @@ Agent Desk code should stay small, explicit, and easy to move across adapters. T
 - Avoid duplicated test data. Prefer fixtures and a small test DSL for common domain objects, events, and projections.
 - The shared test DSL lives in `:test-fixtures`: `workEvents { started(); blocked() }` for event
   chains, `eventTimestampAt(...)` for deterministic timestamps, `commitEvidence(...)`-style factories
-  for evidence references, and `shouldBePublicSafe()` / `shouldBeEmptyProjection()` matchers.
+  for evidence references, and `shouldBePublicSafe()` / `shouldBeEmptyProjection()` /
+  `shouldHaveNoActionAffordances()` matchers.
   App-layer projection helpers (`operatorState { }`, `projectedWorkItem { }`) live in
   `app/src/commonTest/.../fixtures/`. New tests use these instead of hand-built domain objects;
   the public-safety denylist is maintained only in `PublicSafetyMatchers.kt`.

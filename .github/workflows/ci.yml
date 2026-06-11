@@ -55,6 +55,11 @@ jobs:
         with:
           gradle-module: :core
 
+      - name: Build test-fixtures module
+        uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
+        with:
+          gradle-module: :test-fixtures
+
       - name: Build app module
         uses: yonatankarp/github-actions/.github/actions/gradle-build@v2
         with:

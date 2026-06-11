@@ -27,11 +27,11 @@ format: ## Apply deterministic formatting with Spotless.
 
 .PHONY: build
 build: ## Build all current modules.
-	$(GRADLE) :core:build :app:build :cli:build :desktop:build :mobile:build
+	$(GRADLE) :core:build :test-fixtures:build :app:build :cli:build :desktop:build :mobile:build
 
 .PHONY: test
 test: ## Run all module test tasks covered by the standard build.
-	$(GRADLE) :core:allTests :app:allTests :cli:test :desktop:allTests :mobile:allTests
+	$(GRADLE) :core:allTests :test-fixtures:allTests :app:allTests :cli:test :desktop:allTests :mobile:allTests
 
 .PHONY: check
 check: hygiene format-check build ## Run the default local pre-PR check set.
