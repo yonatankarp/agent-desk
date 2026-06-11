@@ -74,13 +74,17 @@ Local `.openclaw/` transcripts and local specs/plans are working artifacts. Do n
 
 ## Reports
 
-Reports go to the configured Agent Desk channel only. They must distinguish:
+Reports go to the configured Agent Desk channel only. Use `docs/daily-report-template.md` as the exact alert shape.
 
-- Role checks actually run
-- Revision/discussion rounds used out of 3
-- Verification evidence
-- Security/public-safety result
-- Discovery output or why no follow-up was warranted
-- Needs-Yonatan blocker, if any
+Hard requirements:
+
+- Start with `🧪 Agent Desk daily report - YYYY-MM-DD`.
+- Keep the section order from `docs/daily-report-template.md`.
+- Include `🤝 Role checks` and list what actually ran for each applicable role.
+- Include `🔁 Revision rounds` separately from role checks.
+- Include `🔐 Security/public-safety`, `🧾 Compliance`, `🔍 Evidence`, and `🧭 Discovery`.
+- End with `➡️ Next` and `🙋 Needs Yonatan`.
+- Do not send a separate "completed and reported" wrapper. The alert itself is the report.
+- Keep the report in one Discord message when it fits. If Discord length forces splitting, preserve the section order and do not add a separate status summary.
 
 Do not write `Agent rounds: 0/3` when what you mean is that no role agents ran. Say the direct role checks actually performed.
