@@ -66,6 +66,12 @@ Follow `.claude/skills/slice-loop/SKILL.md` for sequencing:
 9. Run Discovery and report.
 10. Continue only while budget remains and no stop condition applies.
 
+## Continuation Threshold
+
+A tiny cleanup is not a full daily run. After a small slice, run Discovery and then continue to Manager selection when at least 45 minutes remain before cutoff and another actionable slice exists.
+
+Stop early only for a real stop condition: no actionable work after Discovery/no-issue triage, owner decision needed, credentials/external setup, unsafe/destructive action, failed checks requiring judgment, unresolved Security/Compliance veto, stuck PR, or cutoff reached.
+
 ## Public-Safe Rules
 
 Agent Desk is public. Do not put private OpenClaw paths, real Discord channel IDs, tokens, raw transcripts, personal data, or private logs in tracked files, public issues, PRs, CI output, or screenshots.
