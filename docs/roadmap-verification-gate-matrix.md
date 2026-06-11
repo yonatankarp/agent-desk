@@ -39,7 +39,7 @@ skips, missing artifacts, or empty failure messages are not release-ready.
 | Local event store and persistence | required | required | optional | required | optional | required | not required | encode/decode tests, corrupt/duplicate diagnostics, public-safe store errors |
 | CLI operator console | required | required | required | required | optional | required | not required | CLI tests, stdin/file failure tests, sample command smoke |
 | Desktop operator surface | required | required | required | required | required | required | required | snapshot/compose smoke, evidence visibility, screenshot/manual QA when UI changes |
-| Mobile read-only surface | required | required | required | required | required | required | required | mobile snapshot/contract tests, read-only proof, manual device/screenshot QA when UI changes |
+| Mobile display surface | required | required | required | required | required | required | required | mobile snapshot/contract tests, display-parity contract, manual device/screenshot QA when UI changes |
 | Action capability proposals | required | optional | optional | required | optional | required | not required | proposal-only tests, disabled external/destructive cases, no executor proof |
 | Mock action approval loop | required | required | optional | required | optional | required | not required | approval/reject/defer/cancel tests, audit receipts, no external side effects |
 | Permission gates | required | required | optional | required | optional | required | not required | action class inventory, deny/approve/cancel/ambiguous/unsupported tests |

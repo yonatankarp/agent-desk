@@ -9,9 +9,9 @@ logs:
 - what evidence supports that state
 - what remains not done
 
-This document defines the first shared product vocabulary for docs, UI copy,
-tests, and future issues. It builds on the milestone completion criteria and
-the first read-only desktop replay surface.
+This document defines the shared product vocabulary for docs, UI copy, tests,
+and future issues. It builds on the milestone completion criteria and the first
+read-only desktop replay surface.
 
 ## Primary Surfaces
 
@@ -34,7 +34,7 @@ Work state rows may be derived from imported observations or sample data. They
 are not raw imported observations, and they should not expose private source
 payloads.
 
-### Read-Only Timeline
+### Timeline
 
 The timeline is the chronological view of accepted, public-safe events. It
 shows event type, work item, source, timestamp, detail text, and evidence
@@ -55,14 +55,30 @@ The queue must not encourage unsafe bulk approval. Disabled, unavailable, or
 future action affordances should explain the missing prerequisite instead of
 pretending the console can act.
 
-### Detail And Evidence
+### Evidence Detail
 
-Detail/evidence surfaces let the operator inspect why a work item, event,
+Evidence detail surfaces let the operator inspect why a work item, event,
 decision, or status appears. They should show public-safe evidence references,
 related timeline entries, and projection warnings when available.
 
 Evidence is a reference to inspectable material, not a place to store raw
 private runtime data. Missing evidence should be shown as missing, not inferred.
+
+## Canonical Section Order
+
+Desktop and mobile display structure uses this canonical section order:
+
+| Order | Canonical section | Desktop label today | Mobile label today | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | Replay status | Replay status | Projection warnings | Mobile currently exposes only the warning/status subset. |
+| 2 | Work state | Work state | Current work | Same current-work concept; desktop label is canonical. |
+| 3 | Timeline | Read-only timeline | Recent events / Timeline | `Timeline` is canonical; `Recent events` is a compact supporting feed until the shared structure source lands. |
+| 4 | Decision queue | Decision queue | Attention queue | Same operator-attention concept; desktop label is canonical. |
+| 5 | Evidence detail | Evidence drilldown | No standalone label / timeline inline detail | `Evidence detail` is canonical; drilldown/inline expansion are surface-specific presentations. |
+
+Per-surface labels are allowed only when this table records the mapping and
+rationale. Unmapped label drift should be treated as a UI structure/copy defect.
+The shared structure work in #270 should use these canonical names.
 
 ### Sources
 
@@ -134,14 +150,16 @@ send, delete, purchase, or change accounts.
 
 ## Desktop And Mobile Boundaries
 
-Desktop is the first full operator surface. It owns dense scanning, replay
-status, work state, timeline, decision queue, detail/evidence, and later safe
+Desktop is the first dense operator surface. It owns dense scanning, replay
+status, work state, timeline, decision queue, evidence detail, and later safe
 approval flows.
 
-Mobile is read-only proof for the first milestone. It may show status,
-attention, timeline summaries, evidence summaries, and unavailable-action
-explanations. It must not expose external side-effect actions in the proof
-phase.
+Desktop and mobile display functionality should stay aligned in both
+directions. Mobile may use compact presentation, but it should not omit display
+capabilities merely because it is mobile. The intentional divergence is
+side-effecting controls: mobile and desktop must not expose stop, resume, retry,
+approve, external send, or other side-effect actions until a scoped action
+proposal, approval, audit, and executor path exists.
 
 ## Copy Guidance
 

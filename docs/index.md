@@ -21,13 +21,13 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Privacy boundary regression](privacy-boundary-regression.md): safe persist/commit/publish rules and representative leak fixtures.
 - [Roadmap verification gate matrix](roadmap-verification-gate-matrix.md): capability-to-evidence acceptance gates.
 - [Verification evidence](verification-evidence.md): structured check results and completion evidence examples.
-- [Mobile read-only contract](mobile-read-only-contract.md): shared `:app` read model and first mobile evidence expectations.
+- [Mobile display-parity contract](mobile-read-only-contract.md): shared `:app` read model, display parity expectations, and action boundaries.
 - [Engineering style](engineering-style.md): Kotlin, domain, adapter, test, and documentation conventions.
 - [Decision log](decision-log.md): durable architecture and process decisions.
 - [Dependabot policy](dependabot-policy.md): dependency update policy, auto-merge gates, and coverage gate status.
 - [Public hygiene](public-hygiene.md): tracked-file public-safety scanner scope, blocked pattern families, placeholder examples, and local fixture smoke.
 - [Desktop verification](desktop-verification.md): headless desktop smoke verification for the current Compose shell.
-- [Mobile read-only shell](mobile-read-only-shell.md): first Compose Multiplatform mobile proof and smoke verification.
+- [Mobile display shell](mobile-read-only-shell.md): first Compose Multiplatform mobile proof and smoke verification.
 - [Branch protection](branch-protection.md): recommended `main` protection and required checks.
 - [Role contract](roles.md): role coverage expectations for autonomous slice work, including post-merge Discovery.
 - [Daily report template](daily-report-template.md): reporting shape for daily implementation loops and discovery output.
