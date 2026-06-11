@@ -50,6 +50,7 @@ When an owner asks for a timeboxed run, such as "run for 2h", treat the duration
 Within a timeboxed run:
 
 - After every merged or reviewed slice, run Discovery, update issue state, then return to Manager selection if meaningful time remains.
+- A tiny cleanup or documentation-only slice is not a full daily run by itself. If the completed slice is small and at least 45 minutes remain before the timebox cutoff, continue to the next actionable slice unless a stop condition applies.
 - If Discovery or a decision issue creates a new unblocked slice and time remains, select that new slice next unless a higher-priority open issue exists.
 - If no open issues exist, Manager/Product should inspect `VISION.md`, recent commits, CI state, docs drift, roadmap gaps, and repeated operator pain, then create or propose the next narrow issue with Goal, Acceptance Criteria, Verification, and Notes.
 - If no issue can be created without guessing product direction or inventing low-value work, stop and report "no actionable work" with the evidence reviewed.
