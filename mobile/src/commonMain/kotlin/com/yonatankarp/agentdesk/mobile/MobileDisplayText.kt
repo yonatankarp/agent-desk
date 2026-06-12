@@ -23,6 +23,7 @@ internal object MobileDisplayText {
     const val NO_ITEMS_NEED_ATTENTION = "No items need attention"
     const val NO_RECENT_ACCEPTED_EVENTS = "No recent accepted events"
     const val NO_TIMELINE_ENTRIES = "No timeline entries"
+    const val NO_PROJECTION_WARNINGS = "No projection warnings"
 
     const val DETAILS_DISCLOSURE_COLLAPSED = "Details ▸"
     const val DETAILS_DISCLOSURE_EXPANDED = "Details ▾"

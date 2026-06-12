@@ -104,7 +104,7 @@ object MobileSmokeSnapshotBuilder {
 
     private fun List<MobileProjectionWarning>.toWarningRows(): List<String> {
         if (isEmpty()) {
-            return listOf("No projection warnings")
+            return listOf(MobileDisplayText.NO_PROJECTION_WARNINGS)
         }
 
         return map { warning -> "${warning.eventId} - ${warning.reason}" }
