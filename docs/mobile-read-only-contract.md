@@ -44,7 +44,7 @@ parity claims.
 | --- | --- | --- | --- |
 | Current work / work state | display view | display view | equal by contract |
 | Decision queue / attention queue | display view | display view | equal by contract |
-| Timeline scanning with state markers | partial; #331 tracks shared timeline projection adoption | display view | in progress |
+| Timeline scanning with state markers | display view | display view | equal by contract |
 | Evidence references, detail, and related items | partial; #332 tracks current-work and attention parity | partial; #333 tracks evidence-detail parity | in progress |
 | Timeline source | display view | partial; #334 tracks mobile source rendering | in progress |
 | Stale markers and projection warnings | display view | display view | equal by contract |
@@ -61,11 +61,10 @@ rows stay unavailable until an owner decision wires mobile actions.
 
 ## Structural Guard
 
-The intended guard for display parity is #270: a shared non-Compose structure
-source consumed by desktop, mobile, and snapshot/text renderers, with section
-presence and ordering tested once. Until that lands, parity docs should describe
-the target contract and cite open implementation gaps instead of claiming every
-field is already rendered on both surfaces.
+The structural guard for display parity is the shared non-Compose display
+structure source consumed by desktop, mobile, and snapshot/text renderers, with
+section presence and ordering tested once. Parity docs should cite open
+implementation gaps instead of claiming every field is rendered on both surfaces.
 
 Suggested verification for the shared contract:
 

@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
@@ -85,7 +84,7 @@ fun AgentDeskApp(
                             }
                         }
                         Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            val lines = screenState.eventLines()
+                            val lines = DesktopTimelinePresenter.rows(screenState.readyState())
                             if (lines.isEmpty()) {
                                 Text("No recent events", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
                             } else {
@@ -94,7 +93,7 @@ fun AgentDeskApp(
                                         type = line.type,
                                         occurredAt = line.occurredAt,
                                         detail = line.detail,
-                                        source = "${line.workItemId} from ${line.source}",
+                                        source = line.source,
                                         showDivider = i < lines.lastIndex,
                                     )
                                 }
@@ -152,8 +151,6 @@ private fun DesktopHeader(
 private fun DesktopScreenState.readyState(): OperatorState? = (this as? DesktopScreenState.Ready)?.state
 
 private fun DesktopScreenState.attentionItems(): List<WorkItem> = readyState()?.let(OperatorStatePresenter::attentionItems).orEmpty()
-
-private fun DesktopScreenState.eventLines(): List<EventLine> = readyState()?.let(OperatorStatePresenter::eventLines).orEmpty()
 
 private fun DesktopScreenState.message(): String? = when (this) {
     DesktopScreenState.Loading -> "Loading operator state"

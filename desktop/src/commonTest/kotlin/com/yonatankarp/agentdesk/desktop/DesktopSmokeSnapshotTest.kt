@@ -1,16 +1,22 @@
 package com.yonatankarp.agentdesk.desktop
 
 import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
+import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldHaveNoActionAffordances
+import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
+import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 
@@ -32,7 +38,10 @@ class DesktopSmokeSnapshotTest :
                     text shouldContain "Not done: 2 item(s) need operator attention."
                     text shouldContain "Discovery/no-issue output is triage, not product completion."
                     text shouldContain "[Running] agent-task:42 Run public hygiene check"
-                    text shouldContain "work.started agent-task:42 from sample-agent"
+                    text shouldContain "Date: 2026-06-02"
+                    text shouldContain "work.started at 2026-06-02T21:00:00Z"
+                    text shouldContain "State: Read-only; Agent accepted the task and started local checks."
+                    text shouldContain "[agent-task:42 from sample-agent]"
                     text shouldContain "[Needs decision] agent-task:43 Choose adapter boundary"
                     text shouldContain "[Blocked] agent-task:44 Review build failure"
                     text shouldContain "Observation: work.blocked for agent-task:44"
@@ -83,6 +92,26 @@ class DesktopSmokeSnapshotTest :
                         "Operator notes: unavailable in read-only proof.",
                         "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design.",
                     )
+                }
+            }
+
+            `when`("events include completed, failed, and stale entries across time windows") {
+                then("desktop renders the shared read-only timeline projection fields") {
+                    val state = timelineParityState()
+
+                    val rows = DesktopSmokeSnapshotBuilder.from(
+                        DesktopScreenState.Ready(state = state, modeLabel = "Loaded state"),
+                    ).sectionRows("Read-only timeline")
+
+                    rows.first() shouldBe "Status - Read-only, Stale, Failed, Completed [Read-only timeline projection]"
+                    rows shouldContain "Date: 2026-06-02"
+                    rows shouldContain "work.succeeded at 2026-06-02T21:10:00Z - State: Completed; Succeeded; " +
+                        "Completion: Successful outcome; Evidence: sanitized-note Completion note -> " +
+                        "docs/evidence/completed.md [agent-task:42 from mock-adapter]"
+                    rows shouldContain "work.failed at 2026-06-03T09:05:00Z - State: Failed; Build failed.; " +
+                        "Completion: Failed outcome [agent-task:43 from mock-adapter]"
+                    rows shouldContain "work.started at 2026-06-03T09:10:00Z - State: Stale; Waiting on background import.; " +
+                        "Evidence: sanitized-note Stale note -> docs/evidence/stale.md [agent-task:44 from mock-adapter]"
                 }
             }
 
@@ -178,3 +207,38 @@ class DesktopSmokeSnapshotTest :
     })
 
 private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
+
+private fun timelineParityState(): OperatorState {
+    val events = workEvents {
+        started(workItemId = "agent-task:42", title = "Ship read-only timeline", summary = "Timeline work started.")
+        succeeded(
+            workItemId = "agent-task:42",
+            evidence = listOf(sanitizedNoteEvidence("Completion note", "docs/evidence/completed.md")),
+        )
+        started(
+            workItemId = "agent-task:43",
+            at = EventTimestamp.parse("2026-06-03T09:00:00Z"),
+            title = "Run failing projection",
+            summary = "Projection failure analysis started.",
+        )
+        failed(workItemId = "agent-task:43", at = EventTimestamp.parse("2026-06-03T09:05:00Z"))
+        started(
+            workItemId = "agent-task:44",
+            at = EventTimestamp.parse("2026-06-03T09:10:00Z"),
+            title = "Watch import freshness",
+            summary = "Waiting on background import.",
+            evidence = listOf(sanitizedNoteEvidence("Stale note", "docs/evidence/stale.md")),
+        )
+    }
+    val projected = OperatorStateProjector.project(events)
+    return projected.copy(
+        staleAttention = listOf(
+            StaleWorkAttention(
+                workItemId = WorkItemId.parse("agent-task:44"),
+                status = WorkStatus.Running,
+                lastEventAt = EventTimestamp.parse("2026-06-03T09:10:00Z"),
+                staleForMinutes = 120,
+            ),
+        ),
+    )
+}

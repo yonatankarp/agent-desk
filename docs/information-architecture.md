@@ -72,13 +72,12 @@ Desktop and mobile display structure uses this canonical section order:
 | --- | --- | --- | --- | --- |
 | 1 | Replay status | Replay status | Projection warnings | Mobile currently exposes only the warning/status subset. |
 | 2 | Work state | Work state | Current work | Same current-work concept; desktop label is canonical. |
-| 3 | Timeline | Read-only timeline | Recent events / Timeline | `Timeline` is canonical; `Recent events` is a compact supporting feed until the shared structure source lands. |
+| 3 | Timeline | Read-only timeline | Timeline | `Timeline` is canonical; surfaces render it from the shared display structure. |
 | 4 | Decision queue | Decision queue | Attention queue | Same operator-attention concept; desktop label is canonical. |
 | 5 | Evidence detail | Evidence drilldown | No standalone label / timeline inline detail | `Evidence detail` is canonical; drilldown/inline expansion are surface-specific presentations. |
 
 Per-surface labels are allowed only when this table records the mapping and
 rationale. Unmapped label drift should be treated as a UI structure/copy defect.
-The shared structure work in #270 should use these canonical names.
 
 ### Sources
 
