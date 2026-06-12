@@ -73,14 +73,11 @@ fun AgentDeskApp(
                 Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                         Panel(title = OperatorDisplaySection.WorkState.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            val items = screenState.readyState()?.workItems.orEmpty()
-                            if (items.isEmpty()) {
+                            val rows = screenState.workRows()
+                            if (rows.isEmpty()) {
                                 Text("No current work", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
                             } else {
-                                items.forEach { item ->
-                                    val p = OperatorStatePresenter.presentationFor(item.status)
-                                    ActionRow(id = item.id.toString(), title = item.title.toString(), tone = p.tone, statusLabel = p.label)
-                                }
+                                rows.forEach { row -> DesktopWorkMetadataRow(row) }
                             }
                         }
                         Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -110,13 +107,8 @@ fun AgentDeskApp(
                             val message = screenState.message()
                             when {
                                 message != null -> Text(message, color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
-
                                 attention.isEmpty() -> Text("No items need a decision", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
-
-                                else -> attention.forEach { item ->
-                                    val p = OperatorStatePresenter.presentationFor(item.status)
-                                    ActionRow(id = item.id.toString(), title = item.title.toString(), tone = p.tone, statusLabel = p.label)
-                                }
+                                else -> screenState.attentionRows().forEach { row -> DesktopWorkMetadataRow(row) }
                             }
                         }
                         Panel(title = OperatorDisplaySection.EvidenceDetail.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -148,9 +140,44 @@ private fun DesktopHeader(
     }
 }
 
+@Composable
+private fun DesktopWorkMetadataRow(row: DesktopWorkItemRow) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        ActionRow(id = row.id, title = row.title, tone = row.tone, statusLabel = row.statusLabel)
+        row.summary?.let { summary ->
+            Text(summary, color = AgentDeskTheme.colors.textSecondary, fontSize = 12.sp, lineHeight = 17.sp)
+        }
+        row.evidenceText?.let { evidence ->
+            Text(
+                "Evidence: $evidence",
+                color = AgentDeskTheme.colors.textMuted,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
+                fontSize = 10.sp,
+                lineHeight = 15.sp,
+            )
+        }
+        row.staleText?.let { stale ->
+            Text(
+                stale,
+                color = AgentDeskTheme.statusRole(StatusTone.Attention).text,
+                fontFamily = AgentDeskTheme.typography.monoFamily,
+                fontSize = 10.sp,
+                lineHeight = 15.sp,
+            )
+        }
+    }
+}
+
 private fun DesktopScreenState.readyState(): OperatorState? = (this as? DesktopScreenState.Ready)?.state
 
-private fun DesktopScreenState.attentionItems(): List<WorkItem> = readyState()?.let(OperatorStatePresenter::attentionItems).orEmpty()
+private fun DesktopScreenState.attentionItems(): List<WorkItem> = DesktopWorkItemPresenter.attentionItems(readyState())
+
+private fun DesktopScreenState.workRows(): List<DesktopWorkItemRow> {
+    val state = readyState()
+    return DesktopWorkItemPresenter.rows(state, state?.workItems.orEmpty(), includeStale = false)
+}
+
+private fun DesktopScreenState.attentionRows(): List<DesktopWorkItemRow> = DesktopWorkItemPresenter.rows(readyState(), attentionItems(), includeStale = true)
 
 private fun DesktopScreenState.message(): String? = when (this) {
     DesktopScreenState.Loading -> "Loading operator state"
@@ -160,5 +187,5 @@ private fun DesktopScreenState.message(): String? = when (this) {
 
 private fun DesktopScreenState.summaryText(): String {
     val state = readyState() ?: return "0 active / 0 attention"
-    return "${OperatorStatePresenter.activeCount(state)} active / ${OperatorStatePresenter.attentionItems(state).size} attention"
+    return "${OperatorStatePresenter.activeCount(state)} active / ${DesktopWorkItemPresenter.attentionItems(state).size} attention"
 }

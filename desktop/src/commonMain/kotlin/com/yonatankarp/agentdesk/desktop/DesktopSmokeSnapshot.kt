@@ -4,7 +4,6 @@ import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
-import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 
 data class DesktopSmokeSnapshot(
     val title: String,
@@ -35,8 +34,20 @@ object DesktopSmokeSnapshotBuilder {
         val state = (screenState as? DesktopScreenState.Ready)?.state
         val message = screenState.message()
         val workItems = state?.workItems.orEmpty()
+        val workRows = DesktopWorkItemPresenter.snapshotRows(
+            state,
+            workItems,
+            emptyText = "No current work",
+            includeStale = false,
+        )
         val timelineRows = DesktopTimelinePresenter.snapshotRows(state)
-        val attentionItems = state?.let(OperatorStatePresenter::attentionItems).orEmpty()
+        val attentionItems = DesktopWorkItemPresenter.attentionItems(state)
+        val attentionRows = DesktopWorkItemPresenter.snapshotRows(
+            state,
+            attentionItems,
+            emptyText = "No items need a decision",
+            includeStale = true,
+        )
         return DesktopSmokeSnapshot(
             title = "Agent Desk",
             modeLabel = screenState.modeLabel,
@@ -46,9 +57,9 @@ object DesktopSmokeSnapshotBuilder {
                     title = section.desktopLabel,
                     rows = section.rows(
                         screenState = screenState,
-                        workItems = workItems,
+                        workRows = workRows,
                         timelineRows = timelineRows,
-                        attentionItems = attentionItems,
+                        attentionRows = attentionRows,
                         message = message,
                     ),
                 )
@@ -58,27 +69,21 @@ object DesktopSmokeSnapshotBuilder {
 
     private fun OperatorDisplaySection.rows(
         screenState: DesktopScreenState,
-        workItems: List<WorkItem>,
+        workRows: List<String>,
         timelineRows: List<String>,
-        attentionItems: List<WorkItem>,
+        attentionRows: List<String>,
         message: String?,
     ): List<String> = when (this) {
         OperatorDisplaySection.ReplayStatus -> DesktopReplayStatus.rows(screenState)
-
-        OperatorDisplaySection.WorkState -> workItems.toWorkRows(emptyText = "No current work")
-
+        OperatorDisplaySection.WorkState -> workRows
         OperatorDisplaySection.Timeline -> timelineRows
-
-        OperatorDisplaySection.DecisionQueue -> message?.let(::listOf) ?: attentionItems.toWorkRows(
-            emptyText = "No items need a decision",
-        )
-
+        OperatorDisplaySection.DecisionQueue -> message?.let(::listOf) ?: attentionRows
         OperatorDisplaySection.EvidenceDetail -> DesktopEvidenceDrilldown.rows(screenState)
     }
 
     private fun DesktopScreenState.summaryText(): String {
         val state = (this as? DesktopScreenState.Ready)?.state ?: return "0 active / 0 attention"
-        val attentionItems = OperatorStatePresenter.attentionItems(state)
+        val attentionItems = DesktopWorkItemPresenter.attentionItems(state)
         return "${OperatorStatePresenter.activeCount(state)} active / ${attentionItems.size} attention"
     }
 
@@ -86,20 +91,5 @@ object DesktopSmokeSnapshotBuilder {
         DesktopScreenState.Loading -> "Loading operator state"
         is DesktopScreenState.Error -> message
         is DesktopScreenState.Ready -> null
-    }
-
-    private fun List<WorkItem>.toWorkRows(emptyText: String): List<String> {
-        if (isEmpty()) {
-            return listOf(emptyText)
-        }
-
-        return map { item ->
-            buildString {
-                append("[${OperatorStatePresenter.presentationFor(item.status).label}] ${item.id} ${item.title}")
-                item.summary?.let { summary ->
-                    append(" - $summary")
-                }
-            }
-        }
     }
 }

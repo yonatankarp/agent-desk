@@ -45,8 +45,9 @@ parity claims.
 | Current work / work state | display view | display view | equal by contract |
 | Decision queue / attention queue | display view | display view | equal by contract |
 | Timeline scanning with state markers | display view | display view | equal by contract |
-| Evidence references, detail, and related items | partial; #332 tracks current-work and attention parity | partial; #333 tracks evidence-detail parity | in progress |
-| Timeline source | display view | partial; #334 tracks mobile source rendering | in progress |
+| Evidence references on work and attention rows | display view | display view | equal by contract |
+| Evidence detail fields and related items | partial | partial; #333 tracks decision/criteria detail parity | in progress |
+| Timeline source | display view | display view | equal by contract |
 | Stale markers and projection warnings | display view | display view | equal by contract |
 
 Action capabilities are intentionally separate from display parity. Nothing in

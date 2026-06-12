@@ -140,6 +140,28 @@ class DesktopSmokeSnapshotTest :
                 }
             }
 
+            `when`("current work has evidence and stale attention") {
+                then("desktop work and attention rows render the parity metadata") {
+                    val snapshot = DesktopSmokeSnapshotBuilder.from(
+                        DesktopScreenState.Ready(
+                            state = workAttentionParityState(),
+                            modeLabel = "Loaded state",
+                        ),
+                    )
+
+                    snapshot.summary shouldBe "1 active / 1 attention"
+                    snapshot.sectionRows("Work state") shouldBe listOf(
+                        "[Running] agent-task:91 Inspect stored projection - Agent is checking accepted events. | " +
+                            "Evidence: sanitized-note Desktop evidence -> docs/evidence/desktop.md",
+                    )
+                    snapshot.sectionRows("Decision queue") shouldBe listOf(
+                        "[Running] agent-task:91 Inspect stored projection - Agent is checking accepted events. | " +
+                            "Evidence: sanitized-note Desktop evidence -> docs/evidence/desktop.md " +
+                            "(Stale 1h 30m since 2026-06-02 21:00 UTC)",
+                    )
+                }
+            }
+
             `when`("a work item reached a canceled terminal state") {
                 then("the canceled label passes the action-verb denylist") {
                     val item =
@@ -238,6 +260,28 @@ private fun timelineParityState(): OperatorState {
                 status = WorkStatus.Running,
                 lastEventAt = EventTimestamp.parse("2026-06-03T09:10:00Z"),
                 staleForMinutes = 120,
+            ),
+        ),
+    )
+}
+
+private fun workAttentionParityState(): OperatorState {
+    val events = workEvents {
+        started(
+            workItemId = "agent-task:91",
+            title = "Inspect stored projection",
+            summary = "Agent is checking accepted events.",
+            evidence = listOf(sanitizedNoteEvidence("Desktop evidence", "docs/evidence/desktop.md")),
+        )
+    }
+    val projected = OperatorStateProjector.project(events)
+    return projected.copy(
+        staleAttention = listOf(
+            StaleWorkAttention(
+                workItemId = WorkItemId.parse("agent-task:91"),
+                status = WorkStatus.Running,
+                lastEventAt = EventTimestamp.parse("2026-06-02T21:00:00Z"),
+                staleForMinutes = 90,
             ),
         ),
     )
