@@ -3,7 +3,10 @@ package com.yonatankarp.agentdesk.app.operator.mobile
 import com.yonatankarp.agentdesk.app.operator.EvidenceLine
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
+import com.yonatankarp.agentdesk.app.operator.ReplayStatusPresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.operator.decision.DecisionQueueItem
+import com.yonatankarp.agentdesk.app.operator.decision.DecisionQueueProjector
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineEntryState
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineProjector
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineStateMarker
@@ -21,6 +24,8 @@ object MobileOperatorStateContract {
     ): MobileOperatorState {
         val evidenceByWorkItem = state.latestEvidenceByWorkItem()
         val workItemsById = state.workItems.associateBy { it.id.toString() }
+        val decisionsByWorkItem = DecisionQueueProjector.project(state).items.associateBy { item -> item.workItemId.toString() }
+        val criteriaResult = ReplayStatusPresenter.criteriaResult(state, modeLabel = "Loaded state")
         val recentEvents = OperatorStatePresenter.eventLines(state).map { line ->
             MobileEventLine(
                 occurredAt = line.occurredAt,
@@ -58,7 +63,13 @@ object MobileOperatorStateContract {
             projectionWarnings = projectionWarnings,
             timeline = timeline,
             timelineStatusMarkers = timelineProjection.stateMarkers.map { it.toMobileLabel() },
-            evidenceDetails = timeline.map { entry -> entry.toEvidenceDetail(recentEvents) },
+            evidenceDetails = timeline.map { entry ->
+                entry.toEvidenceDetail(
+                    recentEvents = recentEvents,
+                    decision = decisionsByWorkItem[entry.workItemId],
+                    criteriaResult = criteriaResult,
+                )
+            },
         )
     }
 
@@ -72,12 +83,18 @@ object MobileOperatorStateContract {
 
     private fun MobileTimelineEntry.toEvidenceDetail(
         recentEvents: List<MobileEventLine>,
+        decision: DecisionQueueItem?,
+        criteriaResult: String,
     ): MobileEvidenceDetail = MobileEvidenceDetail(
         eventId = eventId,
         source = source,
         timestamp = occurredAt,
         summary = summary,
         provenance = "replay event $eventId",
+        decisionState = decision?.state?.name,
+        decisionSource = decision?.request?.source?.toString(),
+        decisionUnavailableReason = decision?.unavailableReason ?: "unavailable for latest replay event.",
+        criteriaResult = criteriaResult,
         evidenceReferences = evidenceReferences,
         relatedEvents = recentEvents.filter { line ->
             line.workItemId == workItemId && !(line.occurredAt == occurredAt && line.type == type)

@@ -172,6 +172,27 @@ class MobileOperatorStateContractTest :
                         detail.provenance shouldBe "replay event event:agent-task:42:blocked"
                         detail.evidenceReferences.single().target shouldBe "docs/blocked-context.md"
                         detail.relatedEvents.single().type shouldBe "work.started"
+                        detail.decisionState shouldBe null
+                        detail.decisionUnavailableReason shouldBe "unavailable for latest replay event."
+                        detail.criteriaResult shouldBe "Not done: 1 item(s) need operator attention."
+                    }
+                }
+
+                then("the detail exposes recorded decision state and criteria result") {
+                    val state = MobileOperatorStateContract.fromEvents(
+                        workEvents {
+                            started()
+                            needsDecision(evidence = listOf(sanitizedNoteEvidence("Decision context", "docs/decision-context.md")))
+                        },
+                    )
+
+                    val detail = state.evidenceDetails.last()
+                    assertSoftly {
+                        detail.decisionState shouldBe "Pending"
+                        detail.decisionSource shouldBe "mock-adapter"
+                        detail.decisionUnavailableReason shouldBe
+                            "Read-only projection: operator decisions are visible, but action execution is not wired in this slice."
+                        detail.criteriaResult shouldBe "Not done: 1 item(s) need operator attention."
                     }
                 }
 
@@ -186,12 +207,18 @@ class MobileOperatorStateContractTest :
                     assertSoftly {
                         detail.relatedEvents shouldBe emptyList()
                         detail.evidenceReferences shouldBe emptyList()
+                        detail.decisionState shouldBe null
+                        detail.decisionUnavailableReason shouldBe "unavailable for latest replay event."
+                        detail.criteriaResult shouldBe "Decision queue: no items need operator attention."
                         buildString {
                             state.timeline.forEach { entry ->
                                 appendLine("${entry.occurredAt} ${entry.source} ${entry.type} ${entry.stateLabel} ${entry.summary}")
                             }
                             state.evidenceDetails.forEach { lineDetail ->
-                                appendLine("${lineDetail.source} ${lineDetail.timestamp} ${lineDetail.summary} ${lineDetail.provenance}")
+                                appendLine(
+                                    "${lineDetail.source} ${lineDetail.timestamp} ${lineDetail.summary} " +
+                                        "${lineDetail.provenance} ${lineDetail.decisionUnavailableReason} ${lineDetail.criteriaResult}",
+                                )
                             }
                         }.shouldBePublicSafe()
                     }

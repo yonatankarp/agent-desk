@@ -46,7 +46,7 @@ parity claims.
 | Decision queue / attention queue | display view | display view | equal by contract |
 | Timeline scanning with state markers | display view | display view | equal by contract |
 | Evidence references on work and attention rows | display view | display view | equal by contract |
-| Evidence detail fields and related items | partial | partial; #333 tracks decision/criteria detail parity | in progress |
+| Evidence detail fields and related items | display view | display view | equal by contract |
 | Timeline source | display view | display view | equal by contract |
 | Stale markers and projection warnings | display view | display view | equal by contract |
 
