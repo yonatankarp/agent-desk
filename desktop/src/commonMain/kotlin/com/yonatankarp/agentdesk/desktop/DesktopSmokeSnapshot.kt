@@ -1,6 +1,5 @@
 package com.yonatankarp.agentdesk.desktop
 
-import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.OperatorState
@@ -36,7 +35,7 @@ object DesktopSmokeSnapshotBuilder {
         val state = (screenState as? DesktopScreenState.Ready)?.state
         val message = screenState.message()
         val workItems = state?.workItems.orEmpty()
-        val events = state?.let(OperatorStatePresenter::eventLines).orEmpty()
+        val timelineRows = DesktopTimelinePresenter.snapshotRows(state)
         val attentionItems = state?.let(OperatorStatePresenter::attentionItems).orEmpty()
         return DesktopSmokeSnapshot(
             title = "Agent Desk",
@@ -48,7 +47,7 @@ object DesktopSmokeSnapshotBuilder {
                     rows = section.rows(
                         screenState = screenState,
                         workItems = workItems,
-                        events = events,
+                        timelineRows = timelineRows,
                         attentionItems = attentionItems,
                         message = message,
                     ),
@@ -60,7 +59,7 @@ object DesktopSmokeSnapshotBuilder {
     private fun OperatorDisplaySection.rows(
         screenState: DesktopScreenState,
         workItems: List<WorkItem>,
-        events: List<EventLine>,
+        timelineRows: List<String>,
         attentionItems: List<WorkItem>,
         message: String?,
     ): List<String> = when (this) {
@@ -68,9 +67,7 @@ object DesktopSmokeSnapshotBuilder {
 
         OperatorDisplaySection.WorkState -> workItems.toWorkRows(emptyText = "No current work")
 
-        OperatorDisplaySection.Timeline -> events.map { line ->
-            "${line.type} ${line.workItemId} from ${line.source} - ${line.detail}"
-        }.ifEmpty { listOf("No recent events") }
+        OperatorDisplaySection.Timeline -> timelineRows
 
         OperatorDisplaySection.DecisionQueue -> message?.let(::listOf) ?: attentionItems.toWorkRows(
             emptyText = "No items need a decision",
