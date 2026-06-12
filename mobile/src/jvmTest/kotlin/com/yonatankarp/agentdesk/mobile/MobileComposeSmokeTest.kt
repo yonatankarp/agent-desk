@@ -85,6 +85,8 @@ class MobileComposeSmokeTest :
                 onNodeWithText("Details ▾").performScrollTo().assertIsDisplayed()
                 onNodeWithText(provenance).performScrollTo().assertIsDisplayed()
                 onNodeWithText("Source: mock-adapter").assertIsDisplayed()
+                onNodeWithText("Decision: unavailable for latest replay event.").assertIsDisplayed()
+                onNodeWithText("Criteria result: Not done: 1 item(s) need operator attention.").assertIsDisplayed()
                 onNodeWithText("Related events: work.started").assertIsDisplayed()
                 onNodeWithText("Redacted evidence: raw provider payloads are not rendered.").assertIsDisplayed()
 

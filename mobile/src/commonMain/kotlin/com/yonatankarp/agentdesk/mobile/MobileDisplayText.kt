@@ -54,6 +54,13 @@ internal object MobileDisplayText {
         } else {
             add("Evidence: ${evidenceReferences(detail.evidenceReferences)}")
         }
+        if (detail.decisionState != null && detail.decisionSource != null) {
+            add("Decision: ${detail.decisionState} from ${detail.decisionSource}")
+            add("Decision unavailable: ${detail.decisionUnavailableReason}")
+        } else {
+            add("Decision: ${detail.decisionUnavailableReason}")
+        }
+        add("Criteria result: ${detail.criteriaResult}")
         if (detail.relatedEvents.isEmpty()) {
             add(RELATED_EVENTS_NONE)
         } else {

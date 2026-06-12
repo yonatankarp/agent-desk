@@ -12,6 +12,10 @@ data class MobileEvidenceDetail(
     val timestamp: String,
     val summary: String,
     val provenance: String,
+    val decisionState: String? = null,
+    val decisionSource: String? = null,
+    val decisionUnavailableReason: String = "unavailable for latest replay event.",
+    val criteriaResult: String = "Criteria unavailable.",
     val evidenceReferences: List<MobileEvidenceReference> = emptyList(),
     val relatedEvents: List<MobileEventLine> = emptyList(),
 )

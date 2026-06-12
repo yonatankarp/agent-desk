@@ -121,6 +121,11 @@ class MobileSmokeSnapshotTest :
                         timestamp = "2026-06-02T21:00:00Z",
                         summary = "Agent is checking accepted events.",
                         provenance = "replay event event:agent-task:91:started",
+                        decisionState = "Pending",
+                        decisionSource = "mock-adapter",
+                        decisionUnavailableReason =
+                        "Read-only projection: operator decisions are visible, but action execution is not wired in this slice.",
+                        criteriaResult = "Not done: 1 item(s) need operator attention.",
                     ),
                 ),
             )
@@ -136,6 +141,9 @@ class MobileSmokeSnapshotTest :
             text shouldContain "Status: Read-only"
             text shouldContain "2026-06-02T21:00:00Z [work.started] agent-task:91 from mock-adapter [Read-only]"
             text shouldContain "Provenance: replay event event:agent-task:91:started"
+            text shouldContain "Decision: Pending from mock-adapter"
+            text shouldContain "Decision unavailable: Read-only projection: operator decisions are visible, but action execution is not wired in this slice."
+            text shouldContain "Criteria result: Not done: 1 item(s) need operator attention."
             text shouldContain "Related events: none"
             text shouldContain "Redacted evidence: raw provider payloads are not rendered."
             text.shouldHaveNoActionAffordances()
