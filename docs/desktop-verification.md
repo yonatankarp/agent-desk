@@ -38,6 +38,7 @@ The smoke tests cover:
 - public-safe sample state
 - empty state rows
 - not-done and attention-needed rows
+- evidence references on current-work rows and stale metadata on attention rows
 - timeline projection status markers, grouped dates, completion outcomes, and evidence references
 - loaded, loading, and invalid-input states
 
