@@ -34,8 +34,10 @@ internal object MobileDisplayText {
 
     fun timelineStatus(markers: List<String>): String = "Status: ${markers.joinToString()}"
 
+    fun timelineSource(entry: MobileTimelineEntry): String = "${entry.workItemId} from ${entry.source}"
+
     fun timelineRow(entry: MobileTimelineEntry): String = buildString {
-        append("${entry.occurredAt} [${entry.type}] ${entry.workItemId} from ${entry.source} [${entry.stateLabel}] - ${entry.summary}")
+        append("${entry.occurredAt} [${entry.type}] ${timelineSource(entry)} [${entry.stateLabel}] - ${entry.summary}")
         entry.completionSummary?.let { completion -> append(" ($completion)") }
         if (entry.evidenceReferences.isNotEmpty()) {
             append(" | Evidence: ${evidenceReferences(entry.evidenceReferences)}")

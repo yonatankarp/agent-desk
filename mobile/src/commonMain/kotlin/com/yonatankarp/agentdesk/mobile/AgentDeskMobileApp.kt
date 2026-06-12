@@ -298,7 +298,7 @@ private fun MobileTimelineRow(
             fontWeight = FontWeight.Medium,
         )
         Text(
-            text = entry.workItemId,
+            text = MobileDisplayText.timelineSource(entry),
             color = AgentDeskTheme.colors.textMuted,
             fontFamily = AgentDeskTheme.typography.monoFamily,
             fontSize = 11.sp,

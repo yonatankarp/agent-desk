@@ -78,6 +78,7 @@ class MobileComposeSmokeTest :
                 val provenance = "Provenance: replay event event:agent-task:42:blocked"
                 onNodeWithText("Timeline").performScrollTo().assertIsDisplayed()
                 onNodeWithText("Status: Read-only, Blocked").performScrollTo().assertIsDisplayed()
+                onAllNodesWithText("agent-task:42 from mock-adapter").assertCountEquals(2)
                 onNodeWithText(provenance).assertDoesNotExist()
 
                 onAllNodesWithText("Details ▸")[1].performScrollTo().performClick()
