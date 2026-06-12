@@ -1,5 +1,8 @@
 package com.yonatankarp.agentdesk.desktop
 
+import com.yonatankarp.agentdesk.app.operator.EventLine
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
@@ -39,31 +42,41 @@ object DesktopSmokeSnapshotBuilder {
             title = "Agent Desk",
             modeLabel = screenState.modeLabel,
             summary = screenState.summaryText(),
-            sections = listOf(
+            sections = OperatorDisplayStructure.orderedSections.map { section ->
                 DesktopSmokeSection(
-                    title = "Replay status",
-                    rows = DesktopReplayStatus.rows(screenState),
-                ),
-                DesktopSmokeSection(
-                    title = "Work state",
-                    rows = workItems.toWorkRows(emptyText = "No current work"),
-                ),
-                DesktopSmokeSection(
-                    title = "Read-only timeline",
-                    rows = events.map { line ->
-                        "${line.type} ${line.workItemId} from ${line.source} - ${line.detail}"
-                    }.ifEmpty { listOf("No recent events") },
-                ),
-                DesktopSmokeSection(
-                    title = "Decision queue",
-                    rows = message?.let(::listOf) ?: attentionItems.toWorkRows(emptyText = "No items need a decision"),
-                ),
-                DesktopSmokeSection(
-                    title = "Evidence drilldown",
-                    rows = DesktopEvidenceDrilldown.rows(screenState),
-                ),
-            ),
+                    title = section.desktopLabel,
+                    rows = section.rows(
+                        screenState = screenState,
+                        workItems = workItems,
+                        events = events,
+                        attentionItems = attentionItems,
+                        message = message,
+                    ),
+                )
+            },
         )
+    }
+
+    private fun OperatorDisplaySection.rows(
+        screenState: DesktopScreenState,
+        workItems: List<WorkItem>,
+        events: List<EventLine>,
+        attentionItems: List<WorkItem>,
+        message: String?,
+    ): List<String> = when (this) {
+        OperatorDisplaySection.ReplayStatus -> DesktopReplayStatus.rows(screenState)
+
+        OperatorDisplaySection.WorkState -> workItems.toWorkRows(emptyText = "No current work")
+
+        OperatorDisplaySection.Timeline -> events.map { line ->
+            "${line.type} ${line.workItemId} from ${line.source} - ${line.detail}"
+        }.ifEmpty { listOf("No recent events") }
+
+        OperatorDisplaySection.DecisionQueue -> message?.let(::listOf) ?: attentionItems.toWorkRows(
+            emptyText = "No items need a decision",
+        )
+
+        OperatorDisplaySection.EvidenceDetail -> DesktopEvidenceDrilldown.rows(screenState)
     }
 
     private fun DesktopScreenState.summaryText(): String {

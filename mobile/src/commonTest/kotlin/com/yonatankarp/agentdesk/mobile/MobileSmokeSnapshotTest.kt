@@ -24,6 +24,13 @@ class MobileSmokeSnapshotTest :
             val text = snapshot.flattenedText()
 
             snapshot.title shouldBe "Agent Desk"
+            snapshot.sections.map { section -> section.title } shouldBe listOf(
+                "Projection warnings",
+                "Current work",
+                "Timeline",
+                "Attention queue",
+                "Evidence detail",
+            )
             text shouldContain "3 current / 2 attention"
             text shouldContain "[Running] agent-task:42 Run public hygiene check"
             text shouldContain "[Needs decision] agent-task:43 Choose adapter boundary"
@@ -122,7 +129,6 @@ class MobileSmokeSnapshotTest :
 
             text shouldContain "Evidence: check-run Mobile smoke -> https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"
             text shouldContain "Stale 1h 30m since 2026-06-02 21:00 UTC"
-            text shouldContain "Recent events"
             text shouldContain "2026-06-02T21:03:00Z [Evidence attached] agent-task:91"
             text shouldContain "Accepted event includes mobile smoke evidence."
             text shouldContain "Projection warnings"
@@ -192,8 +198,11 @@ class MobileSmokeSnapshotTest :
 
             snapshot.sectionRows("Current work") shouldBe listOf("No current work")
             snapshot.sectionRows("Attention queue") shouldBe listOf("No items need attention")
-            snapshot.sectionRows("Recent events") shouldBe listOf("No recent accepted events")
-            snapshot.sectionRows("Timeline") shouldBe listOf("No timeline entries")
+            snapshot.sectionRows("Timeline") shouldBe listOf(
+                "No recent accepted events",
+                "No timeline entries",
+            )
+            snapshot.sectionRows("Evidence detail") shouldBe listOf("Evidence missing: no timeline evidence detail is available.")
         }
     })
 
