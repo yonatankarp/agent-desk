@@ -1,6 +1,7 @@
 package com.yonatankarp.agentdesk.mobile
 
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
@@ -11,20 +12,23 @@ import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
 
 internal object MobileDisplayText {
     const val APP_TITLE = "Agent Desk"
-    const val CURRENT_WORK_TITLE = "Current work"
-    const val ATTENTION_QUEUE_TITLE = "Attention queue"
+    val CURRENT_WORK_TITLE = OperatorDisplaySection.WorkState.mobileLabel
+    val ATTENTION_QUEUE_TITLE = OperatorDisplaySection.DecisionQueue.mobileLabel
     const val RECENT_EVENTS_TITLE = "Recent events"
-    const val TIMELINE_TITLE = "Timeline"
-    const val PROJECTION_WARNINGS_TITLE = "Projection warnings"
+    val TIMELINE_TITLE = OperatorDisplaySection.Timeline.mobileLabel
+    val PROJECTION_WARNINGS_TITLE = OperatorDisplaySection.ReplayStatus.mobileLabel
+    val EVIDENCE_DETAIL_TITLE = OperatorDisplaySection.EvidenceDetail.mobileLabel
 
     const val NO_CURRENT_WORK = "No current work"
     const val NO_ITEMS_NEED_ATTENTION = "No items need attention"
     const val NO_RECENT_ACCEPTED_EVENTS = "No recent accepted events"
     const val NO_TIMELINE_ENTRIES = "No timeline entries"
+    const val NO_PROJECTION_WARNINGS = "No projection warnings"
 
     const val DETAILS_DISCLOSURE_COLLAPSED = "Details ▸"
     const val DETAILS_DISCLOSURE_EXPANDED = "Details ▾"
     const val EVIDENCE_MISSING = "Evidence missing: no public-safe evidence reference was attached."
+    const val EVIDENCE_DETAIL_MISSING = "Evidence missing: no timeline evidence detail is available."
     const val RELATED_EVENTS_NONE = "Related events: none"
     const val REDACTED_EVIDENCE = "Redacted evidence: raw provider payloads are not rendered."
 

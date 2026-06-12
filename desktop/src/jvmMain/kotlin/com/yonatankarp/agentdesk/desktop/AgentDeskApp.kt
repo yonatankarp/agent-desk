@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.app.operator.EventLine
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
@@ -65,14 +66,14 @@ fun AgentDeskApp(
                     mode = next
                     themeStore.save(next)
                 }
-                Panel(title = "Replay status", modifier = Modifier.fillMaxWidth()) {
+                Panel(title = OperatorDisplaySection.ReplayStatus.desktopLabel, modifier = Modifier.fillMaxWidth()) {
                     DesktopReplayStatus.rows(screenState).forEach { row ->
                         Text(row, color = AgentDeskTheme.colors.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
                     }
                 }
                 Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                        Panel(title = "Work state", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        Panel(title = OperatorDisplaySection.WorkState.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
                             val items = screenState.readyState()?.workItems.orEmpty()
                             if (items.isEmpty()) {
                                 Text("No current work", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
@@ -83,7 +84,7 @@ fun AgentDeskApp(
                                 }
                             }
                         }
-                        Panel(title = "Read-only timeline", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
                             val lines = screenState.eventLines()
                             if (lines.isEmpty()) {
                                 Text("No recent events", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
@@ -102,7 +103,7 @@ fun AgentDeskApp(
                     }
                     Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                         Panel(
-                            title = "Decision queue",
+                            title = OperatorDisplaySection.DecisionQueue.desktopLabel,
                             modifier = Modifier.weight(1f).fillMaxWidth(),
                             titleColor = AgentDeskTheme.statusRole(StatusTone.Blocked).text,
                         ) {
@@ -119,7 +120,7 @@ fun AgentDeskApp(
                                 }
                             }
                         }
-                        Panel(title = "Evidence drilldown", modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        Panel(title = OperatorDisplaySection.EvidenceDetail.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
                             DesktopEvidenceDrilldown.rows(screenState).forEach { row -> EvidenceItem(label = row) }
                         }
                     }

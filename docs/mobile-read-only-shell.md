@@ -34,7 +34,10 @@ Run the sample-only shell in a phone-sized desktop window:
 ./gradlew :mobile:run
 ```
 
-The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which should contain the `Current work`, `Attention queue`, and `Timeline` sections with sanitized sample work only.
+The deterministic smoke evidence is `MobileSmokeSnapshotBuilder.sample()`, which
+uses the shared display structure source for `Projection warnings`, `Current
+work`, `Timeline`, `Attention queue`, and `Evidence detail` sections with
+sanitized sample work only.
 
 ## Timeline and Evidence Detail
 

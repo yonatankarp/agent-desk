@@ -1,5 +1,7 @@
 package com.yonatankarp.agentdesk.mobile
 
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileOperatorState
@@ -37,49 +39,29 @@ object MobileSmokeSnapshotBuilder {
             currentWorkCount = state.currentWork.size,
             attentionCount = state.attentionQueue.size,
         ),
-        sections = buildList {
-            add(
-                MobileSmokeSection(
-                    title = MobileDisplayText.CURRENT_WORK_TITLE,
-                    rows = state.currentWork.toWorkRows(emptyText = MobileDisplayText.NO_CURRENT_WORK),
-                ),
+        sections = OperatorDisplayStructure.orderedSections.map { section ->
+            MobileSmokeSection(
+                title = section.mobileLabel,
+                rows = section.rows(state),
             )
-            add(
-                MobileSmokeSection(
-                    title = MobileDisplayText.ATTENTION_QUEUE_TITLE,
-                    rows = state.attentionQueue.toAttentionRows(),
-                ),
-            )
-            add(
-                MobileSmokeSection(
-                    title = MobileDisplayText.RECENT_EVENTS_TITLE,
-                    rows = state.recentEvents.toEventRows(),
-                ),
-            )
-            add(
-                MobileSmokeSection(
-                    title = MobileDisplayText.TIMELINE_TITLE,
-                    rows = state.timeline.toTimelineRows(state.timelineStatusMarkers),
-                ),
-            )
-            state.evidenceDetails.firstOrNull()?.let { detail ->
-                add(
-                    MobileSmokeSection(
-                        title = MobileDisplayText.timelineRow(state.timeline.first()),
-                        rows = MobileDisplayText.evidenceDetailRows(detail),
-                    ),
-                )
-            }
-            if (state.projectionWarnings.isNotEmpty()) {
-                add(
-                    MobileSmokeSection(
-                        title = MobileDisplayText.PROJECTION_WARNINGS_TITLE,
-                        rows = state.projectionWarnings.toWarningRows(),
-                    ),
-                )
-            }
         },
     )
+
+    private fun OperatorDisplaySection.rows(state: MobileOperatorState): List<String> = when (this) {
+        OperatorDisplaySection.ReplayStatus -> state.projectionWarnings.toWarningRows()
+
+        OperatorDisplaySection.WorkState -> state.currentWork.toWorkRows(emptyText = MobileDisplayText.NO_CURRENT_WORK)
+
+        OperatorDisplaySection.Timeline -> state.recentEvents.toEventRows() + state.timeline.toTimelineRows(
+            state.timelineStatusMarkers,
+        )
+
+        OperatorDisplaySection.DecisionQueue -> state.attentionQueue.toAttentionRows()
+
+        OperatorDisplaySection.EvidenceDetail -> state.evidenceDetails.firstOrNull()
+            ?.let(MobileDisplayText::evidenceDetailRows)
+            ?: listOf(MobileDisplayText.EVIDENCE_DETAIL_MISSING)
+    }
 
     private fun List<MobileWorkItem>.toWorkRows(emptyText: String): List<String> {
         if (isEmpty()) {
@@ -120,7 +102,13 @@ object MobileSmokeSnapshotBuilder {
         return listOf(MobileDisplayText.timelineStatus(markers)) + map { entry -> MobileDisplayText.timelineRow(entry) }
     }
 
-    private fun List<MobileProjectionWarning>.toWarningRows(): List<String> = map { warning -> "${warning.eventId} - ${warning.reason}" }
+    private fun List<MobileProjectionWarning>.toWarningRows(): List<String> {
+        if (isEmpty()) {
+            return listOf(MobileDisplayText.NO_PROJECTION_WARNINGS)
+        }
+
+        return map { warning -> "${warning.eventId} - ${warning.reason}" }
+    }
 
     private fun MobileWorkItem.describe(): String = MobileDisplayText.workRow(this)
 

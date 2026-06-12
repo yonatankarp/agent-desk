@@ -46,6 +46,18 @@ class DesktopSmokeSnapshotTest :
                         "Diagnostics: raw provider data and arbitrary local file opening are unavailable by design."
                     text.shouldHaveNoActionAffordances()
                 }
+
+                then("it keeps the shared desktop section order") {
+                    val snapshot = DesktopSmokeSnapshotBuilder.from(SampleOperatorState.current())
+
+                    snapshot.sections.map { section -> section.title } shouldBe listOf(
+                        "Replay status",
+                        "Work state",
+                        "Read-only timeline",
+                        "Decision queue",
+                        "Evidence drilldown",
+                    )
+                }
             }
 
             `when`("building from an empty operator state") {
