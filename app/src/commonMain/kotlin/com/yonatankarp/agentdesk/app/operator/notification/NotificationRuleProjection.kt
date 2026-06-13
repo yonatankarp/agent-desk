@@ -187,7 +187,8 @@ object NotificationRuleProjector {
         digestGroup: DigestGroup,
         reason: String,
     ): NotificationSignal? {
-        val event = events.maxByOrNull { it.occurredAt } ?: return null
+        val matchingEvents = events.filter { rule.matches(it) }
+        val event = matchingEvents.maxByOrNull { it.occurredAt } ?: return null
         return NotificationSignal(
             rule = rule,
             workItemId = id,
@@ -198,7 +199,7 @@ object NotificationRuleProjector {
             dedupeKey = dedupeKey(rule, id),
             reason = reason,
             evidenceReferences = event.evidenceLines(),
-            occurrenceCount = events.count { rule.matches(it) }.coerceAtLeast(1),
+            occurrenceCount = matchingEvents.count(),
         )
     }
 
