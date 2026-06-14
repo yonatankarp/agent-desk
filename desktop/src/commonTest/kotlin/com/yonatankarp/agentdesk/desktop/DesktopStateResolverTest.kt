@@ -52,7 +52,52 @@ class DesktopStateResolverTest :
                     loading.sectionRows("Replay status") shouldBe
                         listOf("Replay status: loading operator state.")
                     error.sectionRows("Replay status") shouldBe
-                        listOf("Blocked/error: Configured event store could not be read.")
+                        listOf(
+                            "Health: Source disconnected.",
+                            "Runtime source is disconnected.",
+                            "Source: disconnected.",
+                            "Backend: unavailable.",
+                            "Last event: unavailable.",
+                            "Last replay: unavailable.",
+                            "Next safe action: reconnect the runtime source before importing observations.",
+                            "Diagnostic: Configured event store could not be read.",
+                        )
+                }
+            }
+
+            `when`("error screen states carry import and permission failures") {
+                then("their replay health rows expose distinct required states") {
+                    val failedImport =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Error("Corrupt work event record at line 1 in configured event store"),
+                        )
+                    val permissionMissing =
+                        DesktopSmokeSnapshotBuilder.from(
+                            DesktopScreenState.Error("Configured event store source permission is missing."),
+                        )
+
+                    failedImport.sectionRows("Replay status") shouldBe
+                        listOf(
+                            "Health: Failed import.",
+                            "Runtime import failed.",
+                            "Source: unavailable.",
+                            "Backend: unavailable.",
+                            "Last event: unavailable.",
+                            "Last replay: unavailable.",
+                            "Next safe action: inspect the public-safe error and fix configuration or source access.",
+                            "Diagnostic: Corrupt work event record at line 1 in configured event store",
+                        )
+                    permissionMissing.sectionRows("Replay status") shouldBe
+                        listOf(
+                            "Health: Source permission missing.",
+                            "Runtime source permission is missing.",
+                            "Source: permission missing.",
+                            "Backend: unavailable.",
+                            "Last event: unavailable.",
+                            "Last replay: unavailable.",
+                            "Next safe action: restore runtime source read permission before importing observations.",
+                            "Diagnostic: Configured event store source permission is missing.",
+                        )
                 }
             }
 

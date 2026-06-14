@@ -70,6 +70,12 @@ class OperatorConsoleRendererTest :
 
                     assertSoftly(output) {
                         shouldContain("Current work")
+                        shouldContain("Health")
+                        shouldContain("- Status: Delayed")
+                        shouldContain("- Replayed 1 event(s); 1 delayed attention item(s) need review.")
+                        shouldContain("- Source: current replay input.")
+                        shouldContain("- Last event: 2026-06-02T21:00:00Z.")
+                        shouldContain("- Last replay: not recorded.")
                         shouldContain("- [Needs decision] agent-task:42 Run public hygiene check")
                         shouldContain("Attention queue")
                         shouldContain("- agent-task:42 Run public hygiene check (Needs decision)")
@@ -94,6 +100,15 @@ class OperatorConsoleRendererTest :
                     output shouldBe
                         """
                         Agent Desk
+
+                        Health
+                        - Status: Empty
+                        - No replay events are available.
+                        - Source: current replay input.
+                        - Backend: local replay state readable.
+                        - Last event: none.
+                        - Last replay: not recorded.
+                        - Next safe action: import sanitized observations or verify the sample surface.
 
                         Current work
                         - none

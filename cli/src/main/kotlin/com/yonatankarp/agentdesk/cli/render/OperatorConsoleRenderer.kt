@@ -2,6 +2,8 @@ package com.yonatankarp.agentdesk.cli.render
 
 import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
+import com.yonatankarp.agentdesk.app.operator.OperatorHealthProjector
+import com.yonatankarp.agentdesk.app.operator.OperatorHealthSummary
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
@@ -11,6 +13,8 @@ import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 class OperatorConsoleRenderer(private val color: AnsiStatusColor = AnsiStatusColor(enabled = false)) {
     fun render(state: OperatorState): String = buildString {
         appendLine("Agent Desk")
+        appendLine()
+        appendHealth(state)
         appendLine()
         appendWorkItems(state.workItems)
         appendLine()
@@ -52,6 +56,32 @@ class OperatorConsoleRenderer(private val color: AnsiStatusColor = AnsiStatusCol
             }
         }
     }
+
+    private fun StringBuilder.appendHealth(state: OperatorState) {
+        val health = OperatorHealthProjector.project(state)
+        appendLine("Health")
+        appendLine("- Status: ${health.status.label}")
+        appendLine("- ${health.ingestion}")
+        appendLine("- ${health.source}")
+        appendLine("- ${health.backend}")
+        appendLine("- ${health.lastEvent}")
+        appendLine("- ${health.lastReplay}")
+        appendLine("- ${health.nextSafeAction}")
+    }
+
+    fun render(health: OperatorHealthSummary): String = buildString {
+        appendLine("Health")
+        appendLine("- Status: ${health.status.label}")
+        appendLine("- ${health.ingestion}")
+        appendLine("- ${health.source}")
+        appendLine("- ${health.backend}")
+        appendLine("- ${health.lastEvent}")
+        appendLine("- ${health.lastReplay}")
+        appendLine("- ${health.nextSafeAction}")
+        health.diagnostics.forEach { diagnostic ->
+            appendLine("- Diagnostic: $diagnostic")
+        }
+    }.trimEnd()
 
     private fun StringBuilder.appendAttentionQueue(state: OperatorState) {
         appendLine("Attention queue")

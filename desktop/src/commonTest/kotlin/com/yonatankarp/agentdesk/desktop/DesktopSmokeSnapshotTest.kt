@@ -33,6 +33,9 @@ class DesktopSmokeSnapshotTest :
                     text shouldContain "Agent Desk"
                     text shouldContain "Sample state"
                     text shouldContain "Replay status"
+                    text shouldContain "Health: Healthy."
+                    text shouldContain "Source: Sample state."
+                    text shouldContain "Last replay: not recorded."
                     text shouldContain "Work state"
                     text shouldContain "Read-only timeline"
                     text shouldContain "Decision queue"
@@ -85,6 +88,9 @@ class DesktopSmokeSnapshotTest :
                     snapshot.summary shouldBe "0 active / 0 attention"
                     snapshot.sectionRows("Replay status").joinToString("\n") shouldContain
                         "Empty queue: no current work or decisions; not product completion without milestone evidence."
+                    snapshot.sectionRows("Replay status").joinToString("\n") shouldContain "Health: Empty."
+                    snapshot.sectionRows("Replay status").joinToString("\n") shouldContain "Source: Loaded state."
+                    snapshot.sectionRows("Replay status").joinToString("\n") shouldContain "Last replay: not recorded."
                     snapshot.sectionRows("Work state") shouldBe listOf("No current work")
                     snapshot.sectionRows("Read-only timeline") shouldBe listOf("No recent events")
                     snapshot.sectionRows("Decision queue") shouldBe listOf("No items need a decision")

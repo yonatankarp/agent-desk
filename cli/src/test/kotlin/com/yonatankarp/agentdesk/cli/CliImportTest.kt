@@ -81,6 +81,65 @@ class CliImportTest :
             }
         }
 
+        given("a stored-events dashboard config") {
+            `when`("the configured event store cannot be read") {
+                then("the CLI renders source disconnected health with a next safe action") {
+                    val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+                    val unreadableStore = Files.createTempDirectory("agent-desk-cli-events")
+                    Files.writeString(
+                        configFile,
+                        """
+                        mode=stored-events
+                        source=local-event-store
+                        eventStoreLocation=$unreadableStore
+                        """.trimIndent(),
+                    )
+
+                    val result = runCli("--config", configFile.toString())
+
+                    result.exitCode shouldBe 1
+                    result.error shouldContain "Error: Configured event store could not be read."
+                    result.error shouldContain "Health"
+                    result.error shouldContain "- Status: Source disconnected"
+                    result.error shouldContain "- Runtime source is disconnected."
+                    result.error shouldContain "- Source: disconnected."
+                    result.error shouldContain "- Last replay: unavailable."
+                    result.error shouldContain
+                        "- Next safe action: reconnect the runtime source before importing observations."
+                    result.output shouldBe ""
+                }
+            }
+
+            `when`("the configured event store is corrupt") {
+                then("the CLI renders failed import health with a next safe action") {
+                    val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+                    val configFile = Files.createTempFile("agent-desk-cli-config", ".properties")
+                    Files.writeString(eventFile, "{not-json}\n")
+                    Files.writeString(
+                        configFile,
+                        """
+                        mode=stored-events
+                        source=local-event-store
+                        eventStoreLocation=$eventFile
+                        """.trimIndent(),
+                    )
+
+                    val result = runCli("--config", configFile.toString())
+
+                    result.exitCode shouldBe 1
+                    result.error shouldContain "Error: Corrupt work event record at line 1 in configured event store"
+                    result.error shouldContain "Health"
+                    result.error shouldContain "- Status: Failed import"
+                    result.error shouldContain "- Runtime import failed."
+                    result.error shouldContain "- Source: unavailable."
+                    result.error shouldContain "- Last replay: unavailable."
+                    result.error shouldContain
+                        "- Next safe action: inspect the public-safe error and fix configuration or source access."
+                    result.output shouldBe ""
+                }
+            }
+        }
+
         given("the sanitized observation import command") {
             `when`("a sanitized export is imported and then rendered through config") {
                 then("sanitized observation import writes canonical events that render through config") {
