@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-15: Shared Compose design tokens live in `:design`
+
+Decision: Shared Compose design tokens, status colors, typography, spacing, theme helpers, and reusable Compose components live in the existing `:design` Compose Multiplatform module. `:app` remains Compose-free and owns semantic operator state such as `StatusTone`; `:design` maps those semantics into Compose presentation primitives consumed by desktop and mobile.
+
+Rationale: A dedicated Compose module gives desktop and mobile one visual source of truth without pulling Compose dependencies into `:app`, CLI, daemon, or runtime-adapter code. The current build graph already matches this direction: `:design` depends on `:app`, while desktop and mobile depend on `:design`. This preserves dependency direction, keeps client styling aligned, and avoids duplicated shell palettes drifting again.
+
+Consequence: Design-system follow-up work should extend `:design` rather than creating a parallel `:ui` module or moving Compose primitives into `:app`. Issues blocked by the placement decision should be retargeted to the existing `:design` module and closed when their remaining acceptance criteria are already satisfied by merged design-system work.
+
 ## 2026-06-05: First runtime adapter scope
 
 Decision: The first concrete non-mock runtime adapter is an OpenClaw sanitized observation-file adapter, not a direct private runtime database/chat-log adapter or a control/action adapter.
