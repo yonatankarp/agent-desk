@@ -72,6 +72,17 @@ A tiny cleanup is not a full daily run. After a small slice, run Discovery and t
 
 Stop early only for a real stop condition: no actionable work after Discovery/no-issue triage, owner decision needed, credentials/external setup, unsafe/destructive action, failed checks requiring judgment, unresolved Security/Compliance veto, stuck PR, or cutoff reached.
 
+## Issue Hygiene
+
+An issue judged stale, irrelevant, duplicate, already satisfied, or overtaken by merged work is not a stop condition by itself. Resolve it as issue hygiene, then continue selection when budget remains.
+
+Required handling:
+
+- If the issue can be closed from public repo evidence, comment with concise evidence, close it, run Discovery, and pick the next actionable issue when time remains.
+- If the issue cannot be closed without owner/maintainer input, comment with the exact missing decision and then continue to a different actionable issue unless the whole backlog is blocked.
+- Do not report "blocked" merely because the selected issue was a poor pick. Either close/comment it and move on, or prove that all remaining candidates are blocked.
+- A no-code run still needs visible movement: issue closed, issue updated with evidence, PR reviewed/merged, new issue created, or a clear all-backlog blocker. Otherwise treat the run as failed, not done.
+
 ## Public-Safe Rules
 
 Agent Desk is public. Do not put private OpenClaw paths, real Discord channel IDs, tokens, raw transcripts, personal data, or private logs in tracked files, public issues, PRs, CI output, or screenshots.
