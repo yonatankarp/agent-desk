@@ -114,12 +114,16 @@ class MobileSmokeSnapshotTest :
                         completionSummary = null,
                         provenance = MobileProvenance(
                             projectId = "project:agent-desk",
+                            workspaceId = "workspace:local",
                             sourceId = "repo:agent-desk",
                             ownerId = "owner:local",
                             agentId = "agent:ororo",
                             modelId = "model:gpt-5",
                             toolId = "tool:gradle",
                             runId = "run:daily-20260616",
+                            objectiveId = "objective:issue-238",
+                            parentHandoffId = "handoff:parent-42",
+                            archiveRecordId = "archive:event-42",
                         ),
                     ),
                 ),
@@ -133,12 +137,16 @@ class MobileSmokeSnapshotTest :
                         provenance = "replay event event:agent-task:91:started",
                         provenanceFields = MobileProvenance(
                             projectId = "project:agent-desk",
+                            workspaceId = "workspace:local",
                             sourceId = "repo:agent-desk",
                             ownerId = "owner:local",
                             agentId = "agent:ororo",
                             modelId = "model:gpt-5",
                             toolId = "tool:gradle",
                             runId = "run:daily-20260616",
+                            objectiveId = "objective:issue-238",
+                            parentHandoffId = "handoff:parent-42",
+                            archiveRecordId = "archive:event-42",
                         ),
                         decisionState = "Pending",
                         decisionSource = "mock-adapter",
@@ -159,9 +167,13 @@ class MobileSmokeSnapshotTest :
             text shouldContain "event:agent-task:91:blocked-after-success"
             text shouldContain "Status: Read-only"
             text shouldContain "2026-06-02T21:00:00Z [work.started] agent-task:91 from mock-adapter [Read-only]"
-            text shouldContain "Provenance: project:agent-desk repo:agent-desk owner:local agent:ororo model:gpt-5 tool:gradle run:daily-20260616"
+            text shouldContain "Provenance: project:agent-desk workspace:local repo:agent-desk owner:local " +
+                "agent:ororo model:gpt-5 tool:gradle run:daily-20260616 objective:issue-238 " +
+                "handoff:parent-42 archive:event-42"
             text shouldContain "Provenance: replay event event:agent-task:91:started"
-            text shouldContain "Provenance fields: project:agent-desk repo:agent-desk owner:local agent:ororo model:gpt-5 tool:gradle run:daily-20260616"
+            text shouldContain "Provenance fields: project:agent-desk workspace:local repo:agent-desk owner:local " +
+                "agent:ororo model:gpt-5 tool:gradle run:daily-20260616 objective:issue-238 " +
+                "handoff:parent-42 archive:event-42"
             text shouldContain "Decision: Pending from mock-adapter"
             text shouldContain "Decision unavailable: Read-only projection: operator decisions are visible, but action execution is not wired in this slice."
             text shouldContain "Criteria result: Not done: 1 item(s) need operator attention."

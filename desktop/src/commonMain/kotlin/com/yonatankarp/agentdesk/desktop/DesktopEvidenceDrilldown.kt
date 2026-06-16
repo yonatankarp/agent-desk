@@ -69,12 +69,16 @@ object DesktopEvidenceDrilldown {
 
     private fun ProvenanceLine.summary(): String? = listOfNotNull(
         projectId,
+        workspaceId,
         sourceId,
         ownerId,
         agentId,
         modelId,
         toolId,
         runId,
+        objectiveId,
+        parentHandoffId,
+        archiveRecordId,
     ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 
     private fun DesktopScreenState.criteriaResult(): String = DesktopReplayStatus.rows(this)

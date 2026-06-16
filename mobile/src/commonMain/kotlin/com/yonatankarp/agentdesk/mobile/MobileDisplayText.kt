@@ -106,11 +106,15 @@ internal object MobileDisplayText {
 
     private fun MobileProvenance.summary(): String? = listOfNotNull(
         projectId,
+        workspaceId,
         sourceId,
         ownerId,
         agentId,
         modelId,
         toolId,
         runId,
+        objectiveId,
+        parentHandoffId,
+        archiveRecordId,
     ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 }

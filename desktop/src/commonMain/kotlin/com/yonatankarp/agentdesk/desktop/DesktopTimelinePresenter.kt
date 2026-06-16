@@ -74,12 +74,16 @@ object DesktopTimelinePresenter {
 
     private fun ProvenanceLine.summary(): String? = listOfNotNull(
         projectId,
+        workspaceId,
         sourceId,
         ownerId,
         agentId,
         modelId,
         toolId,
         runId,
+        objectiveId,
+        parentHandoffId,
+        archiveRecordId,
     ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 
     private val ReadOnlyTimelineEntryState.label: String

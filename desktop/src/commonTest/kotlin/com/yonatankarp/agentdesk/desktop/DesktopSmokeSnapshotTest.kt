@@ -109,8 +109,9 @@ class DesktopSmokeSnapshotTest :
                     rows shouldContain "Date: 2026-06-02"
                     rows shouldContain "work.succeeded at 2026-06-02T21:10:00Z - State: Completed; Succeeded; " +
                         "Completion: Successful outcome; Evidence: sanitized-note Completion note -> " +
-                        "docs/evidence/completed.md; Provenance: project:agent-desk repo:agent-desk owner:local agent:ororo " +
-                        "model:gpt-5 tool:gradle run:daily-20260616 [agent-task:42 from mock-adapter]"
+                        "docs/evidence/completed.md; Provenance: project:agent-desk workspace:local " +
+                        "repo:agent-desk owner:local agent:ororo model:gpt-5 tool:gradle run:daily-20260616 " +
+                        "objective:issue-238 handoff:parent-42 archive:event-42 [agent-task:42 from mock-adapter]"
                     rows shouldContain "work.failed at 2026-06-03T09:05:00Z - State: Failed; Build failed.; " +
                         "Completion: Failed outcome [agent-task:43 from mock-adapter]"
                     rows shouldContain "work.started at 2026-06-03T09:10:00Z - State: Stale; Waiting on background import.; " +
@@ -142,8 +143,9 @@ class DesktopSmokeSnapshotTest :
                     ).sectionRows("Evidence drilldown")
 
                     rows shouldContain "Provenance: replay event event:agent-task:42:blocked"
-                    rows shouldContain "Provenance fields: project:agent-desk repo:agent-desk owner:local " +
-                        "agent:ororo model:gpt-5 tool:gradle run:daily-20260616"
+                    rows shouldContain "Provenance fields: project:agent-desk workspace:local " +
+                        "repo:agent-desk owner:local agent:ororo model:gpt-5 tool:gradle run:daily-20260616 " +
+                        "objective:issue-238 handoff:parent-42 archive:event-42"
                     rows.joinToString("\n").shouldBePublicSafe()
                     rows.joinToString("\n").shouldHaveNoActionAffordances()
                 }
@@ -266,12 +268,16 @@ private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sect
 
 private fun publicSafeProvenance(): WorkProvenance = WorkProvenance(
     projectId = ProvenanceId.parse("project:agent-desk"),
+    workspaceId = ProvenanceId.parse("workspace:local"),
     sourceId = ProvenanceId.parse("repo:agent-desk"),
     ownerId = ProvenanceId.parse("owner:local"),
     agentId = ProvenanceId.parse("agent:ororo"),
     modelId = ProvenanceId.parse("model:gpt-5"),
     toolId = ProvenanceId.parse("tool:gradle"),
     runId = ProvenanceId.parse("run:daily-20260616"),
+    objectiveId = ProvenanceId.parse("objective:issue-238"),
+    parentHandoffId = ProvenanceId.parse("handoff:parent-42"),
+    archiveRecordId = ProvenanceId.parse("archive:event-42"),
 )
 
 private fun timelineParityState(): OperatorState {
