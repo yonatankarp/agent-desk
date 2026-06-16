@@ -5,7 +5,9 @@ import com.yonatankarp.agentdesk.app.fixtures.operatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
+import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.testfixtures.sanitizedNoteEvidence
@@ -80,6 +82,125 @@ class ReadOnlyTimelineProjectorTest :
                         ReadOnlyTimelineStateMarker.Empty,
                         ReadOnlyTimelineStateMarker.ReadOnly,
                     )
+                }
+            }
+
+            `when`("events carry public-safe provenance") {
+                then("it exposes query facets for project, source, owner, agent, status, risk, and recency") {
+                    val projectA = WorkProvenance(
+                        projectId = ProvenanceId.parse("project:agent-desk"),
+                        workspaceId = ProvenanceId.parse("workspace:desktop"),
+                        sourceId = ProvenanceId.parse("repo:agent-desk"),
+                        ownerId = ProvenanceId.parse("owner:local"),
+                        agentId = ProvenanceId.parse("agent:ororo"),
+                        modelId = ProvenanceId.parse("model:gpt-5"),
+                        toolId = ProvenanceId.parse("tool:gradle"),
+                        runId = ProvenanceId.parse("run:daily-20260616"),
+                    )
+                    val projectB = WorkProvenance(
+                        projectId = ProvenanceId.parse("project:archive"),
+                        workspaceId = ProvenanceId.parse("workspace:mobile"),
+                        sourceId = ProvenanceId.parse("repo:archive"),
+                        ownerId = ProvenanceId.parse("owner:ops"),
+                        agentId = ProvenanceId.parse("agent:relay"),
+                    )
+                    val state = operatorState {
+                        started(provenance = projectA)
+                        started(
+                            workItemId = "agent-task:77",
+                            title = "Review archived provenance",
+                            summary = "Agent imported replay archive metadata.",
+                            provenance = projectB,
+                        )
+                        failed(
+                            workItemId = "agent-task:77",
+                            reason = "Replay archive verification failed.",
+                            provenance = projectB,
+                        )
+                    }
+
+                    val projection = ReadOnlyTimelineProjector.project(state)
+
+                    assertSoftly(projection.entries.first()) {
+                        provenance.projectId shouldBe "project:agent-desk"
+                        provenance.sourceId shouldBe "repo:agent-desk"
+                        provenance.ownerId shouldBe "owner:local"
+                        provenance.agentId shouldBe "agent:ororo"
+                        provenance.modelId shouldBe "model:gpt-5"
+                        provenance.toolId shouldBe "tool:gradle"
+                    }
+                    projection.projectGroups.map { it.key }.shouldContainExactlyInAnyOrder(
+                        "project:agent-desk",
+                        "project:archive",
+                    )
+                    projection.workspaceGroups.map { it.key }.shouldContainExactlyInAnyOrder(
+                        "workspace:desktop",
+                        "workspace:mobile",
+                    )
+                    projection.ownerGroups.map { it.key }.shouldContainExactlyInAnyOrder("owner:local", "owner:ops")
+                    projection.agentGroups.map { it.key }.shouldContainExactlyInAnyOrder("agent:ororo", "agent:relay")
+                    projection.sourceGroups.map { it.key }.shouldContainExactly("mock-adapter")
+                    projection.upstreamSourceGroups.map { it.key }.shouldContainExactlyInAnyOrder(
+                        "repo:agent-desk",
+                        "repo:archive",
+                    )
+                    projection.statusGroups.map { it.key }.shouldContainExactlyInAnyOrder("Running", "Failed")
+                    projection.riskGroups.map { it.key }.shouldContainExactlyInAnyOrder("ReadOnly", "Failed")
+                    projection.timeWindowGroups.single().key shouldBe "2026-06-02"
+                }
+
+                then("it can apply project, source, owner, status, risk, and recency filters") {
+                    val projectA = WorkProvenance(
+                        projectId = ProvenanceId.parse("project:agent-desk"),
+                        workspaceId = ProvenanceId.parse("workspace:desktop"),
+                        sourceId = ProvenanceId.parse("repo:agent-desk"),
+                        ownerId = ProvenanceId.parse("owner:local"),
+                    )
+                    val projectB = WorkProvenance(
+                        projectId = ProvenanceId.parse("project:archive"),
+                        workspaceId = ProvenanceId.parse("workspace:mobile"),
+                        sourceId = ProvenanceId.parse("repo:archive"),
+                        ownerId = ProvenanceId.parse("owner:ops"),
+                    )
+                    val state = operatorState {
+                        started(provenance = projectA)
+                        started(
+                            workItemId = "agent-task:77",
+                            title = "Review archived provenance",
+                            summary = "Agent imported replay archive metadata.",
+                            provenance = projectB,
+                        )
+                        failed(
+                            workItemId = "agent-task:77",
+                            reason = "Replay archive verification failed.",
+                            provenance = projectB,
+                        )
+                    }
+
+                    val projection = ReadOnlyTimelineProjector.project(
+                        state,
+                        filter = ReadOnlyTimelineFilter(
+                            projectId = "project:archive",
+                            workspaceId = "workspace:mobile",
+                            upstreamSourceId = "repo:archive",
+                            ownerId = "owner:ops",
+                            status = "Failed",
+                            risk = "Failed",
+                            timeWindow = "2026-06-02",
+                        ),
+                    )
+
+                    projection.entries.map { it.eventId }.shouldContainExactly(
+                        "event:agent-task:77:started",
+                        "event:agent-task:77:failed",
+                    )
+                    projection.projectGroups.single().key shouldBe "project:archive"
+                    projection.workspaceGroups.single().key shouldBe "workspace:mobile"
+                    projection.upstreamSourceGroups.single().key shouldBe "repo:archive"
+                    projection.ownerGroups.single().key shouldBe "owner:ops"
+                    projection.statusGroups.single().key shouldBe "Failed"
+                    projection.riskGroups.single().key shouldBe "Failed"
+                    projection.timeWindowGroups.single().key shouldBe "2026-06-02"
                 }
             }
 

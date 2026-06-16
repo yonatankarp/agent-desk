@@ -164,6 +164,48 @@ class SanitizedRuntimeObservationMapperTest :
                     }
                 }
             }
+
+            `when`("a sanitized observation includes public-safe provenance") {
+                then("the mapper keeps project and agent provenance on the canonical event") {
+                    val event = mapper.toWorkEvent(
+                        RuntimeWorkObservation(
+                            eventId = "event:agent-task:54:started",
+                            occurredAt = "2026-06-02T21:30:00Z",
+                            source = "mock-adapter",
+                            workItemId = "agent-task:54",
+                            kind = RuntimeWorkObservationKind.Started,
+                            title = "Review provenance import",
+                            provenance = RuntimeWorkProvenance(
+                                projectId = "project:agent-desk",
+                                workspaceId = "workspace:shared",
+                                sourceId = "repo:agent-desk",
+                                ownerId = "owner:local",
+                                agentId = "agent:ororo",
+                                modelId = "model:gpt-5",
+                                toolId = "tool:gradle",
+                                runId = "run:daily-20260616",
+                                objectiveId = "objective:provenance",
+                                parentHandoffId = "handoff:manager",
+                                archiveRecordId = "archive:agent-task-54",
+                            ),
+                        ),
+                    )
+
+                    assertSoftly(event.provenance!!) {
+                        projectId.toString() shouldBe "project:agent-desk"
+                        workspaceId.toString() shouldBe "workspace:shared"
+                        sourceId.toString() shouldBe "repo:agent-desk"
+                        ownerId.toString() shouldBe "owner:local"
+                        agentId.toString() shouldBe "agent:ororo"
+                        modelId.toString() shouldBe "model:gpt-5"
+                        toolId.toString() shouldBe "tool:gradle"
+                        runId.toString() shouldBe "run:daily-20260616"
+                        objectiveId.toString() shouldBe "objective:provenance"
+                        parentHandoffId.toString() shouldBe "handoff:manager"
+                        archiveRecordId.toString() shouldBe "archive:agent-task-54"
+                    }
+                }
+            }
         }
 
         given("unsafe runtime observations") {
@@ -250,6 +292,32 @@ class SanitizedRuntimeObservationMapperTest :
                         shouldContain("Runtime observation source")
                         shouldContain("private runtime")
                         shouldNotContain(unsafeThreadSource)
+                    }
+                }
+            }
+
+            `when`("runtime provenance includes a private runtime identifier") {
+                then("the mapper rejects it before constructing a work event") {
+                    val unsafeRunId = "session:private-run"
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        mapper.toWorkEvent(
+                            RuntimeWorkObservation(
+                                eventId = "event:agent-task:99:started",
+                                occurredAt = "2026-06-02T21:30:00Z",
+                                source = "mock-adapter",
+                                workItemId = "agent-task:99",
+                                kind = RuntimeWorkObservationKind.Started,
+                                title = "Run public hygiene check",
+                                provenance = RuntimeWorkProvenance(runId = unsafeRunId),
+                            ),
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Runtime observation provenance.runId")
+                        shouldContain("private runtime")
+                        shouldNotContain(unsafeRunId)
                     }
                 }
             }

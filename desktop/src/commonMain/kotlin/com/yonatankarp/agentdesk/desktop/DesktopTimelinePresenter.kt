@@ -2,6 +2,7 @@ package com.yonatankarp.agentdesk.desktop
 
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.operator.ProvenanceLine
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineEntryState
 import com.yonatankarp.agentdesk.app.operator.timeline.ReadOnlyTimelineProjector
@@ -56,6 +57,7 @@ object DesktopTimelinePresenter {
                 append("; Evidence: ")
                 append(evidenceReferences.joinToString(" | ", transform = EvidenceDisplayFormatter::format))
             }
+            provenance.summary()?.let { summary -> append("; Provenance: $summary") }
         },
         source = "$workItemId from $source",
         timeWindow = timeWindow,
@@ -69,6 +71,20 @@ object DesktopTimelinePresenter {
         append(" - $detail")
         append(" [$source]")
     }
+
+    private fun ProvenanceLine.summary(): String? = listOfNotNull(
+        projectId,
+        workspaceId,
+        sourceId,
+        ownerId,
+        agentId,
+        modelId,
+        toolId,
+        runId,
+        objectiveId,
+        parentHandoffId,
+        archiveRecordId,
+    ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 
     private val ReadOnlyTimelineEntryState.label: String
         get() = when (this) {

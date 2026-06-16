@@ -14,6 +14,7 @@ private val eventDeclarationNames =
         "EvidenceReference",
         "EvidenceReferenceKind",
         "EvidenceTarget",
+        "ProvenanceId",
         "WorkBlockedPayload",
         "WorkCanceledPayload",
         "WorkEvent",
@@ -22,6 +23,7 @@ private val eventDeclarationNames =
         "WorkEventType",
         "WorkFailedPayload",
         "WorkNeedsDecisionPayload",
+        "WorkProvenance",
         "WorkStartedPayload",
         "WorkSucceededPayload",
     )

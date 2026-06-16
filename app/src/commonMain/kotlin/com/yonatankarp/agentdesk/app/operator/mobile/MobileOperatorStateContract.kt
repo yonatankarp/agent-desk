@@ -34,6 +34,7 @@ object MobileOperatorStateContract {
                 detail = line.detail,
                 source = line.source,
                 evidenceReferences = line.evidenceReferences.toMobileReferences(),
+                provenance = MobileProvenance.from(line.provenance),
             )
         }
         val timelineProjection = ReadOnlyTimelineProjector.project(state)
@@ -50,6 +51,7 @@ object MobileOperatorStateContract {
                 summary = entry.summary,
                 completionSummary = entry.completionSummary,
                 evidenceReferences = entry.evidenceReferences.toMobileReferences(),
+                provenance = MobileProvenance.from(entry.provenance),
             )
         }
 
@@ -96,6 +98,7 @@ object MobileOperatorStateContract {
         decisionUnavailableReason = decision?.unavailableReason ?: "unavailable for latest replay event.",
         criteriaResult = criteriaResult,
         evidenceReferences = evidenceReferences,
+        provenanceFields = provenance,
         relatedEvents = recentEvents.filter { line ->
             line.workItemId == workItemId && !(line.occurredAt == occurredAt && line.type == type)
         },

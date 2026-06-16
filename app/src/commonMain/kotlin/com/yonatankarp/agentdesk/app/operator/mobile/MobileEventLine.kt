@@ -7,4 +7,5 @@ data class MobileEventLine(
     val detail: String,
     val source: String = "",
     val evidenceReferences: List<MobileEvidenceReference> = emptyList(),
+    val provenance: MobileProvenance? = null,
 )

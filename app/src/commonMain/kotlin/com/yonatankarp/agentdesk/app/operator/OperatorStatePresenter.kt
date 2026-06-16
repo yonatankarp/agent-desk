@@ -32,6 +32,7 @@ object OperatorStatePresenter {
                     target = evidence.target.toString(),
                 )
             },
+            provenance = ProvenanceLine.from(event.provenance),
         )
     }
 

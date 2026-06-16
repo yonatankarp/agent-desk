@@ -9,6 +9,19 @@
       "kind": "started",
       "title": "Add sanitized export fixture",
       "summary": "Agent started creating public-safe runtime adapter fixture coverage.",
+      "provenance": {
+        "projectId": "project:agent-desk",
+        "workspaceId": "workspace:fixture",
+        "sourceId": "repo:agent-desk",
+        "ownerId": "owner:local",
+        "agentId": "agent:ororo",
+        "modelId": "model:gpt-5",
+        "toolId": "tool:gradle",
+        "runId": "run:daily-20260616",
+        "objectiveId": "objective:fixture",
+        "parentHandoffId": "handoff:manager",
+        "archiveRecordId": "archive:agent-task-211"
+      },
       "evidenceReferences": [
         {
           "kind": "sanitized-note",

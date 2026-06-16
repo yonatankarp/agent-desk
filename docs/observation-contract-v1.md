@@ -41,6 +41,7 @@ Each observation record may contain only these fields:
 | `summary` | optional for `started` | Short public-safe operational summary. |
 | `reason` | required for `needs-decision`, `blocked`, and `failed`; optional for `canceled` | Public-safe reason text. |
 | `evidenceReferences` | optional | Compact public-safe evidence references. |
+| `provenance` | optional | Compact public-safe provenance aliases for grouping, replay, and read-model filters. |
 
 Accepted `kind` values are:
 
@@ -64,6 +65,34 @@ Each evidence reference contains:
 Evidence must point to inspectable material without storing raw private
 evidence in the observation record.
 
+## Provenance
+
+Each observation may include a `provenance` object. Every field is optional,
+but values must be public-safe aliases that use the shared compact identifier
+grammar. They must not be raw provider ids, local paths, channel ids, message
+ids, raw transcript markers, credentials, or private runtime identifiers.
+
+Accepted provenance fields are:
+
+| Field | Meaning |
+| --- | --- |
+| `projectId` | Public project grouping alias, such as `project:agent-desk`. |
+| `workspaceId` | Public workspace grouping alias, such as `workspace:desktop`. |
+| `sourceId` | Upstream repo or external source alias, such as `repo:agent-desk`. |
+| `ownerId` | Public owner alias for filtering, such as `owner:local`. |
+| `agentId` | Public agent alias, such as `agent:ororo`. |
+| `modelId` | Public model alias, such as `model:gpt-5`. |
+| `toolId` | Public tool alias, such as `tool:gradle`. |
+| `runId` | Public run/session alias, such as `run:daily-20260616`. |
+| `objectiveId` | Public objective alias, such as `objective:provenance`. |
+| `parentHandoffId` | Public handoff alias, such as `handoff:manager`. |
+| `archiveRecordId` | Public replay/archive record alias, such as `archive:agent-task-42`. |
+
+`source` and `provenance.sourceId` have different meanings. `source` is the
+adapter or observation source that produced the canonical event.
+`provenance.sourceId` is the upstream repo or external source identity used for
+grouping and filtering.
+
 ## Validation Behavior
 
 The import path rejects malformed, unsupported, missing, or unsafe records
@@ -74,6 +103,8 @@ before appending canonical events.
 - Unsafe ids, unsafe text, private-looking paths, raw transcript markers,
   channel/message ids, private runtime/session ids, credentials, private URLs,
   and unsafe evidence references fail before append.
+- Unsafe provenance aliases fail before append and failure messages do not echo
+  the raw rejected value.
 - Duplicate canonical event ids are skipped and reported as duplicates.
 - Store read/write failures fail with public-safe store messages.
 - Redaction or field dropping is not performed in v1. Adapters must provide

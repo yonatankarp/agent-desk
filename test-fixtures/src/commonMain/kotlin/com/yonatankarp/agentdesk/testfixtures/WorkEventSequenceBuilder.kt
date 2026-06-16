@@ -8,6 +8,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
@@ -30,6 +31,7 @@ class WorkEventSequenceBuilder internal constructor(
         title: String? = null,
         summary: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         events += fixtures.workStartedEvent(
@@ -40,7 +42,7 @@ class WorkEventSequenceBuilder internal constructor(
                 title = title?.let(WorkItemTitle::parse) ?: fixtures.workTitle,
                 summary = summary?.let(WorkSummary::parse) ?: fixtures.startedSummary,
             ),
-        ).withEvidence(evidence)
+        ).withEvidence(evidence).withProvenance(provenance)
     }
 
     fun blocked(
@@ -48,6 +50,7 @@ class WorkEventSequenceBuilder internal constructor(
         at: EventTimestamp = fixtures.blockedAt,
         reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         events += fixtures.workBlockedEvent(
@@ -57,7 +60,7 @@ class WorkEventSequenceBuilder internal constructor(
             payload = WorkBlockedPayload(
                 reason = reason?.let(WorkSummary::parse) ?: fixtures.blockedReason,
             ),
-        ).withEvidence(evidence)
+        ).withEvidence(evidence).withProvenance(provenance)
     }
 
     fun needsDecision(
@@ -65,6 +68,7 @@ class WorkEventSequenceBuilder internal constructor(
         at: EventTimestamp = fixtures.needsDecisionAt,
         reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         val id = eventId(itemId, suffix = "needs-decision")
@@ -78,20 +82,21 @@ class WorkEventSequenceBuilder internal constructor(
                 payload = WorkNeedsDecisionPayload(reason = WorkSummary.parse(reason)),
             )
         }
-        events += event.withEvidence(evidence)
+        events += event.withEvidence(evidence).withProvenance(provenance)
     }
 
     fun succeeded(
         workItemId: String? = null,
         at: EventTimestamp = fixtures.terminalAt,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         events += fixtures.workSucceededEvent(
             id = eventId(itemId, suffix = "succeeded"),
             occurredAt = at,
             workItemId = itemId,
-        ).withEvidence(evidence)
+        ).withEvidence(evidence).withProvenance(provenance)
     }
 
     fun failed(
@@ -99,6 +104,7 @@ class WorkEventSequenceBuilder internal constructor(
         at: EventTimestamp = fixtures.terminalAt,
         reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         val id = eventId(itemId, suffix = "failed")
@@ -112,7 +118,7 @@ class WorkEventSequenceBuilder internal constructor(
                 payload = WorkFailedPayload(reason = WorkSummary.parse(reason)),
             )
         }
-        events += event.withEvidence(evidence)
+        events += event.withEvidence(evidence).withProvenance(provenance)
     }
 
     fun canceled(
@@ -120,6 +126,7 @@ class WorkEventSequenceBuilder internal constructor(
         at: EventTimestamp = fixtures.terminalAt,
         reason: String? = null,
         evidence: List<EvidenceReference> = emptyList(),
+        provenance: WorkProvenance? = null,
     ) {
         val itemId = itemId(workItemId)
         val id = eventId(itemId, suffix = "canceled")
@@ -133,7 +140,7 @@ class WorkEventSequenceBuilder internal constructor(
                 payload = WorkCanceledPayload(reason = WorkSummary.parse(reason)),
             )
         }
-        events += event.withEvidence(evidence)
+        events += event.withEvidence(evidence).withProvenance(provenance)
     }
 
     /** Escape hatch for events the named builders cannot express. */
@@ -151,4 +158,6 @@ class WorkEventSequenceBuilder internal constructor(
     ): WorkEventId = WorkEventId.parse("event:${itemId.value}:$suffix")
 
     private fun WorkEvent.withEvidence(evidence: List<EvidenceReference>): WorkEvent = if (evidence.isEmpty()) this else copy(evidenceReferences = evidence)
+
+    private fun WorkEvent.withProvenance(provenance: WorkProvenance?): WorkEvent = provenance?.let { copy(provenance = it) } ?: this
 }

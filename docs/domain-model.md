@@ -65,10 +65,13 @@ The default stale-work derivation marks non-terminal running or waiting work as 
 - `type`: stable event type derived from the payload.
 - `payload`: typed event-specific data.
 - `evidenceReferences`: optional compact links or references to public-safe evidence for the event.
+- `provenance`: optional public-safe grouping and source identity for project, workspace, upstream source, owner, agent, model/tool alias, run alias, objective, handoff, and archive record.
 
 OpenClaw-specific runtime details belong in an adapter before they reach this model. The core event source should stay public-safe and adapter-neutral.
 
 Evidence references point operators at inspectable material without storing raw evidence in the event stream. Allowed evidence kinds are `commit`, `check-run`, `artifact`, `screenshot`, and `sanitized-note`. Evidence labels and targets must be single-line, compact, and public-safe; they reject private local paths, credentials, raw transcript markers, channel ids, and private runtime/session identifiers.
+
+Provenance identifiers are public-safe aliases, not raw provider identities. They use the same compact identifier grammar as other adapter-neutral ids and reject private local paths, credentials, raw transcript markers, channel ids, and private runtime markers. `WorkEvent.source` remains the adapter/source that produced the observation, while `provenance.sourceId` names the upstream repo or external source identity used for grouping and replay filtering.
 
 ### Public-Safe Examples
 
@@ -130,6 +133,28 @@ evidenceReferences[0].label: Gradle Build
 evidenceReferences[0].target: https://github.com/yonatankarp/agent-desk/actions/runs/26937983933
 ```
 
+Work started with provenance:
+
+```text
+id: event:agent-task:42:started
+occurredAt: 2026-06-02T21:00:00Z
+source: mock-adapter
+workItemId: agent-task:42
+type: work.started
+payload.title: Run public hygiene check
+provenance.projectId: project:agent-desk
+provenance.workspaceId: workspace:desktop
+provenance.sourceId: repo:agent-desk
+provenance.ownerId: owner:local
+provenance.agentId: agent:ororo
+provenance.modelId: model:gpt-5
+provenance.toolId: tool:gradle
+provenance.runId: run:daily-20260616
+provenance.objectiveId: objective:provenance
+provenance.parentHandoffId: handoff:manager
+provenance.archiveRecordId: archive:agent-task-42
+```
+
 These are illustrative public-safe examples. The stable JSON wire contract is described below.
 
 ## Event Serialization
@@ -159,6 +184,7 @@ Record fields:
 - `type`: stable event wire name such as `work.started` or `work.blocked`.
 - `payload`: event-specific sanitized text fields. Current fields are `title`, `summary`, and `reason`.
 - `evidenceReferences`: optional list of compact evidence records with `kind`, `label`, and `target`.
+- `provenance`: optional public-safe provenance record with compact id fields.
 
 Event with evidence:
 
@@ -166,7 +192,13 @@ Event with evidence:
 {"id":"event:agent-task:42:blocked","occurredAt":"2026-06-02T21:05:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.blocked","payload":{"reason":"CI failed on the core test task."},"evidenceReferences":[{"kind":"check-run","label":"Gradle Build","target":"https://github.com/yonatankarp/agent-desk/actions/runs/26937983933"}]}
 ```
 
-The JSON contract must stay public-safe. It must not include local paths, credentials, channel ids, raw transcripts, private runtime ids, or OpenClaw-specific internal fields.
+Event with provenance:
+
+```json
+{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"provenance":{"projectId":"project:agent-desk","workspaceId":"workspace:desktop","sourceId":"repo:agent-desk","ownerId":"owner:local","agentId":"agent:ororo","modelId":"model:gpt-5","toolId":"tool:gradle","runId":"run:daily-20260616","objectiveId":"objective:provenance","parentHandoffId":"handoff:manager","archiveRecordId":"archive:agent-task-42"}}
+```
+
+The JSON contract must stay public-safe. It must not include local paths, credentials, channel ids, raw transcripts, private runtime ids, or OpenClaw-specific internal fields. `provenance.runId` is the public-safe run/session alias; raw provider session identifiers must not be stored.
 
 Local newline-delimited JSON persistence is described in [Local event store](local-event-store.md).
 

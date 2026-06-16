@@ -28,6 +28,9 @@ The scenario verifies that:
   appear in the attention queue
 - evidence references survive into inspectable output without storing private
   source material
+- public-safe provenance aliases survive observation import, event-store replay,
+  and read-only timeline/mobile projections without exposing private runtime
+  identifiers
 - the fixture covers blocked, needs-decision, succeeded, failed, and canceled
   states
 

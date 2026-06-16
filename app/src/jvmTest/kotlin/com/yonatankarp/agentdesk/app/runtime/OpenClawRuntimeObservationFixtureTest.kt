@@ -43,6 +43,9 @@ class OpenClawRuntimeObservationFixtureTest :
                         id.toString() shouldBe "event:agent-task:211:started"
                         source.toString() shouldBe "openclaw-local"
                         workItemId.toString() shouldBe "agent-task:211"
+                        provenance?.projectId.toString() shouldBe "project:agent-desk"
+                        provenance?.sourceId.toString() shouldBe "repo:agent-desk"
+                        provenance?.agentId.toString() shouldBe "agent:ororo"
                         evidenceReferences.single().kind.wireName shouldBe "sanitized-note"
                         evidenceReferences.single().label.toString() shouldBe "Runtime adapter decision"
                         evidenceReferences.single().target.toString() shouldBe
