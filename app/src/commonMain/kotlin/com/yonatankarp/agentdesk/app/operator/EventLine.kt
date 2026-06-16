@@ -7,4 +7,5 @@ data class EventLine(
     val source: String,
     val detail: String,
     val evidenceReferences: List<EvidenceLine> = emptyList(),
+    val provenance: ProvenanceLine? = null,
 )

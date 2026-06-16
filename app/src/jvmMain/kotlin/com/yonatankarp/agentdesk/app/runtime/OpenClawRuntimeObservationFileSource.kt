@@ -67,6 +67,7 @@ class OpenClawRuntimeObservationFileSource(
             summary = summary,
             reason = reason,
             evidenceReferences = evidenceReferences.map { it.toRuntimeEvidenceReference() },
+            provenance = provenance?.toRuntimeWorkProvenance(),
         )
     }
 
@@ -91,6 +92,20 @@ class OpenClawRuntimeObservationFileSource(
             target = target,
         )
     }
+
+    private fun OpenClawWorkProvenanceRecord.toRuntimeWorkProvenance(): RuntimeWorkProvenance = RuntimeWorkProvenance(
+        projectId = projectId,
+        workspaceId = workspaceId,
+        sourceId = sourceId,
+        ownerId = ownerId,
+        agentId = agentId,
+        modelId = modelId,
+        toolId = toolId,
+        runId = runId,
+        objectiveId = objectiveId,
+        parentHandoffId = parentHandoffId,
+        archiveRecordId = archiveRecordId,
+    )
 
     private companion object {
         const val SUPPORTED_SCHEMA_VERSION = 1
@@ -126,6 +141,7 @@ private data class OpenClawObservationRecord(
     val reason: String? = null,
     @SerialName("evidenceReferences")
     val evidenceReferences: List<OpenClawEvidenceReferenceRecord> = emptyList(),
+    val provenance: OpenClawWorkProvenanceRecord? = null,
 )
 
 @Serializable
@@ -133,4 +149,19 @@ private data class OpenClawEvidenceReferenceRecord(
     val kind: String? = null,
     val label: String? = null,
     val target: String? = null,
+)
+
+@Serializable
+private data class OpenClawWorkProvenanceRecord(
+    val projectId: String? = null,
+    val workspaceId: String? = null,
+    val sourceId: String? = null,
+    val ownerId: String? = null,
+    val agentId: String? = null,
+    val modelId: String? = null,
+    val toolId: String? = null,
+    val runId: String? = null,
+    val objectiveId: String? = null,
+    val parentHandoffId: String? = null,
+    val archiveRecordId: String? = null,
 )

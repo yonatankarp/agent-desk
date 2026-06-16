@@ -18,6 +18,7 @@ The read model exposes:
 - a display-only attention queue for `NeedsDecision`, `Blocked`, and stale running or waiting work
 - compact evidence references already validated by the domain model
 - recent accepted event lines, each carrying its adapter-neutral source
+- structured public-safe provenance aliases when replay events record them
 - projection warnings for ignored stored events (the single warnings channel; store-read/import diagnostics join it when a store-backed loader feeds mobile)
 - a display-only timeline derived from the same `ReadOnlyTimelineProjector` the
   shared app layer owns: entries with source, time window, type, status and
@@ -26,6 +27,12 @@ The read model exposes:
   (`replay event <id>`), evidence references, and related events for the same
   work item — mirroring the desktop drilldown's sanitized field set; raw
   provider payloads are never part of the model
+
+Mobile timeline entries and evidence details receive provenance from the shared
+`:app` read model. The mobile contract does not parse event JSON directly and
+does not invent provider ids. Optional provenance fields mirror the canonical
+event aliases: project, workspace, upstream source, owner, agent, model, tool,
+run, objective, handoff, and archive record.
 
 The first Compose mobile screenshot or smoke evidence should show only sanitized
 sample or stored-event state: current work, attention queue, stale markers when

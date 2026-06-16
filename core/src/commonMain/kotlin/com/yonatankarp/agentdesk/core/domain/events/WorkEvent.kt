@@ -13,6 +13,7 @@ data class WorkEvent(
     val workItemId: WorkItemId,
     val payload: WorkEventPayload,
     val evidenceReferences: List<EvidenceReference> = emptyList(),
+    val provenance: WorkProvenance? = null,
 ) {
     val type: WorkEventType
         get() = payload.type

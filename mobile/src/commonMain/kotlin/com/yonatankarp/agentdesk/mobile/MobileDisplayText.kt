@@ -6,6 +6,7 @@ import com.yonatankarp.agentdesk.app.operator.StaleDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceDetail
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEvidenceReference
+import com.yonatankarp.agentdesk.app.operator.mobile.MobileProvenance
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileStaleAttention
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileTimelineEntry
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileWorkItem
@@ -42,6 +43,7 @@ internal object MobileDisplayText {
         if (entry.evidenceReferences.isNotEmpty()) {
             append(" | Evidence: ${evidenceReferences(entry.evidenceReferences)}")
         }
+        entry.provenance?.summary()?.let { summary -> append(" | Provenance: $summary") }
     }
 
     fun evidenceDetailRows(detail: MobileEvidenceDetail): List<String> = buildList {
@@ -49,6 +51,7 @@ internal object MobileDisplayText {
         add("Timestamp: ${detail.timestamp}")
         add("Summary: ${detail.summary}")
         add("Provenance: ${detail.provenance}")
+        detail.provenanceFields?.summary()?.let { add("Provenance fields: $it") }
         if (detail.evidenceReferences.isEmpty()) {
             add(EVIDENCE_MISSING)
         } else {
@@ -98,5 +101,16 @@ internal object MobileDisplayText {
         if (event.evidenceReferences.isNotEmpty()) {
             append(" | Evidence: ${evidenceReferences(event.evidenceReferences)}")
         }
+        event.provenance?.summary()?.let { summary -> append(" | Provenance: $summary") }
     }
+
+    private fun MobileProvenance.summary(): String? = listOfNotNull(
+        projectId,
+        sourceId,
+        ownerId,
+        agentId,
+        modelId,
+        toolId,
+        runId,
+    ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 }

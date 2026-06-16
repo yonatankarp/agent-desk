@@ -3,7 +3,9 @@ package com.yonatankarp.agentdesk.app.operator.mobile
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
+import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
 import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
@@ -149,6 +151,40 @@ class MobileOperatorStateContractTest :
                         entry.evidenceReferences.single().target shouldBe "docs/blocked-context.md"
                         state.timelineStatusMarkers.shouldContainExactly("Read-only", "Blocked")
                         state.recentEvents.last().source shouldBe "mock-adapter"
+                    }
+                }
+            }
+        }
+
+        given("stored events with provenance") {
+            `when`("the mobile contract is derived from events") {
+                then("timeline and evidence detail expose structured public-safe provenance") {
+                    val provenance = WorkProvenance(
+                        projectId = ProvenanceId.parse("project:agent-desk"),
+                        workspaceId = ProvenanceId.parse("workspace:mobile"),
+                        sourceId = ProvenanceId.parse("repo:agent-desk"),
+                        ownerId = ProvenanceId.parse("owner:local"),
+                        agentId = ProvenanceId.parse("agent:ororo"),
+                        modelId = ProvenanceId.parse("model:gpt-5"),
+                        toolId = ProvenanceId.parse("tool:gradle"),
+                        runId = ProvenanceId.parse("run:daily-20260616"),
+                        objectiveId = ProvenanceId.parse("objective:provenance"),
+                        parentHandoffId = ProvenanceId.parse("handoff:manager"),
+                        archiveRecordId = ProvenanceId.parse("archive:agent-task-42"),
+                    )
+                    val state = MobileOperatorStateContract.fromEvents(
+                        workEvents {
+                            started(provenance = provenance)
+                        },
+                    )
+
+                    assertSoftly {
+                        state.recentEvents.single().provenance?.projectId shouldBe "project:agent-desk"
+                        state.timeline.single().provenance?.sourceId shouldBe "repo:agent-desk"
+                        state.timeline.single().provenance?.agentId shouldBe "agent:ororo"
+                        state.evidenceDetails.single().provenanceFields?.modelId shouldBe "model:gpt-5"
+                        state.evidenceDetails.single().provenanceFields?.archiveRecordId shouldBe "archive:agent-task-42"
+                        state.evidenceDetails.single().provenanceFields.toString().shouldBePublicSafe()
                     }
                 }
             }

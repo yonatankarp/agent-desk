@@ -1,6 +1,8 @@
 package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
+import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
 import com.yonatankarp.agentdesk.testfixtures.commitEvidence
 import io.kotest.assertions.assertSoftly
@@ -83,6 +85,62 @@ class WorkEventJsonTest :
                     assertSoftly(error.message.orEmpty()) {
                         shouldContain("Evidence target")
                         shouldNotContain(unsafeTarget)
+                    }
+                }
+            }
+        }
+
+        given("work provenance") {
+            `when`("an event includes project and agent provenance") {
+                then("it preserves the public-safe provenance record through replay serialization") {
+                    val event = AppFixtures.workStartedEvent().copy(
+                        provenance = WorkProvenance(
+                            projectId = ProvenanceId.parse("project:agent-desk"),
+                            workspaceId = ProvenanceId.parse("workspace:desktop"),
+                            sourceId = ProvenanceId.parse("repo:agent-desk"),
+                            ownerId = ProvenanceId.parse("owner:local"),
+                            agentId = ProvenanceId.parse("agent:ororo"),
+                            modelId = ProvenanceId.parse("model:gpt-5"),
+                            toolId = ProvenanceId.parse("tool:gradle"),
+                            runId = ProvenanceId.parse("run:daily-20260616"),
+                            objectiveId = ProvenanceId.parse("objective:provenance"),
+                            parentHandoffId = ProvenanceId.parse("handoff:manager"),
+                            archiveRecordId = ProvenanceId.parse("archive:agent-task-42"),
+                        ),
+                    )
+
+                    val encoded = WorkEventJson.encode(event)
+
+                    encoded shouldContain
+                        """"provenance":{"projectId":"project:agent-desk","workspaceId":"workspace:desktop","sourceId":"repo:agent-desk","ownerId":"owner:local","agentId":"agent:ororo","modelId":"model:gpt-5","toolId":"tool:gradle","runId":"run:daily-20260616","objectiveId":"objective:provenance","parentHandoffId":"handoff:manager","archiveRecordId":"archive:agent-task-42"}"""
+                    WorkEventJson.decode(encoded) shouldBe event
+                }
+            }
+
+            `when`("an older event omits provenance") {
+                then("it decodes with no provenance") {
+                    val event =
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"}}""",
+                        )
+
+                    event.provenance shouldBe null
+                }
+            }
+
+            `when`("a record includes unsafe provenance") {
+                then("decoding rejects it without echoing the raw id") {
+                    val unsafeRunId = "session:private-run"
+
+                    val error = shouldThrow<IllegalArgumentException> {
+                        WorkEventJson.decode(
+                            """{"id":"event:agent-task:42:started","occurredAt":"2026-06-02T21:00:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.started","payload":{"title":"Run public hygiene check"},"provenance":{"runId":"$unsafeRunId"}}""",
+                        )
+                    }
+
+                    assertSoftly(error.message.orEmpty()) {
+                        shouldContain("Provenance id")
+                        shouldNotContain(unsafeRunId)
                     }
                 }
             }

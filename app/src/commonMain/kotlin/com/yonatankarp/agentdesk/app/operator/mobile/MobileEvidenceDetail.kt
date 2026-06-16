@@ -18,4 +18,5 @@ data class MobileEvidenceDetail(
     val criteriaResult: String = "Criteria unavailable.",
     val evidenceReferences: List<MobileEvidenceReference> = emptyList(),
     val relatedEvents: List<MobileEventLine> = emptyList(),
+    val provenanceFields: MobileProvenance? = null,
 )

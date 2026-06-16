@@ -29,6 +29,19 @@ class OpenClawRuntimeObservationFileSourceTest :
                               "kind": "started",
                               "title": "Implement sanitized adapter",
                               "summary": "Agent started the approved runtime adapter slice.",
+                              "provenance": {
+                                "projectId": "project:agent-desk",
+                                "workspaceId": "workspace:adapter",
+                                "sourceId": "repo:agent-desk",
+                                "ownerId": "owner:local",
+                                "agentId": "agent:ororo",
+                                "modelId": "model:gpt-5",
+                                "toolId": "tool:gradle",
+                                "runId": "run:daily-20260616",
+                                "objectiveId": "objective:adapter",
+                                "parentHandoffId": "handoff:manager",
+                                "archiveRecordId": "archive:agent-task-210"
+                              },
                               "evidenceReferences": [
                                 {
                                   "kind": "sanitized-note",
@@ -62,6 +75,17 @@ class OpenClawRuntimeObservationFileSourceTest :
                         workItemId shouldBe "agent-task:210"
                         title shouldBe "Implement sanitized adapter"
                         summary shouldBe "Agent started the approved runtime adapter slice."
+                        provenance?.projectId shouldBe "project:agent-desk"
+                        provenance?.workspaceId shouldBe "workspace:adapter"
+                        provenance?.sourceId shouldBe "repo:agent-desk"
+                        provenance?.ownerId shouldBe "owner:local"
+                        provenance?.agentId shouldBe "agent:ororo"
+                        provenance?.modelId shouldBe "model:gpt-5"
+                        provenance?.toolId shouldBe "tool:gradle"
+                        provenance?.runId shouldBe "run:daily-20260616"
+                        provenance?.objectiveId shouldBe "objective:adapter"
+                        provenance?.parentHandoffId shouldBe "handoff:manager"
+                        provenance?.archiveRecordId shouldBe "archive:agent-task-210"
                         evidenceReferences.single().kind shouldBe "sanitized-note"
                         evidenceReferences.single().label shouldBe "Adapter decision"
                         evidenceReferences.single().target shouldBe "docs/runtime-adapter-scope-decision.md"

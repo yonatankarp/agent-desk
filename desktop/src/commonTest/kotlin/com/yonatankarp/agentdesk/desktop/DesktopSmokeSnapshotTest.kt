@@ -5,6 +5,8 @@ import com.yonatankarp.agentdesk.app.operator.OperatorStateProjector
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
@@ -107,11 +109,43 @@ class DesktopSmokeSnapshotTest :
                     rows shouldContain "Date: 2026-06-02"
                     rows shouldContain "work.succeeded at 2026-06-02T21:10:00Z - State: Completed; Succeeded; " +
                         "Completion: Successful outcome; Evidence: sanitized-note Completion note -> " +
-                        "docs/evidence/completed.md [agent-task:42 from mock-adapter]"
+                        "docs/evidence/completed.md; Provenance: project:agent-desk repo:agent-desk owner:local agent:ororo " +
+                        "model:gpt-5 tool:gradle run:daily-20260616 [agent-task:42 from mock-adapter]"
                     rows shouldContain "work.failed at 2026-06-03T09:05:00Z - State: Failed; Build failed.; " +
                         "Completion: Failed outcome [agent-task:43 from mock-adapter]"
                     rows shouldContain "work.started at 2026-06-03T09:10:00Z - State: Stale; Waiting on background import.; " +
                         "Evidence: sanitized-note Stale note -> docs/evidence/stale.md [agent-task:44 from mock-adapter]"
+                }
+            }
+
+            `when`("the latest event carries structured provenance") {
+                then("desktop evidence drilldown renders the public-safe provenance fields") {
+                    val provenance = publicSafeProvenance()
+                    val state = OperatorStateProjector.project(
+                        workEvents {
+                            started(
+                                workItemId = "agent-task:42",
+                                title = "Ship provenance display",
+                                summary = "Agent is preserving public-safe provenance.",
+                                provenance = provenance,
+                            )
+                            blocked(
+                                workItemId = "agent-task:42",
+                                reason = "Waiting on dashboard filter review.",
+                                provenance = provenance,
+                            )
+                        },
+                    )
+
+                    val rows = DesktopSmokeSnapshotBuilder.from(
+                        DesktopScreenState.Ready(state = state, modeLabel = "Loaded state"),
+                    ).sectionRows("Evidence drilldown")
+
+                    rows shouldContain "Provenance: replay event event:agent-task:42:blocked"
+                    rows shouldContain "Provenance fields: project:agent-desk repo:agent-desk owner:local " +
+                        "agent:ororo model:gpt-5 tool:gradle run:daily-20260616"
+                    rows.joinToString("\n").shouldBePublicSafe()
+                    rows.joinToString("\n").shouldHaveNoActionAffordances()
                 }
             }
 
@@ -230,12 +264,29 @@ class DesktopSmokeSnapshotTest :
 
 private fun DesktopSmokeSnapshot.sectionRows(title: String): List<String> = sections.single { it.title == title }.rows
 
+private fun publicSafeProvenance(): WorkProvenance = WorkProvenance(
+    projectId = ProvenanceId.parse("project:agent-desk"),
+    sourceId = ProvenanceId.parse("repo:agent-desk"),
+    ownerId = ProvenanceId.parse("owner:local"),
+    agentId = ProvenanceId.parse("agent:ororo"),
+    modelId = ProvenanceId.parse("model:gpt-5"),
+    toolId = ProvenanceId.parse("tool:gradle"),
+    runId = ProvenanceId.parse("run:daily-20260616"),
+)
+
 private fun timelineParityState(): OperatorState {
+    val provenance = publicSafeProvenance()
     val events = workEvents {
-        started(workItemId = "agent-task:42", title = "Ship read-only timeline", summary = "Timeline work started.")
+        started(
+            workItemId = "agent-task:42",
+            title = "Ship read-only timeline",
+            summary = "Timeline work started.",
+            provenance = provenance,
+        )
         succeeded(
             workItemId = "agent-task:42",
             evidence = listOf(sanitizedNoteEvidence("Completion note", "docs/evidence/completed.md")),
+            provenance = provenance,
         )
         started(
             workItemId = "agent-task:43",

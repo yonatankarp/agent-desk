@@ -12,4 +12,5 @@ data class MobileTimelineEntry(
     val summary: String,
     val completionSummary: String?,
     val evidenceReferences: List<MobileEvidenceReference> = emptyList(),
+    val provenance: MobileProvenance? = null,
 )

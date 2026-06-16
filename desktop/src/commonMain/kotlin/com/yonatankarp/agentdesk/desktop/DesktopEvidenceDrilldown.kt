@@ -4,6 +4,7 @@ import com.yonatankarp.agentdesk.app.operator.EventLine
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
+import com.yonatankarp.agentdesk.app.operator.ProvenanceLine
 import com.yonatankarp.agentdesk.app.operator.decision.DecisionQueueProjector
 
 object DesktopEvidenceDrilldown {
@@ -42,6 +43,7 @@ object DesktopEvidenceDrilldown {
             add("Source: ${line.source}")
             add("Timestamp: ${line.occurredAt}")
             add("Provenance: replay event ${event.id}")
+            line.provenance?.summary()?.let { add("Provenance fields: $it") }
             addAll(evidenceRows)
             decision?.let {
                 add("Decision: ${it.state.name} from ${it.request.source}")
@@ -64,6 +66,16 @@ object DesktopEvidenceDrilldown {
         .ifEmpty {
             listOf("Evidence missing: no public-safe evidence reference was attached.")
         }
+
+    private fun ProvenanceLine.summary(): String? = listOfNotNull(
+        projectId,
+        sourceId,
+        ownerId,
+        agentId,
+        modelId,
+        toolId,
+        runId,
+    ).takeIf { it.isNotEmpty() }?.joinToString(" ")
 
     private fun DesktopScreenState.criteriaResult(): String = DesktopReplayStatus.rows(this)
         .firstOrNull { row -> !row.startsWith("Read-only replay source:") }

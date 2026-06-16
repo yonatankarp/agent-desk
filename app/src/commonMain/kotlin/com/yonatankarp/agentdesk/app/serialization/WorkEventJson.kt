@@ -2,6 +2,7 @@ package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
+import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
@@ -10,6 +11,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkEventPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventType
 import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
@@ -38,6 +40,7 @@ object WorkEventJson {
         type = event.type.wireName,
         payload = event.payload.toRecord(),
         evidenceReferences = event.evidenceReferences.map { it.toRecord() },
+        provenance = event.provenance?.toRecord(),
     )
 
     fun fromRecord(record: WorkEventRecord): WorkEvent = record.toDomain()
@@ -49,6 +52,35 @@ object WorkEventJson {
         workItemId = WorkItemId.parse(workItemId),
         payload = payload.toDomainPayload(type.toEventType()),
         evidenceReferences = evidenceReferences.map { it.toDomain() },
+        provenance = provenance?.toDomain(),
+    )
+
+    private fun WorkProvenance.toRecord(): WorkProvenanceRecord = WorkProvenanceRecord(
+        projectId = projectId?.toString(),
+        workspaceId = workspaceId?.toString(),
+        sourceId = sourceId?.toString(),
+        ownerId = ownerId?.toString(),
+        agentId = agentId?.toString(),
+        modelId = modelId?.toString(),
+        toolId = toolId?.toString(),
+        runId = runId?.toString(),
+        objectiveId = objectiveId?.toString(),
+        parentHandoffId = parentHandoffId?.toString(),
+        archiveRecordId = archiveRecordId?.toString(),
+    )
+
+    private fun WorkProvenanceRecord.toDomain(): WorkProvenance = WorkProvenance(
+        projectId = projectId?.let(ProvenanceId::parse),
+        workspaceId = workspaceId?.let(ProvenanceId::parse),
+        sourceId = sourceId?.let(ProvenanceId::parse),
+        ownerId = ownerId?.let(ProvenanceId::parse),
+        agentId = agentId?.let(ProvenanceId::parse),
+        modelId = modelId?.let(ProvenanceId::parse),
+        toolId = toolId?.let(ProvenanceId::parse),
+        runId = runId?.let(ProvenanceId::parse),
+        objectiveId = objectiveId?.let(ProvenanceId::parse),
+        parentHandoffId = parentHandoffId?.let(ProvenanceId::parse),
+        archiveRecordId = archiveRecordId?.let(ProvenanceId::parse),
     )
 
     private fun WorkEventPayload.toRecord(): WorkEventPayloadRecord = when (this) {
