@@ -136,10 +136,10 @@ private fun DesktopHeader(
                 fontWeight = FontWeight.SemiBold,
             )
             Text("Local operator console", color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.body)
-            Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.mono)
+            Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.caption)
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
-            Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.mono)
+            Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.label)
             ThemeModeControl(mode = mode, onCycle = onCycle)
         }
     }
