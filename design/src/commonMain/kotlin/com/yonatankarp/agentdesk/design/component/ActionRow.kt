@@ -34,7 +34,6 @@ fun ActionRow(
     val spacing = AgentDeskTheme.spacing
     val rail = AgentDeskTheme.statusRole(tone).rail
     val railPx = with(LocalDensity.current) { spacing.railWidth.toPx() }
-    val mono = AgentDeskTheme.typography.monoFamily
 
     Row(
         modifier = modifier
