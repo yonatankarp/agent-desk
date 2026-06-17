@@ -13,8 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 
 @Composable
@@ -23,9 +21,9 @@ fun EvidenceItem(
     modifier: Modifier = Modifier,
 ) {
     val colors = AgentDeskTheme.colors
-    val mono = AgentDeskTheme.typography.monoFamily
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-        Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(colors.accent))
-        Text(text = label, color = colors.textSecondary, fontFamily = mono, fontSize = 12.sp)
+    val spacing = AgentDeskTheme.spacing
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+        Box(Modifier.size(spacing.sm).clip(RoundedCornerShape(spacing.railWidth)).background(colors.accent))
+        Text(text = label, color = colors.textSecondary, style = AgentDeskTheme.typography.mono)
     }
 }

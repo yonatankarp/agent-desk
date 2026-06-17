@@ -11,6 +11,7 @@ data class AgentDeskSpacing(
     val md: Dp = 12.dp,
     val lg: Dp = 16.dp,
     val xl: Dp = 24.dp,
+    val lineWidth: Dp = 1.dp,
     val panelRadius: Dp = 14.dp,
     val rowRadius: Dp = 10.dp,
     val railWidth: Dp = 3.dp,

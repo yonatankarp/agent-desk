@@ -17,8 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 
 @Composable
@@ -34,7 +32,7 @@ fun Panel(
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(spacing.panelRadius))
-            .border(1.dp, colors.line, RoundedCornerShape(spacing.panelRadius)),
+            .border(spacing.lineWidth, colors.line, RoundedCornerShape(spacing.panelRadius)),
         color = colors.panel,
         shape = RoundedCornerShape(spacing.panelRadius),
         tonalElevation = AgentDeskTheme.elevation.panelTonal,
@@ -47,7 +45,6 @@ fun Panel(
                     color = titleColor ?: colors.textMuted,
                     style = AgentDeskTheme.typography.section,
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.6.sp,
                 )
                 if (count != null) {
                     Spacer(Modifier.weight(1f))
