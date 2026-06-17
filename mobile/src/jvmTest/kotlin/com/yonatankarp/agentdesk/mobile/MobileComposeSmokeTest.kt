@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.mobile
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
@@ -59,6 +60,8 @@ class MobileComposeSmokeTest :
                 onNodeWithText("No current work").assertIsDisplayed()
                 onNodeWithText("No items need attention").assertIsDisplayed()
                 onNodeWithText("No recent accepted events").assertIsDisplayed()
+                onNodeWithText("No timeline entries").assertIsDisplayed()
+                onAllNodesWithTag(MOBILE_EMPTY_ROW_TEST_TAG).assertCountEquals(4)
             }
         }
 

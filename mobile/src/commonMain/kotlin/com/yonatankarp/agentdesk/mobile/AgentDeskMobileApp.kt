@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
@@ -59,14 +60,14 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                 MobileHeader(state, mode) { mode = it }
                 Panel(title = MobileDisplayText.CURRENT_WORK_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.currentWork.isEmpty()) {
-                        MobileEmptyLine(MobileDisplayText.NO_CURRENT_WORK)
+                        MobileEmptyRow(MobileDisplayText.NO_CURRENT_WORK)
                     } else {
                         state.currentWork.forEach { item -> MobileWorkRow(item) }
                     }
                 }
                 Panel(title = MobileDisplayText.ATTENTION_QUEUE_TITLE, modifier = Modifier.fillMaxWidth()) {
                     if (state.attentionQueue.isEmpty()) {
-                        MobileEmptyLine(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
+                        MobileEmptyRow(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
                     } else {
                         state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
                     }
@@ -376,6 +377,7 @@ private fun MobileEmptyRow(text: String) {
         text = text,
         modifier = Modifier
             .fillMaxWidth()
+            .testTag(MOBILE_EMPTY_ROW_TEST_TAG)
             .clip(RoundedCornerShape(AgentDeskTheme.spacing.rowRadius))
             .background(AgentDeskTheme.colors.row)
             .padding(AgentDeskTheme.spacing.md),
@@ -384,11 +386,4 @@ private fun MobileEmptyRow(text: String) {
     )
 }
 
-@Composable
-private fun MobileEmptyLine(text: String) {
-    Text(
-        text = text,
-        color = AgentDeskTheme.colors.textMuted,
-        style = AgentDeskTheme.typography.body,
-    )
-}
+internal const val MOBILE_EMPTY_ROW_TEST_TAG = "mobile-empty-row"
