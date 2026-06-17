@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,8 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
@@ -56,10 +55,11 @@ fun AgentDeskApp(
 ) {
     var mode by remember { mutableStateOf(themeStore.load()) }
     AgentDeskTheme(mode = mode) {
+        val spacing = AgentDeskTheme.spacing
         Surface(modifier = Modifier.fillMaxSize(), color = AgentDeskTheme.colors.background) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
+                modifier = Modifier.fillMaxSize().padding(spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(spacing.lg),
             ) {
                 DesktopHeader(screenState, mode) { next ->
                     mode = next
@@ -67,15 +67,15 @@ fun AgentDeskApp(
                 }
                 Panel(title = OperatorDisplaySection.ReplayStatus.desktopLabel, modifier = Modifier.fillMaxWidth()) {
                     DesktopReplayStatus.rows(screenState).forEach { row ->
-                        Text(row, color = AgentDeskTheme.colors.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+                        Text(row, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
                     }
                 }
-                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                    Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.lg)) {
+                    Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
                         Panel(title = OperatorDisplaySection.WorkState.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
                             val rows = screenState.workRows()
                             if (rows.isEmpty()) {
-                                Text("No current work", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                                DesktopEmptyRow("No current work")
                             } else {
                                 rows.forEach { row -> DesktopWorkMetadataRow(row) }
                             }
@@ -83,7 +83,7 @@ fun AgentDeskApp(
                         Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
                             val lines = DesktopTimelinePresenter.rows(screenState.readyState())
                             if (lines.isEmpty()) {
-                                Text("No recent events", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                                DesktopEmptyRow("No recent events")
                             } else {
                                 lines.forEachIndexed { i, line ->
                                     EventRow(
@@ -97,7 +97,7 @@ fun AgentDeskApp(
                             }
                         }
                     }
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
                         Panel(
                             title = OperatorDisplaySection.DecisionQueue.desktopLabel,
                             modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -106,8 +106,8 @@ fun AgentDeskApp(
                             val attention = screenState.attentionItems()
                             val message = screenState.message()
                             when {
-                                message != null -> Text(message, color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
-                                attention.isEmpty() -> Text("No items need a decision", color = AgentDeskTheme.colors.textMuted, fontSize = 13.sp)
+                                message != null -> DesktopEmptyRow(message)
+                                attention.isEmpty() -> DesktopEmptyRow("No items need a decision")
                                 else -> screenState.attentionRows().forEach { row -> DesktopWorkMetadataRow(row) }
                             }
                         }
@@ -128,13 +128,18 @@ private fun DesktopHeader(
     onCycle: (ThemeMode) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Agent Desk", color = AgentDeskTheme.colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-            Text("Local operator console", color = AgentDeskTheme.colors.textMuted, fontSize = 14.sp)
-            Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 12.sp)
+        Column(verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.xs)) {
+            Text(
+                "Agent Desk",
+                color = AgentDeskTheme.colors.textPrimary,
+                style = AgentDeskTheme.typography.display,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text("Local operator console", color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.body)
+            Text(screenState.modeLabel, color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.mono)
         }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, fontFamily = AgentDeskTheme.typography.monoFamily, fontSize = 13.sp)
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
+            Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.mono)
             ThemeModeControl(mode = mode, onCycle = onCycle)
         }
     }
@@ -142,29 +147,41 @@ private fun DesktopHeader(
 
 @Composable
 private fun DesktopWorkMetadataRow(row: DesktopWorkItemRow) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.xs)) {
         ActionRow(id = row.id, title = row.title, tone = row.tone, statusLabel = row.statusLabel)
         row.summary?.let { summary ->
-            Text(summary, color = AgentDeskTheme.colors.textSecondary, fontSize = 12.sp, lineHeight = 17.sp)
+            Text(summary, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
         }
         row.evidenceText?.let { evidence ->
             Text(
                 "Evidence: $evidence",
                 color = AgentDeskTheme.colors.textMuted,
-                fontFamily = AgentDeskTheme.typography.monoFamily,
-                fontSize = 10.sp,
-                lineHeight = 15.sp,
+                style = AgentDeskTheme.typography.mono,
             )
         }
         row.staleText?.let { stale ->
             Text(
                 stale,
                 color = AgentDeskTheme.statusRole(StatusTone.Attention).text,
-                fontFamily = AgentDeskTheme.typography.monoFamily,
-                fontSize = 10.sp,
-                lineHeight = 15.sp,
+                style = AgentDeskTheme.typography.mono,
             )
         }
+    }
+}
+
+@Composable
+private fun DesktopEmptyRow(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = AgentDeskTheme.colors.row,
+        shape = RoundedCornerShape(AgentDeskTheme.spacing.rowRadius),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(AgentDeskTheme.spacing.md),
+            color = AgentDeskTheme.colors.textMuted,
+            style = AgentDeskTheme.typography.body,
+        )
     }
 }
 
