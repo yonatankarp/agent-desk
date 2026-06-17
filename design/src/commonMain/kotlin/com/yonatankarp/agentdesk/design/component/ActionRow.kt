@@ -51,9 +51,9 @@ fun ActionRow(
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
     ) {
         if (id != null) {
-            Text(text = id, color = colors.textMuted, fontFamily = mono, fontSize = 11.sp)
+            Text(text = id, color = colors.textMuted, style = AgentDeskTheme.typography.mono)
         }
-        Text(text = title, color = colors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Text(text = title, color = colors.textPrimary, style = AgentDeskTheme.typography.rowTitle, fontWeight = FontWeight.Medium)
         Spacer(Modifier.weight(1f))
         StatusPill(label = statusLabel, tone = tone)
     }

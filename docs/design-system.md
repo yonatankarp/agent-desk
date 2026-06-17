@@ -9,12 +9,12 @@ Vision principle: shared domain semantics across desktop, mobile, and backend).
 
 - **Tokens** (`com.yonatankarp.agentdesk.design.token`): `AgentDeskColors` (light + dark
   surfaces/text), `StatusColors` (per `StatusTone` `text`/`rail`/`pillBg`),
-  `AgentDeskSpacing` (spacing, radii, rail width), and `AgentDeskTypography`
-  (bundled Inter for UI, JetBrains Mono for IDs/timestamps; both OFL — see
+  `AgentDeskSpacing` (spacing, radii, rail width), `AgentDeskElevation` (shared
+  tonal/shadow depth), and `AgentDeskTypography` (bundled Inter for UI, JetBrains Mono for IDs/timestamps; both OFL — see
   `design/THIRD_PARTY_LICENSES/`).
 - **Theme** (`com.yonatankarp.agentdesk.design.theme`): `AgentDeskTheme { }` provides the
   tokens via composition locals and a Material3 scheme. Access through the
-  `AgentDeskTheme` object (`.colors`, `.status`, `.spacing`, `.typography`,
+  `AgentDeskTheme` object (`.colors`, `.status`, `.spacing`, `.elevation`, `.typography`,
   `.statusRole(tone)`).
 - **Components** (`com.yonatankarp.agentdesk.design.component`): `Panel`, `ActionRow`
   (status rail + monospace id + pill), `StatusPill`, `EventRow`, `EvidenceItem`,
