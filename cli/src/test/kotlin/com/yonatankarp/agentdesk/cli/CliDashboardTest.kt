@@ -88,6 +88,10 @@ class CliDashboardTest :
                     val result = runCli("--config", configFile.toString())
 
                     result.exitCode shouldBe 0
+                    result.output shouldContain "Health"
+                    result.output shouldContain "- Status: Healthy"
+                    result.output shouldContain "- Replayed 2 event(s) into operator state."
+                    result.output shouldContain "- Last event: 2026-06-02T21:05:00.123Z."
                     result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
                     result.output shouldContain "- agent-task:42 Run public hygiene check (Blocked)"
                     result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
@@ -115,6 +119,11 @@ class CliDashboardTest :
                     val result = runCli("--config", configFile.toString())
 
                     result.exitCode shouldBe 0
+                    result.output shouldContain "- Status: Partial import"
+                    result.output shouldContain "- Recovered 2 committed event(s) from a partial import."
+                    result.output shouldContain "- Source: current replay input."
+                    result.output shouldContain "- Last replay: not recorded."
+                    result.output shouldContain "- Next safe action: repair the event store before importing more observations."
                     result.output shouldContain "- [Blocked] agent-task:42 Run public hygiene check"
                     result.error shouldContain "Torn trailing record at line 3"
                     result.output.shouldBePublicSafe()

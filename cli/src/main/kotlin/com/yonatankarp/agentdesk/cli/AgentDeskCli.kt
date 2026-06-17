@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.operator.OperatorHealthProjector
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.runtime.summary
 import com.yonatankarp.agentdesk.cli.input.CliCommand
@@ -127,6 +128,8 @@ object AgentDeskCli {
         2
     } catch (exception: CliInputException) {
         error.println("Error: ${exception.publicMessage}")
+        error.println()
+        error.println(OperatorConsoleRenderer().render(OperatorHealthProjector.failedImportSurface(exception.publicMessage)))
         1
     }
 

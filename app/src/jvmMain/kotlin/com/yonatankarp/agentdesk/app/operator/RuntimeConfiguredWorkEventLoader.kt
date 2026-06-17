@@ -24,7 +24,7 @@ object RuntimeConfiguredWorkEventLoader {
         } catch (error: InvalidPathException) {
             throw RuntimeConfiguredOperatorStateLoadException("Configured event store could not be read.", error)
         } catch (error: SecurityException) {
-            throw RuntimeConfiguredOperatorStateLoadException("Configured event store could not be read.", error)
+            throw RuntimeConfiguredOperatorStateLoadException("Configured event store source permission is missing.", error)
         } catch (error: WorkEventStoreException) {
             throw RuntimeConfiguredOperatorStateLoadException(
                 PublicSafeWorkEventStoreMessage.from(
