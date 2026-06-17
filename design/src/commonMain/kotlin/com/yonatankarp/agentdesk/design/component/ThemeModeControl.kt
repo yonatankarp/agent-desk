@@ -11,8 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 import com.yonatankarp.agentdesk.design.theme.ThemeMode
 
@@ -23,6 +21,7 @@ fun ThemeModeControl(
     modifier: Modifier = Modifier,
 ) {
     val colors = AgentDeskTheme.colors
+    val spacing = AgentDeskTheme.spacing
     val label = when (mode) {
         ThemeMode.System -> "Auto"
         ThemeMode.Light -> "Light"
@@ -33,10 +32,10 @@ fun ThemeModeControl(
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(colors.row)
-            .border(1.dp, colors.line, RoundedCornerShape(50))
+            .border(spacing.lineWidth, colors.line, RoundedCornerShape(50))
             .clickable { onCycle(mode.next()) }
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
         color = colors.textSecondary,
-        fontSize = 12.sp,
+        style = AgentDeskTheme.typography.label,
     )
 }

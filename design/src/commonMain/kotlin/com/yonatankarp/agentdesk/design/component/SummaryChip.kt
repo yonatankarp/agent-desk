@@ -14,8 +14,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yonatankarp.agentdesk.design.theme.AgentDeskTheme
 
 @Composable
@@ -25,6 +23,7 @@ fun SummaryChip(
     modifier: Modifier = Modifier,
 ) {
     val colors = AgentDeskTheme.colors
+    val spacing = AgentDeskTheme.spacing
     val text: AnnotatedString = buildAnnotatedString {
         withStyle(SpanStyle(color = colors.textPrimary, fontWeight = FontWeight.SemiBold)) { append(value) }
         append(" ")
@@ -34,8 +33,8 @@ fun SummaryChip(
         text = text,
         modifier = modifier
             .background(colors.row, RoundedCornerShape(50))
-            .border(1.dp, colors.line, RoundedCornerShape(50))
-            .padding(horizontal = 12.dp, vertical = 5.dp),
-        fontSize = 12.sp,
+            .border(spacing.lineWidth, colors.line, RoundedCornerShape(50))
+            .padding(horizontal = spacing.md, vertical = spacing.xs),
+        style = AgentDeskTheme.typography.label,
     )
 }
