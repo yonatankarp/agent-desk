@@ -69,6 +69,47 @@ ready unless the whole outcome is blocked or unknown. Manual QA may supplement
 automated checks, but it does not replace required tests, smoke runs, public
 hygiene, or CI evidence.
 
+## Pending Event Contract Decision
+
+Issue
+[#329](https://github.com/yonatankarp/agent-desk/issues/329) needs an owner
+decision before implementation because no production event currently records
+verification results for a work item. The proposed contract is a dedicated
+`work.verification-recorded` event rather than overloading lifecycle payloads or
+plain evidence references.
+
+The proposed event should carry public-safe, adapter-neutral verification facts:
+
+- outcome
+- whether verification was attempted
+- known failures
+- touched artifacts
+- residual risks
+- verification results using the vocabulary above
+
+Each verification result should include:
+
+- name
+- kind: local test, CI check, smoke run, or manual QA
+- result: passed, failed, skipped, or unknown
+- optional duration in milliseconds
+- public-safe output reference
+- failure summary only when the result failed
+- compact evidence reference
+- optional input binding with SHA-256 digest, algorithm, and captured timestamp
+
+The first implementation should keep filesystem hashing and current-file digest
+calculation outside `:core` and outside `:app` `commonMain`. JVM or persistence
+adapter code may compute `ContentDigest.parseSha256(...)` and `capturedAt`;
+common code should consume only already-sanitized digest values. `ReportCommand`
+can then project the latest `work.verification-recorded` event for the requested
+work item into `CompletionEvidenceChecklist` and pass the real last-change
+`EventTimestamp` to `CompletionEvidenceProjector.readiness(...)`.
+
+This is a proposal, not an accepted architecture decision. Do not implement the
+producer-side event contract or record it in the decision log until the owner
+approves the event shape on #329 or its decision PR.
+
 Non-goals for this slice: CI provider integration, private logs, screenshots
 with private data, raw transcripts, retention policy, cloud storage, and
 compliance-grade audit controls.

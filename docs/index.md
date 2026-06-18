@@ -20,7 +20,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Public-safe artifact policy](public-safe-artifact-policy.md): artifact classes, sharing rules, and operator recovery runbooks.
 - [Privacy boundary regression](privacy-boundary-regression.md): safe persist/commit/publish rules and representative leak fixtures.
 - [Roadmap verification gate matrix](roadmap-verification-gate-matrix.md): capability-to-evidence acceptance gates.
-- [Verification evidence](verification-evidence.md): structured check results and completion evidence examples.
+- [Verification evidence](verification-evidence.md): structured check results, completion evidence examples, and the pending verification event contract proposal.
 - [Digest and notification rules](digest-notification-rules.md): read-only attention rules, urgency, digest grouping, dedupe, and deferred delivery boundaries.
 - [Mobile display-parity contract](mobile-read-only-contract.md): shared `:app` read model, display parity expectations, and action boundaries.
 - [Engineering style](engineering-style.md): Kotlin, domain, adapter, test, and documentation conventions.
