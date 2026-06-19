@@ -2,7 +2,17 @@ package com.yonatankarp.agentdesk.app.serialization
 
 import com.yonatankarp.agentdesk.app.fixtures.AppFixtures
 import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
+import com.yonatankarp.agentdesk.core.domain.events.RecordedContentDigest
+import com.yonatankarp.agentdesk.core.domain.events.RecordedDigestAlgorithm
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationInputBinding
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationKind
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationResult
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationState
+import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
 import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationOutcome
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
+import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
 import com.yonatankarp.agentdesk.testfixtures.checkRunEvidence
 import com.yonatankarp.agentdesk.testfixtures.commitEvidence
 import io.kotest.assertions.assertSoftly
@@ -146,6 +156,51 @@ class WorkEventJsonTest :
             }
         }
 
+        given("a verification recorded event") {
+            `when`("it is encoded and decoded") {
+                then("it round trips the public-safe verification payload") {
+                    val event = AppFixtures.workStartedEvent().copy(
+                        id = WorkEventId.parse("event:agent-task:42:verification-recorded"),
+                        payload = WorkVerificationRecordedPayload(
+                            outcome = WorkVerificationOutcome.Ready,
+                            verificationAttempted = true,
+                            knownFailures = emptyList(),
+                            touchedArtifacts = listOf(WorkSummary.parse("cli/src/main/kotlin/com/yonatankarp/agentdesk/cli/ReportCommand.kt")),
+                            residualRisks = emptyList(),
+                            results = listOf(
+                                RecordedVerificationResult(
+                                    name = WorkSummary.parse("Gradle check"),
+                                    kind = RecordedVerificationKind.LocalTest,
+                                    result = RecordedVerificationState.Passed,
+                                    durationMillis = 1200,
+                                    outputReference = WorkSummary.parse("checks/gradle-check"),
+                                    failureSummary = null,
+                                    evidenceReference = checkRunEvidence(
+                                        "Gradle check",
+                                        "https://github.com/yonatankarp/agent-desk/actions/runs/27793545211",
+                                    ),
+                                    inputBinding = RecordedVerificationInputBinding(
+                                        digest = RecordedContentDigest.parseSha256(
+                                            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                                        ),
+                                        algorithm = RecordedDigestAlgorithm.Sha256,
+                                        capturedAt = AppFixtures.terminalAt,
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+
+                    val encoded = WorkEventJson.encode(event)
+
+                    encoded shouldContain """"type":"work.verification-recorded""""
+                    encoded shouldContain """"kind":"local-test""""
+                    encoded shouldContain """"algorithm":"sha-256""""
+                    WorkEventJson.decode(encoded) shouldBe event
+                }
+            }
+        }
+
         given("current lifecycle payload variants") {
             `when`("they are converted to records") {
                 then("they preserve stable wire names without Kotlin class names") {
@@ -156,6 +211,17 @@ class WorkEventJsonTest :
                         AppFixtures.workSucceededEvent(),
                         AppFixtures.workFailedEvent(),
                         AppFixtures.workCanceledEvent(),
+                        AppFixtures.workStartedEvent().copy(
+                            id = WorkEventId.parse("event:agent-task:42:verification-recorded"),
+                            payload = WorkVerificationRecordedPayload(
+                                outcome = WorkVerificationOutcome.Unknown,
+                                verificationAttempted = false,
+                                knownFailures = emptyList(),
+                                touchedArtifacts = emptyList(),
+                                residualRisks = emptyList(),
+                                results = emptyList(),
+                            ),
+                        ),
                     ).map { WorkEventJson.toRecord(it).type } shouldBe
                         listOf(
                             "work.started",
@@ -164,6 +230,7 @@ class WorkEventJsonTest :
                             "work.succeeded",
                             "work.failed",
                             "work.canceled",
+                            "work.verification-recorded",
                         )
                 }
             }

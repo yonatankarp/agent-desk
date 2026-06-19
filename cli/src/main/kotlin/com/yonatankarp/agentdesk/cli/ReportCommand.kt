@@ -3,10 +3,10 @@ package com.yonatankarp.agentdesk.cli
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
 import com.yonatankarp.agentdesk.app.operator.audit.AuditEntry
 import com.yonatankarp.agentdesk.app.operator.audit.AuditTrailProjector
-import com.yonatankarp.agentdesk.app.operator.verification.CompletionEvidenceChecklist
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionEvidenceProjector
-import com.yonatankarp.agentdesk.app.operator.verification.CompletionOutcome
 import com.yonatankarp.agentdesk.app.operator.verification.CompletionReadinessLabels
+import com.yonatankarp.agentdesk.app.operator.verification.RecordedVerificationEvidenceProjector
+import com.yonatankarp.agentdesk.app.operator.verification.VerificationFreshnessDeriver
 import com.yonatankarp.agentdesk.app.persistence.AuditRecordReadResult
 import com.yonatankarp.agentdesk.app.persistence.AuditStoreException
 import com.yonatankarp.agentdesk.app.persistence.LocalFileAuditRecordRepository
@@ -41,7 +41,7 @@ internal object ReportCommand {
             appendLine("Work item")
             appendLine("- $workItemId (${inspection.statusPresentation.label})")
             appendLine()
-            appendReadiness()
+            appendReadiness(events, workItemId)
             appendLine()
             appendAuditTrail(trail, auditStoreConfigured = auditRead != null)
         }.trimEnd()
@@ -52,14 +52,25 @@ internal object ReportCommand {
         )
     }
 
-    private fun StringBuilder.appendReadiness() {
-        val readiness = CompletionEvidenceProjector.readiness(unboundChecklist)
+    private fun StringBuilder.appendReadiness(
+        events: List<WorkEvent>,
+        workItemId: WorkItemId,
+    ) {
+        val evidence = RecordedVerificationEvidenceProjector.project(events, workItemId)
+        val readiness = CompletionEvidenceProjector.readiness(evidence.checklist, evidence.lastChangedAt)
         appendLine("Readiness")
         appendLine("- ${CompletionReadinessLabels.labelFor(readiness.state)}")
         readiness.reasons.forEach { reason -> appendLine("- $reason") }
         appendLine()
         appendLine("Verification")
-        appendLine("- none")
+        if (evidence.checklist.verificationResults.isEmpty()) {
+            appendLine("- none")
+            return
+        }
+        evidence.checklist.verificationResults.forEach { result ->
+            val freshness = VerificationFreshnessDeriver.derive(result.inputBinding, evidence.lastChangedAt)
+            appendLine("- ${result.name}: ${result.result.name.lowercase()} (${result.kind.name}, ${freshness.name.lowercase()})")
+        }
     }
 
     private fun StringBuilder.appendAuditTrail(
@@ -91,19 +102,4 @@ internal object ReportCommand {
     } catch (exception: AuditStoreException) {
         throw CliInputException(exception.message ?: "Configured audit store could not be read.")
     }
-
-    /**
-     * No production path constructs verification evidence from the event store
-     * yet — #268 hardened the evidence model and derivation, but the
-     * events->checklist recorder is follow-up work — so readiness honestly
-     * reports the unknown/unverified projection instead of fabricating a source.
-     */
-    private val unboundChecklist = CompletionEvidenceChecklist(
-        outcome = CompletionOutcome.Unknown,
-        verificationAttempted = false,
-        knownFailures = emptyList(),
-        touchedArtifacts = emptyList(),
-        residualRisks = emptyList(),
-        verificationResults = emptyList(),
-    )
 }

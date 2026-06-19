@@ -1,12 +1,15 @@
 package com.yonatankarp.agentdesk.core.domain.projections
 
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationOutcome
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 import com.yonatankarp.agentdesk.core.fixtures.CoreFixtures
 import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBeEmptyProjection
 import com.yonatankarp.agentdesk.testfixtures.workEvents
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -253,6 +256,36 @@ class WorkEventProjectorTest :
 
                     projection.workItems.single().status shouldBe WorkStatus.Succeeded
                     projection.ignoredEvents.single().reason shouldContain "Cannot transition"
+                }
+            }
+        }
+
+        given("verification recorded events") {
+            `when`("a verification event follows a started item") {
+                then("the projector accepts it without changing lifecycle status") {
+                    val events = workEvents {
+                        started()
+                        event(
+                            CoreFixtures.workStartedEvent(
+                                id = WorkEventId.parse("event:agent-task:42:verification-recorded"),
+                                occurredAt = CoreFixtures.terminalAt,
+                                payload = WorkVerificationRecordedPayload(
+                                    outcome = WorkVerificationOutcome.Unknown,
+                                    verificationAttempted = false,
+                                    knownFailures = emptyList(),
+                                    touchedArtifacts = emptyList(),
+                                    residualRisks = emptyList(),
+                                    results = emptyList(),
+                                ),
+                            ),
+                        )
+                    }
+
+                    val projection = WorkEventProjector.project(events)
+
+                    projection.recentEvents.map { it.id.toString() } shouldContain
+                        "event:agent-task:42:verification-recorded"
+                    projection.workItems.single().status shouldBe WorkStatus.Running
                 }
             }
         }

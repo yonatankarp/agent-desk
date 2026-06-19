@@ -44,6 +44,50 @@ class WorkEventTest :
             }
         }
 
+        given("verification recorded events") {
+            `when`("the payload is inspected") {
+                then("it carries only public-safe verification facts") {
+                    val payload = verificationRecordedPayload()
+
+                    payload.type shouldBe WorkEventType.WorkVerificationRecorded
+                    payload.outcome shouldBe WorkVerificationOutcome.Ready
+                    payload.results.single().kind shouldBe RecordedVerificationKind.LocalTest
+                    payload.results.single().result shouldBe RecordedVerificationState.Passed
+                    payload.results.single().inputBinding?.algorithm shouldBe RecordedDigestAlgorithm.Sha256
+                }
+            }
+
+            `when`("the recorded digest is parsed") {
+                then("it accepts only lowercase SHA-256 hex") {
+                    RecordedContentDigest.parseSha256(
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    ).toString() shouldBe "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+                    shouldThrow<IllegalArgumentException> {
+                        RecordedContentDigest.parseSha256("A".repeat(64))
+                    }.message shouldContain "SHA-256"
+                }
+            }
+
+            `when`("a failed result omits its failure summary") {
+                then("it rejects the payload") {
+                    shouldThrow<IllegalArgumentException> {
+                        RecordedVerificationResult(
+                            name = CoreFixtures.startedSummary,
+                            kind = RecordedVerificationKind.LocalTest,
+                            result = RecordedVerificationState.Failed,
+                            durationMillis = 1,
+                            outputReference = CoreFixtures.startedSummary,
+                            evidenceReference = checkRunEvidence(
+                                "Gradle Build",
+                                "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+                            ),
+                        )
+                    }.message shouldContain "Failed verification results"
+                }
+            }
+        }
+
         given("event identifiers and sources") {
             `when`("raw values use surrounding whitespace and mixed case") {
                 then("they normalize case") {
@@ -188,6 +232,34 @@ class WorkEventTest :
             }
         }
     })
+
+private fun verificationRecordedPayload(): WorkVerificationRecordedPayload = WorkVerificationRecordedPayload(
+    outcome = WorkVerificationOutcome.Ready,
+    verificationAttempted = true,
+    knownFailures = emptyList(),
+    touchedArtifacts = listOf(CoreFixtures.startedSummary),
+    residualRisks = emptyList(),
+    results = listOf(
+        RecordedVerificationResult(
+            name = CoreFixtures.startedSummary,
+            kind = RecordedVerificationKind.LocalTest,
+            result = RecordedVerificationState.Passed,
+            durationMillis = 1,
+            outputReference = CoreFixtures.startedSummary,
+            evidenceReference = checkRunEvidence(
+                "Gradle Build",
+                "https://github.com/yonatankarp/agent-desk/actions/runs/26937983933",
+            ),
+            inputBinding = RecordedVerificationInputBinding(
+                digest = RecordedContentDigest.parseSha256(
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                ),
+                algorithm = RecordedDigestAlgorithm.Sha256,
+                capturedAt = CoreFixtures.terminalAt,
+            ),
+        ),
+    ),
+)
 
 private fun unsafeEvidenceLabels(): List<String> {
     val rawIdentifier = "123456789" + "012345678"

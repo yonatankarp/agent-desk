@@ -3,6 +3,12 @@ package com.yonatankarp.agentdesk.app.serialization
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import com.yonatankarp.agentdesk.core.domain.events.ProvenanceId
+import com.yonatankarp.agentdesk.core.domain.events.RecordedContentDigest
+import com.yonatankarp.agentdesk.core.domain.events.RecordedDigestAlgorithm
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationInputBinding
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationKind
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationResult
+import com.yonatankarp.agentdesk.core.domain.events.RecordedVerificationState
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkCanceledPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
@@ -14,6 +20,8 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkProvenance
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationOutcome
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemTitle
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkSummary
@@ -99,6 +107,16 @@ object WorkEventJson {
         is WorkFailedPayload -> WorkEventPayloadRecord(reason = reason.toString())
 
         is WorkCanceledPayload -> WorkEventPayloadRecord(reason = reason?.toString())
+
+        is WorkVerificationRecordedPayload ->
+            WorkEventPayloadRecord(
+                outcome = outcome.wireName(),
+                verificationAttempted = verificationAttempted,
+                knownFailures = knownFailures.map { it.toString() },
+                touchedArtifacts = touchedArtifacts.map { it.toString() },
+                residualRisks = residualRisks.map { it.toString() },
+                verificationResults = results.map { it.toRecord() },
+            )
     }
 
     private fun WorkEventPayloadRecord.toDomainPayload(type: WorkEventType): WorkEventPayload = when (type) {
@@ -129,8 +147,109 @@ object WorkEventJson {
             WorkCanceledPayload(
                 reason = reason?.let(WorkSummary::parse),
             )
+
+        WorkEventType.WorkVerificationRecorded ->
+            WorkVerificationRecordedPayload(
+                outcome = requireNotNull(outcome) { "work.verification-recorded payload requires outcome" }
+                    .toVerificationOutcome(),
+                verificationAttempted = requireNotNull(verificationAttempted) {
+                    "work.verification-recorded payload requires verificationAttempted"
+                },
+                knownFailures = knownFailures.map(WorkSummary::parse),
+                touchedArtifacts = touchedArtifacts.map(WorkSummary::parse),
+                residualRisks = residualRisks.map(WorkSummary::parse),
+                results = verificationResults.map { it.toDomain() },
+            )
     }
 
     private fun String.toEventType(): WorkEventType = WorkEventType.entries.firstOrNull { it.wireName == this }
         ?: throw IllegalArgumentException("Unknown work event type")
+
+    private fun RecordedVerificationResult.toRecord(): VerificationResultRecord = VerificationResultRecord(
+        name = name.toString(),
+        kind = kind.wireName(),
+        result = result.wireName(),
+        durationMillis = durationMillis,
+        outputReference = outputReference.toString(),
+        failureSummary = failureSummary?.toString(),
+        evidenceReference = evidenceReference.toRecord(),
+        inputBinding = inputBinding?.toRecord(),
+    )
+
+    private fun VerificationResultRecord.toDomain(): RecordedVerificationResult = RecordedVerificationResult(
+        name = WorkSummary.parse(name),
+        kind = kind.toVerificationKind(),
+        result = result.toVerificationState(),
+        durationMillis = durationMillis,
+        outputReference = WorkSummary.parse(outputReference),
+        failureSummary = failureSummary?.let(WorkSummary::parse),
+        evidenceReference = evidenceReference.toDomain(),
+        inputBinding = inputBinding?.toDomain(),
+    )
+
+    private fun RecordedVerificationInputBinding.toRecord(): VerificationInputBindingRecord = VerificationInputBindingRecord(
+        digest = digest.toString(),
+        algorithm = algorithm.wireName(),
+        capturedAt = capturedAt.toString(),
+    )
+
+    private fun VerificationInputBindingRecord.toDomain(): RecordedVerificationInputBinding = RecordedVerificationInputBinding(
+        digest = RecordedContentDigest.parseSha256(digest),
+        algorithm = algorithm.toDigestAlgorithm(),
+        capturedAt = EventTimestamp.parse(capturedAt),
+    )
+
+    private fun WorkVerificationOutcome.wireName(): String = when (this) {
+        WorkVerificationOutcome.Ready -> "ready"
+        WorkVerificationOutcome.NotReady -> "not-ready"
+        WorkVerificationOutcome.Blocked -> "blocked"
+        WorkVerificationOutcome.Unknown -> "unknown"
+    }
+
+    private fun String.toVerificationOutcome(): WorkVerificationOutcome = when (this) {
+        "ready" -> WorkVerificationOutcome.Ready
+        "not-ready" -> WorkVerificationOutcome.NotReady
+        "blocked" -> WorkVerificationOutcome.Blocked
+        "unknown" -> WorkVerificationOutcome.Unknown
+        else -> throw IllegalArgumentException("Unknown verification outcome")
+    }
+
+    private fun RecordedVerificationKind.wireName(): String = when (this) {
+        RecordedVerificationKind.LocalTest -> "local-test"
+        RecordedVerificationKind.CiCheck -> "ci-check"
+        RecordedVerificationKind.SmokeRun -> "smoke-run"
+        RecordedVerificationKind.ManualQa -> "manual-qa"
+    }
+
+    private fun String.toVerificationKind(): RecordedVerificationKind = when (this) {
+        "local-test" -> RecordedVerificationKind.LocalTest
+        "ci-check" -> RecordedVerificationKind.CiCheck
+        "smoke-run" -> RecordedVerificationKind.SmokeRun
+        "manual-qa" -> RecordedVerificationKind.ManualQa
+        else -> throw IllegalArgumentException("Unknown verification result kind")
+    }
+
+    private fun RecordedVerificationState.wireName(): String = when (this) {
+        RecordedVerificationState.Passed -> "passed"
+        RecordedVerificationState.Failed -> "failed"
+        RecordedVerificationState.Skipped -> "skipped"
+        RecordedVerificationState.Unknown -> "unknown"
+    }
+
+    private fun String.toVerificationState(): RecordedVerificationState = when (this) {
+        "passed" -> RecordedVerificationState.Passed
+        "failed" -> RecordedVerificationState.Failed
+        "skipped" -> RecordedVerificationState.Skipped
+        "unknown" -> RecordedVerificationState.Unknown
+        else -> throw IllegalArgumentException("Unknown verification result state")
+    }
+
+    private fun RecordedDigestAlgorithm.wireName(): String = when (this) {
+        RecordedDigestAlgorithm.Sha256 -> "sha-256"
+    }
+
+    private fun String.toDigestAlgorithm(): RecordedDigestAlgorithm = when (this) {
+        "sha-256" -> RecordedDigestAlgorithm.Sha256
+        else -> throw IllegalArgumentException("Unknown verification digest algorithm")
+    }
 }

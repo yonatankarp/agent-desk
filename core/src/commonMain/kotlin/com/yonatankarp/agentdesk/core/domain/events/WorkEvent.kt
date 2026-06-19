@@ -101,6 +101,7 @@ enum class WorkEventType(val wireName: String) {
     WorkSucceeded("work.succeeded"),
     WorkFailed("work.failed"),
     WorkCanceled("work.canceled"),
+    WorkVerificationRecorded("work.verification-recorded"),
 }
 
 sealed interface WorkEventPayload {
@@ -140,4 +141,85 @@ data class WorkCanceledPayload(
     val reason: WorkSummary? = null,
 ) : WorkEventPayload {
     override val type: WorkEventType = WorkEventType.WorkCanceled
+}
+
+data class WorkVerificationRecordedPayload(
+    val outcome: WorkVerificationOutcome,
+    val verificationAttempted: Boolean,
+    val knownFailures: List<WorkSummary>,
+    val touchedArtifacts: List<WorkSummary>,
+    val residualRisks: List<WorkSummary>,
+    val results: List<RecordedVerificationResult>,
+) : WorkEventPayload {
+    override val type: WorkEventType = WorkEventType.WorkVerificationRecorded
+}
+
+data class RecordedVerificationResult(
+    val name: WorkSummary,
+    val kind: RecordedVerificationKind,
+    val result: RecordedVerificationState,
+    val durationMillis: Long? = null,
+    val outputReference: WorkSummary,
+    val failureSummary: WorkSummary? = null,
+    val evidenceReference: EvidenceReference,
+    val inputBinding: RecordedVerificationInputBinding? = null,
+) {
+    init {
+        require(durationMillis == null || durationMillis >= 0) {
+            "Verification duration must not be negative."
+        }
+        require(result == RecordedVerificationState.Failed || failureSummary == null) {
+            "Only failed verification results may include a failure summary."
+        }
+        require(result != RecordedVerificationState.Failed || failureSummary != null) {
+            "Failed verification results must include a failure summary."
+        }
+    }
+}
+
+data class RecordedVerificationInputBinding(
+    val digest: RecordedContentDigest,
+    val algorithm: RecordedDigestAlgorithm,
+    val capturedAt: EventTimestamp,
+)
+
+enum class WorkVerificationOutcome {
+    Ready,
+    NotReady,
+    Blocked,
+    Unknown,
+}
+
+enum class RecordedVerificationKind {
+    LocalTest,
+    CiCheck,
+    SmokeRun,
+    ManualQa,
+}
+
+enum class RecordedVerificationState {
+    Passed,
+    Failed,
+    Skipped,
+    Unknown,
+}
+
+enum class RecordedDigestAlgorithm {
+    Sha256,
+}
+
+@JvmInline
+value class RecordedContentDigest private constructor(val value: String) {
+    companion object {
+        private val sha256Hex = "[0-9a-f]{64}".toRegex()
+
+        fun parseSha256(raw: String): RecordedContentDigest {
+            require(sha256Hex.matches(raw)) {
+                "Recorded content digest must be a 64-character lowercase SHA-256 hex string"
+            }
+            return RecordedContentDigest(raw)
+        }
+    }
+
+    override fun toString(): String = value
 }
