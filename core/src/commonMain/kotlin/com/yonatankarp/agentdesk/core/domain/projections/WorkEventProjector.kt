@@ -9,6 +9,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
 import com.yonatankarp.agentdesk.core.domain.events.epochMinute
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkItemId
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
@@ -126,6 +127,8 @@ object WorkEventProjector {
                 status = WorkStatus.Canceled,
                 summary = payload.reason ?: current.summary,
             )
+
+        is WorkVerificationRecordedPayload -> current
     }
 
     private fun WorkItem?.transitionTo(

@@ -8,6 +8,7 @@ import com.yonatankarp.agentdesk.core.domain.events.WorkFailedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkNeedsDecisionPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkStartedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkSucceededPayload
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
 import com.yonatankarp.agentdesk.core.domain.projections.StaleWorkAttention
 import com.yonatankarp.agentdesk.core.domain.valueobjects.WorkStatus
 
@@ -54,5 +55,6 @@ object OperatorStatePresenter {
         WorkSucceededPayload -> "Succeeded"
         is WorkFailedPayload -> reason.toString()
         is WorkCanceledPayload -> reason?.toString() ?: "Canceled"
+        is WorkVerificationRecordedPayload -> "Verification recorded"
     }
 }

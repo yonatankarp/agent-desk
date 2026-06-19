@@ -57,6 +57,27 @@ class CliReportTest :
                 }
             }
 
+            `when`("a work item has recorded verification evidence") {
+                then("readiness and verification render the recorded result with freshness") {
+                    val eventFile = Files.createTempFile("agent-desk-cli-events", ".ndjson")
+                    Files.writeString(
+                        eventFile,
+                        "$STARTED_EVENT\n$VERIFICATION_RECORDED_EVENT\n$BLOCKED_EVENT\n",
+                    )
+
+                    val result = runCli("report", "agent-task:42", "--events", eventFile.toString())
+
+                    result.exitCode shouldBe 0
+                    result.output shouldContain "Readiness"
+                    result.output shouldContain "- Gradle check freshness is stale."
+                    result.output shouldContain "Verification"
+                    result.output shouldContain "- Gradle check: passed (LocalTest, stale)"
+                    result.output shouldNotContain "- none"
+                    result.output.shouldBePublicSafe()
+                    result.error shouldBe ""
+                }
+            }
+
             `when`("an audit store seeded by an approved act run is reported") {
                 then("the trail renders gate, loop, and action records grouped by correlation id with humanized results") {
                     val eventFile = seededEventFile()

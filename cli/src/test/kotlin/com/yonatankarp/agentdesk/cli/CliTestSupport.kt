@@ -220,6 +220,9 @@ internal const val NEEDS_DECISION_EVENT =
 internal const val SUCCEEDED_EVENT =
     """{"id":"event:agent-task:42:succeeded","occurredAt":"2026-06-02T21:10:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.succeeded","payload":{}}"""
 
+internal const val VERIFICATION_RECORDED_EVENT =
+    """{"id":"event:agent-task:42:verification-recorded","occurredAt":"2026-06-02T21:04:00Z","source":"mock-adapter","workItemId":"agent-task:42","type":"work.verification-recorded","payload":{"outcome":"ready","verificationAttempted":true,"touchedArtifacts":["cli/src/main/kotlin/com/yonatankarp/agentdesk/cli/ReportCommand.kt"],"verificationResults":[{"name":"Gradle check","kind":"local-test","result":"passed","durationMillis":1200,"outputReference":"checks/gradle-check","evidenceReference":{"kind":"check-run","label":"Gradle check","target":"https://github.com/yonatankarp/agent-desk/actions/runs/27793545211"},"inputBinding":{"digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","algorithm":"sha-256","capturedAt":"2026-06-02T21:04:00Z"}}]}}"""
+
 internal const val OTHER_STARTED_EVENT =
     """{"id":"event:agent-task:43:started","occurredAt":"2026-06-02T21:01:00Z","source":"mock-adapter","workItemId":"agent-task:43","type":"work.started","payload":{"title":"Prepare release checklist","summary":"Agent started release preparation."}}"""
 
