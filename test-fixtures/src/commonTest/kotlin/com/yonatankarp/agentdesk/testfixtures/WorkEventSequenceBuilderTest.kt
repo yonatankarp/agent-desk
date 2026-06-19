@@ -2,6 +2,7 @@ package com.yonatankarp.agentdesk.testfixtures
 
 import com.yonatankarp.agentdesk.core.domain.events.WorkBlockedPayload
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventType
+import com.yonatankarp.agentdesk.core.domain.events.WorkVerificationRecordedPayload
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -84,6 +85,19 @@ class WorkEventSequenceBuilderTest :
                         WorkEventFixtures.workFailedEvent(),
                         WorkEventFixtures.workCanceledEvent(),
                     )
+                }
+            }
+
+            `when`("a verification recorded event is built with defaults") {
+                then("it carries canonical public-safe verification evidence") {
+                    val events = workEvents {
+                        verificationRecorded()
+                    }
+
+                    val payload = events.single().payload.shouldBeInstanceOf<WorkVerificationRecordedPayload>()
+                    events.single().type shouldBe WorkEventType.WorkVerificationRecorded
+                    payload.results.single().name.value shouldBe "Gradle check"
+                    payload.results.single().inputBinding?.capturedAt shouldBe WorkEventFixtures.terminalAt
                 }
             }
         }
