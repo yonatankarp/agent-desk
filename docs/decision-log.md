@@ -1,5 +1,13 @@
 # Decision Log
 
+## 2026-06-19: Live host connectivity is staged before control
+
+Decision: Live-host work is split into three stages: diagnostic-only host connectivity, read-only live observation sync, and approval-gated live inspect. Mutating live actions such as stop, resume, retry, and cancel remain deferred until the live action proposal and approval flow is separately accepted.
+
+Rationale: The existing runtime adapter proves sanitized offline replay, not actual host reachability. Operators need Agent Desk to show whether a configured host alias is reachable and why it is not, while keeping private endpoint details local-only and out of public artifacts. Jumping directly to live control would mix networking, authentication, public-safety, observation sync, and action approval before the diagnostic foundation is inspectable.
+
+Consequence: Follow-up work should start with local host profile/alias mapping, authentication and permission boundaries, reachability diagnostics, smoke/lab verification, and operator status surfacing. Read-only live sync comes after diagnostics are stable. Approval-gated inspect comes after read-only sync. Mutating actions remain out of scope until explicitly approved. Full scope details live in [Live host connectivity milestone](live-host-connectivity-milestone.md).
+
 ## 2026-06-15: Shared Compose design tokens live in `:design`
 
 Decision: Shared Compose design tokens, status colors, typography, spacing, theme helpers, and reusable Compose components live in the existing `:design` Compose Multiplatform module. `:app` remains Compose-free and owns semantic operator state such as `StatusTone`; `:design` maps those semantics into Compose presentation primitives consumed by desktop and mobile.
