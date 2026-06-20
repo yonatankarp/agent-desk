@@ -22,6 +22,9 @@ data class RuntimeHostReachabilityDiagnostic(
         if (state != RuntimeHostReachabilityState.Reachable && state != RuntimeHostReachabilityState.NotConfigured && failure == null) {
             throw RuntimeHostReachabilityException("failed host diagnostics require a failure category")
         }
+        if (failure != null && failure != state.expectedFailure()) {
+            throw RuntimeHostReachabilityException("host reachability state and failure category must match")
+        }
         if (state == RuntimeHostReachabilityState.UnsafePrivateDetailRedacted && !privateDetailRedacted) {
             throw RuntimeHostReachabilityException("unsafe-private-detail-redacted diagnostics require redaction")
         }
@@ -33,6 +36,16 @@ data class RuntimeHostReachabilityDiagnostic(
         val redactionText = if (privateDetailRedacted) " private-detail=redacted" else ""
         return "Host reachability: $target state=${state.wireName}$failureText$redactionText."
     }
+}
+
+private fun RuntimeHostReachabilityState.expectedFailure(): RuntimeHostReachabilityFailure? = when (this) {
+    RuntimeHostReachabilityState.NotConfigured -> RuntimeHostReachabilityFailure.MissingConfiguration
+    RuntimeHostReachabilityState.Reachable -> null
+    RuntimeHostReachabilityState.Unreachable -> RuntimeHostReachabilityFailure.NetworkUnavailable
+    RuntimeHostReachabilityState.TimedOut -> RuntimeHostReachabilityFailure.Timeout
+    RuntimeHostReachabilityState.Rejected -> RuntimeHostReachabilityFailure.AuthenticationRejected
+    RuntimeHostReachabilityState.UnsupportedHostMode -> RuntimeHostReachabilityFailure.UnsupportedHostMode
+    RuntimeHostReachabilityState.UnsafePrivateDetailRedacted -> RuntimeHostReachabilityFailure.UnsafePrivateDetailRedacted
 }
 
 enum class RuntimeHostReachabilityState(val wireName: String) {
@@ -56,4 +69,5 @@ enum class RuntimeHostReachabilityFailure(val wireName: String) {
 
 class RuntimeHostReachabilityException(
     message: String,
-) : RuntimeException(message)
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

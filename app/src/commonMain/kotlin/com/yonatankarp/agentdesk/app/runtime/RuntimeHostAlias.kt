@@ -14,7 +14,8 @@ value class RuntimeHostAlias private constructor(val value: String) {
                 )
             } catch (error: IllegalArgumentException) {
                 throw RuntimeHostReachabilityException(
-                    error.message ?: "hostAlias must be a public-safe alias",
+                    message = error.message ?: "hostAlias must be a public-safe alias",
+                    cause = error,
                 )
             }
 

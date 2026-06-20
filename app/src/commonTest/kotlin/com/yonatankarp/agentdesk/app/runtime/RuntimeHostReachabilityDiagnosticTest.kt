@@ -99,6 +99,30 @@ class RuntimeHostReachabilityDiagnosticTest :
                             alias = RuntimeHostAlias.parse("operator-lab"),
                         )
                     }.message shouldBe "failed host diagnostics require a failure category"
+
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostReachabilityDiagnostic(
+                            state = RuntimeHostReachabilityState.TimedOut,
+                            alias = RuntimeHostAlias.parse("operator-lab"),
+                            failure = RuntimeHostReachabilityFailure.NetworkUnavailable,
+                        )
+                    }.message shouldBe "host reachability state and failure category must match"
+
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostReachabilityDiagnostic(
+                            state = RuntimeHostReachabilityState.Rejected,
+                            alias = RuntimeHostAlias.parse("operator-lab"),
+                            failure = RuntimeHostReachabilityFailure.Timeout,
+                        )
+                    }.message shouldBe "host reachability state and failure category must match"
+
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostReachabilityDiagnostic(
+                            state = RuntimeHostReachabilityState.UnsafePrivateDetailRedacted,
+                            alias = RuntimeHostAlias.parse("operator-lab"),
+                            failure = RuntimeHostReachabilityFailure.UnsafePrivateDetailRedacted,
+                        )
+                    }.message shouldBe "unsafe-private-detail-redacted diagnostics require redaction"
                 }
             }
         }
