@@ -123,6 +123,15 @@ class RuntimeHostReachabilityDiagnosticTest :
                             failure = RuntimeHostReachabilityFailure.UnsafePrivateDetailRedacted,
                         )
                     }.message shouldBe "unsafe-private-detail-redacted diagnostics require redaction"
+
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostReachabilityDiagnostic(
+                            state = RuntimeHostReachabilityState.Unreachable,
+                            alias = RuntimeHostAlias.parse("operator-lab"),
+                            failure = RuntimeHostReachabilityFailure.NetworkUnavailable,
+                            privateDetailRedacted = true,
+                        )
+                    }.message shouldBe "only unsafe-private-detail-redacted diagnostics may mark private detail redacted"
                 }
             }
         }

@@ -28,6 +28,9 @@ data class RuntimeHostReachabilityDiagnostic(
         if (state == RuntimeHostReachabilityState.UnsafePrivateDetailRedacted && !privateDetailRedacted) {
             throw RuntimeHostReachabilityException("unsafe-private-detail-redacted diagnostics require redaction")
         }
+        if (privateDetailRedacted && state != RuntimeHostReachabilityState.UnsafePrivateDetailRedacted) {
+            throw RuntimeHostReachabilityException("only unsafe-private-detail-redacted diagnostics may mark private detail redacted")
+        }
     }
 
     fun publicMessage(): String {
