@@ -78,6 +78,7 @@ make smoke-mock
 make smoke-mobile
 make smoke-compose
 make smoke-sanitized-runtime
+make smoke-host-lab
 ```
 
 Run the local host reachability smoke with an ignored host profile:

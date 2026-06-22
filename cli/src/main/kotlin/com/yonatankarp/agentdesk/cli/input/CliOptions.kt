@@ -57,6 +57,13 @@ internal data class CliOptions(
                         command = CliCommand.HostSmoke()
                     }
 
+                    "host-smoke-lab" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        command = CliCommand.HostSmokeLab
+                    }
+
                     "report" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -251,6 +258,7 @@ internal data class CliOptions(
                     command is CliCommand.ImportMockRuntime ||
                         command is CliCommand.ImportOpenClawObservations ||
                         command is CliCommand.HostSmoke ||
+                        command is CliCommand.HostSmokeLab ||
                         command is CliCommand.Act
                     ) &&
                 mode != null
