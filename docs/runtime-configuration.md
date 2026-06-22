@@ -207,3 +207,28 @@ Credential references are local-only configuration. Tracked docs, tests, CI
 output, issues, PRs, screenshots, and release notes must not include tokens,
 authorization headers, one-time codes, account ids, raw endpoint details, or
 private parser errors.
+
+## Host Reachability Smoke
+
+Run the local host reachability smoke with an ignored host profile:
+
+```bash
+./gradlew :cli:run --args='host-smoke --host-config agent-desk.host.properties'
+```
+
+The command reads `hostAlias` and `hostEndpoint` from the local profile, checks
+the configured host from the local machine, and prints only a public-safe
+reachability diagnostic. A reachable host exits `0`; missing configuration,
+unreachable hosts, timeouts, auth rejection, unsupported mode, or redacted
+unsafe details exit non-zero.
+
+Example public-safe output:
+
+```text
+Host reachability: host=host:primary state=unreachable failure=network-unavailable.
+```
+
+Do not paste the real host profile, hostname, IP address, port, URL, token,
+authorization header, socket path, or raw command failure into public issues or
+PR comments. Public evidence should include only the command name, sanitized
+host alias, diagnostic state, failure category, and the local/CI check names.

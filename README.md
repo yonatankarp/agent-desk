@@ -80,6 +80,16 @@ make smoke-compose
 make smoke-sanitized-runtime
 ```
 
+Run the local host reachability smoke with an ignored host profile:
+
+```bash
+./gradlew :cli:run --args='host-smoke --host-config agent-desk.host.properties'
+```
+
+The command prints only public-safe host aliases and diagnostic categories; keep
+real host endpoints and credentials out of public issues, PRs, logs, and
+screenshots.
+
 For CLI examples, runtime configuration, desktop status, and local event store workflows, use the Wiki links above. Repo docs remain canonical for architecture and implementation details.
 
 Build the standalone executable CLI jar:

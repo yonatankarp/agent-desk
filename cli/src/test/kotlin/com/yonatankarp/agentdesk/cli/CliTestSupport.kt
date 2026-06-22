@@ -1,5 +1,8 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostProfile
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostic
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostics
 import com.yonatankarp.agentdesk.core.domain.events.EventTimestamp
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -21,11 +24,21 @@ internal data class UsageErrorCase(
 internal fun runCli(
     vararg args: String,
     input: String = "",
-): CliRunResult = runCli(args = args, input = ByteArrayInputStream(input.encodeToByteArray()))
+    hostReachabilityCheck: (RuntimeHostProfile) -> RuntimeHostReachabilityDiagnostic = {
+        RuntimeHostReachabilityDiagnostics.unreachable(it.alias)
+    },
+): CliRunResult = runCli(
+    args = args,
+    input = ByteArrayInputStream(input.encodeToByteArray()),
+    hostReachabilityCheck = hostReachabilityCheck,
+)
 
 internal fun runCli(
     vararg args: String,
     input: InputStream,
+    hostReachabilityCheck: (RuntimeHostProfile) -> RuntimeHostReachabilityDiagnostic = {
+        RuntimeHostReachabilityDiagnostics.unreachable(it.alias)
+    },
 ): CliRunResult {
     val output = ByteArrayOutputStream()
     val error = ByteArrayOutputStream()
@@ -36,6 +49,7 @@ internal fun runCli(
             output = PrintStream(output),
             error = PrintStream(error),
             now = { EventTimestamp.parse("2026-06-06T09:30:00Z") },
+            hostReachabilityCheck = hostReachabilityCheck,
         )
 
     return CliRunResult(
@@ -205,6 +219,18 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     UsageErrorCase(
         args = listOf("import-mock-runtime"),
         expectedErrors = listOf("Missing value for --event-store."),
+    ),
+    UsageErrorCase(
+        args = listOf("host-smoke"),
+        expectedErrors = listOf("Missing value for --host-config."),
+    ),
+    UsageErrorCase(
+        args = listOf("host-smoke", "--host-config", "one.properties", "--host-config", "two.properties"),
+        expectedErrors = listOf("Choose only one host config."),
+    ),
+    UsageErrorCase(
+        args = listOf("--host-config", "agent-desk.host.properties"),
+        expectedErrors = listOf("--host-config is only valid with host-smoke."),
     ),
 )
 
