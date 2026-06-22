@@ -19,11 +19,19 @@ value class RuntimeHostAlias private constructor(val value: String) {
                 )
             }
 
-            if ("://" in normalized || ":" in normalized) {
+            if ("://" in normalized || (":" in normalized && !normalized.isExplicitHostAlias())) {
                 throw RuntimeHostReachabilityException("hostAlias must not include endpoint details")
             }
 
             return RuntimeHostAlias(normalized)
+        }
+
+        private fun String.isExplicitHostAlias(): Boolean {
+            if (!startsWith("host:")) {
+                return false
+            }
+            val suffix = removePrefix("host:")
+            return suffix.isNotBlank() && ":" !in suffix && "/" !in suffix && "\\" !in suffix
         }
     }
 
