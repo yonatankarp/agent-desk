@@ -232,3 +232,6 @@ Do not paste the real host profile, hostname, IP address, port, URL, token,
 authorization header, socket path, or raw command failure into public issues or
 PR comments. Public evidence should include only the command name, sanitized
 host alias, diagnostic state, failure category, and the local/CI check names.
+
+For the local troubleshooting flow, see the
+[failed local host connection runbook](failed-host-connection-runbook.md).
