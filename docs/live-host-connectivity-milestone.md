@@ -111,3 +111,22 @@ Real host profile files are private runtime configuration. Keep them outside the
 repository or in ignored `agent-desk.host*.properties` files. The checked-in
 template [agent-desk.host.example.properties](agent-desk.host.example.properties)
 uses placeholders only.
+
+## Auth And Permission Boundary
+
+Host authentication uses public-safe states: `not-configured`, `pending`,
+`accepted`, `rejected`, `expired`, and `unsupported`. Credentials, tokens,
+authorization headers, pairing codes, and raw endpoint details stay in local
+configuration only.
+
+Host permission modes are staged with the milestone:
+
+- `diagnostic-only`: reachability diagnostics only
+- `read-only-observation`: diagnostics plus sanitized observation reads
+- `action-capable`: diagnostics, sanitized observation reads, and inspect
+  action proposals
+- `unsupported`: no host operations
+
+No current permission mode allows mutating live-host actions. Stop, resume,
+retry, cancel, and similar control operations remain out of scope until the
+live action proposal and approval flow is separately accepted.
