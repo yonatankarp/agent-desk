@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Validate public-safe repository hygiene
         run: bash scripts/validate-public-hygiene.sh
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
@@ -99,7 +99,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
@@ -114,7 +114,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare JVM build
         uses: yonatankarp/github-actions/.github/actions/prepare-jvm-build@v2
