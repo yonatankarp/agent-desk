@@ -54,6 +54,7 @@ Within a timeboxed run:
 - If Discovery or a decision issue creates a new unblocked slice and time remains, select that new slice next unless a higher-priority open issue exists.
 - If no open issues exist, Manager/Product should inspect `VISION.md`, recent commits, CI state, docs drift, roadmap gaps, and repeated operator pain, then create or propose the next narrow issue with Goal, Acceptance Criteria, Verification, and Notes.
 - If no issue can be created without guessing product direction or inventing low-value work, stop and report "no actionable work" with the evidence reviewed.
+- Empty actionable backlog is not product completion. Use [Empty backlog discovery](docs/empty-backlog-discovery.md) to record the evidence reviewed, issues created/proposed, or the explicit public-safe stop reason.
 - Do not keep working merely to consume the clock. Each selected slice must still be narrow, useful, public-safe, and verifiable.
 
 Stop a timeboxed run before the clock expires when credentials, external setup, destructive cleanup, unsafe public action, unclear owner decision, failed checks needing judgment, or unavailable required review blocks responsible progress.

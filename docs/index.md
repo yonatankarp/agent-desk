@@ -34,6 +34,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Branch protection](branch-protection.md): recommended `main` protection and required checks.
 - [Role contract](roles.md): role coverage expectations for autonomous slice work, including post-merge Discovery.
 - [Daily report template](daily-report-template.md): reporting shape for daily implementation loops and discovery output.
+- [Empty backlog discovery checklist](empty-backlog-discovery.md): no-actionable-work audit inputs and report shape.
 
 ## Boundary Rules
 
