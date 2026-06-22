@@ -16,6 +16,8 @@ internal sealed interface CliCommand {
 
     data class HostSmoke(val hostConfigPath: String? = null) : CliCommand
 
+    data object HostSmokeLab : CliCommand
+
     data class Act(
         val intent: OperatorActionIntent,
         val rawWorkItemId: String,

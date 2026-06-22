@@ -235,3 +235,17 @@ host alias, diagnostic state, failure category, and the local/CI check names.
 
 For the local troubleshooting flow, see the
 [failed local host connection runbook](failed-host-connection-runbook.md).
+
+## Host Connectivity Lab
+
+Run the public-safe simulated host connectivity lab with:
+
+```bash
+make smoke-host-lab
+```
+
+The lab uses synthetic host profiles and the same CLI diagnostic rendering path
+as `host-smoke`. It does not require a private real host, real endpoint, token,
+or local-network service. The output covers reachable, unreachable, timeout,
+auth rejected, and unsafe-detail-redacted states so CI and local runs can prove
+the diagnostic surface without leaking private infrastructure.

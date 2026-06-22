@@ -93,6 +93,10 @@ object AgentDeskCli {
                 }
             }
 
+            CliCommand.HostSmokeLab -> {
+                output.println(HostSmokeLabCommand.execute())
+            }
+
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
                 val read = options.toWorkEventRead(input)
@@ -159,6 +163,7 @@ object AgentDeskCli {
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
           agent-desk host-smoke --host-config <file>
+          agent-desk host-smoke-lab
           agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
           agent-desk report <work-item-id> --events <file> [--audit-store <file>]
           agent-desk inspect <work-item-id> [--sample]
@@ -177,6 +182,9 @@ object AgentDeskCli {
           host-smoke
                           Check a configured local host profile and render a public-safe
                           reachability diagnostic. Read-only: no runtime actions are run.
+          host-smoke-lab
+                          Run public-safe simulated host connectivity diagnostics without
+                          requiring a private real host.
           act resume <work-item-id>
                           Route a public-safe mock resume through the permission gate and
                           approval loop, recording the decision and durable audit evidence.
