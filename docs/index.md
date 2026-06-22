@@ -17,6 +17,7 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Local-first smoke suite](local-first-smoke-suite.md): Makefile-backed core loop smoke without external services.
 - [Milestone readiness report](milestone-readiness-report.md): release readiness template and checklist.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
+- [Failed local host connection runbook](failed-host-connection-runbook.md): public-safe troubleshooting flow for local-network host connection failures.
 - [Action permission gates](action-permission-gates.md): action class inventory and fail-closed permission behavior.
 - [Public-safe artifact policy](public-safe-artifact-policy.md): artifact classes, sharing rules, and operator recovery runbooks.
 - [Privacy boundary regression](privacy-boundary-regression.md): safe persist/commit/publish rules and representative leak fixtures.
