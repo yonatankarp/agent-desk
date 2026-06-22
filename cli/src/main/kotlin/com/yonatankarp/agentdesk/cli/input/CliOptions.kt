@@ -50,6 +50,13 @@ internal data class CliOptions(
                         command = CliCommand.ImportOpenClawObservations()
                     }
 
+                    "host-smoke" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        command = CliCommand.HostSmoke()
+                    }
+
                     "report" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -173,6 +180,25 @@ internal data class CliOptions(
                         index += 1
                     }
 
+                    "--host-config" -> {
+                        val path = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing value for --host-config.")
+                        if (path.startsWith("-")) {
+                            throw CliUsageException("Missing value for --host-config.")
+                        }
+                        command = when (val selectedCommand = command) {
+                            is CliCommand.HostSmoke -> {
+                                if (selectedCommand.hostConfigPath != null) {
+                                    throw CliUsageException("Choose only one host config.")
+                                }
+                                selectedCommand.copy(hostConfigPath = path)
+                            }
+
+                            else -> throw CliUsageException("--host-config is only valid with host-smoke.")
+                        }
+                        index += 1
+                    }
+
                     "--sample" -> mode = mode.assign(CliInputMode.Sample)
 
                     "--stdin" -> mode = mode.assign(CliInputMode.Stdin)
@@ -211,6 +237,9 @@ internal data class CliOptions(
             if (command is CliCommand.ImportOpenClawObservations && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
+            if (command is CliCommand.HostSmoke && command.hostConfigPath == null) {
+                throw CliUsageException("Missing value for --host-config.")
+            }
             if (command is CliCommand.Act && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
@@ -221,6 +250,7 @@ internal data class CliOptions(
                 (
                     command is CliCommand.ImportMockRuntime ||
                         command is CliCommand.ImportOpenClawObservations ||
+                        command is CliCommand.HostSmoke ||
                         command is CliCommand.Act
                     ) &&
                 mode != null

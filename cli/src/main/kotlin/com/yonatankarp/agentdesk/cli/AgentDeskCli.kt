@@ -2,6 +2,9 @@ package com.yonatankarp.agentdesk.cli
 
 import com.yonatankarp.agentdesk.app.operator.OperatorHealthProjector
 import com.yonatankarp.agentdesk.app.operator.WorkItemInspector
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostProfile
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityChecks
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostic
 import com.yonatankarp.agentdesk.app.runtime.summary
 import com.yonatankarp.agentdesk.cli.input.CliCommand
 import com.yonatankarp.agentdesk.cli.input.CliInputException
@@ -34,6 +37,7 @@ object AgentDeskCli {
         output: PrintStream = System.out,
         error: PrintStream = System.err,
         now: () -> EventTimestamp = { EventTimestamp.parse(Instant.now().toString()) },
+        hostReachabilityCheck: (RuntimeHostProfile) -> RuntimeHostReachabilityDiagnostic = RuntimeHostReachabilityChecks::check,
     ): Int = try {
         val options = CliOptions.parse(args.toList())
         if (options.showHelp) {
@@ -74,6 +78,19 @@ object AgentDeskCli {
                         "skipped ${result.skippedDuplicateCount} duplicate event(s).",
                 )
                 output.println(result.diagnostics.summary().publicMessage())
+            }
+
+            is CliCommand.HostSmoke -> {
+                val hostConfigPath = command.hostConfigPath
+                    ?: throw CliUsageException("Missing value for --host-config.")
+                val result = HostSmokeCommand.execute(
+                    hostConfigPath = hostConfigPath,
+                    check = hostReachabilityCheck,
+                )
+                output.println(result.text)
+                if (result.exitCode != 0) {
+                    return result.exitCode
+                }
             }
 
             is CliCommand.Inspect -> {
@@ -141,6 +158,7 @@ object AgentDeskCli {
           agent-desk [--sample]
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
+          agent-desk host-smoke --host-config <file>
           agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
           agent-desk report <work-item-id> --events <file> [--audit-store <file>]
           agent-desk inspect <work-item-id> [--sample]
@@ -156,6 +174,9 @@ object AgentDeskCli {
                           Import public-safe mock runtime events into a local event store.
           import-openclaw-observations
                           Import a sanitized observation export into a local event store.
+          host-smoke
+                          Check a configured local host profile and render a public-safe
+                          reachability diagnostic. Read-only: no runtime actions are run.
           act resume <work-item-id>
                           Route a public-safe mock resume through the permission gate and
                           approval loop, recording the decision and durable audit evidence.
@@ -173,6 +194,8 @@ object AgentDeskCli {
           --approve       Approve the gated action explicitly. Only valid with act.
           --observations <file>
                           Sanitized observation export for import-openclaw-observations.
+          --host-config <file>
+                          Local ignored host profile for host-smoke.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
