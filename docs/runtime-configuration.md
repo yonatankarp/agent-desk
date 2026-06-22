@@ -146,3 +146,30 @@ Store files are runtime artifacts; `*.ndjson` is gitignored so local stores
 never enter the public repository.
 
 Action result evidence uses sanitized note targets such as `mock-action:resume`. It must not include local paths, service identifiers, raw transcripts, channel ids, or private runtime details.
+
+## Local Host Profiles
+
+Live-host diagnostics use a separate local host profile instead of the dashboard
+runtime configuration. Host profiles are runtime configuration, not project
+source. Keep real profiles outside the repository or in ignored
+`agent-desk.host*.properties` files.
+
+Tracked docs may show only placeholders and public-safe aliases:
+
+```properties
+hostAlias=operator-lab
+hostEndpoint=<local-http-or-https-endpoint>
+hostAliasMappings=runtime-primary=operator-lab
+```
+
+`hostAlias` is the only host identifier intended for public output. It is
+validated with the same public-safe alias policy used by reachability
+diagnostics. `hostEndpoint` is local-only private configuration; renderers and
+diagnostics must report it as local-only and must not print hostnames, IP
+addresses, ports, socket paths, credentials, or raw parser exceptions. Optional
+`hostAliasMappings` entries let an operator map local runtime ids to
+public-safe aliases explicitly instead of deriving aliases from private ids.
+
+Do not paste real host profile values into public issues, PRs, CI logs,
+screenshots, or release notes. Public evidence should cite only the command
+name, public-safe alias, diagnostic category, and sanitized test output.

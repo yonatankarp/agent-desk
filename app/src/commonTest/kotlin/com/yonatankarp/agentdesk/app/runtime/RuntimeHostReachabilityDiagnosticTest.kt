@@ -15,6 +15,7 @@ class RuntimeHostReachabilityDiagnosticTest :
             `when`("every public state is rendered") {
                 then("operators can distinguish the failure mode without endpoint details") {
                     val alias = RuntimeHostAlias.parse("office-lab-host")
+                    val explicitHostAlias = RuntimeHostAlias.parse("host:primary")
                     val diagnostics = listOf(
                         RuntimeHostReachabilityDiagnostics.notConfigured(),
                         RuntimeHostReachabilityDiagnostics.reachable(alias),
@@ -47,6 +48,7 @@ class RuntimeHostReachabilityDiagnosticTest :
                         "Host reachability: host=office-lab-host state=unsafe-private-detail-redacted " +
                             "failure=unsafe-private-detail-redacted private-detail=redacted.",
                     )
+                    explicitHostAlias.value shouldBe "host:primary"
                 }
             }
 

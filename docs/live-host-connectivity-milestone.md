@@ -97,3 +97,17 @@ Each follow-up slice should include:
 - docs updates when operator behavior or local setup changes
 
 The private real host may be used for local operator validation, but public PR evidence must rely on sanitized/lab output rather than private endpoint details.
+
+## Local Host Profile Contract
+
+The diagnostic milestone uses an operator-provided host profile with:
+
+- `hostAlias`: public-safe alias shown in diagnostics and operator surfaces
+- `hostEndpoint`: local-only endpoint configuration that must never be rendered
+  into public artifacts
+- `hostAliasMappings`: optional explicit runtime-id to public-alias mappings
+
+Real host profile files are private runtime configuration. Keep them outside the
+repository or in ignored `agent-desk.host*.properties` files. The checked-in
+template [agent-desk.host.example.properties](agent-desk.host.example.properties)
+uses placeholders only.
