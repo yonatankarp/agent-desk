@@ -173,3 +173,37 @@ public-safe aliases explicitly instead of deriving aliases from private ids.
 Do not paste real host profile values into public issues, PRs, CI logs,
 screenshots, or release notes. Public evidence should cite only the command
 name, public-safe alias, diagnostic category, and sanitized test output.
+
+## Host Auth And Permission Boundary
+
+Host connection auth is modeled separately from network reachability. Public
+state may show only the host alias, auth state, permission mode, and allowed
+operation classes.
+
+Auth states:
+
+- `not-configured`: no local auth material is configured.
+- `pending`: a local pairing or approval step is not complete.
+- `accepted`: local auth is present and accepted for the configured host.
+- `rejected`: the host rejected the local auth material.
+- `expired`: previously accepted local auth is no longer valid.
+- `unsupported`: the host or mode cannot support this connection.
+
+Permission modes:
+
+- `diagnostic-only`: may perform reachability diagnostics after auth is
+  accepted.
+- `read-only-observation`: may perform diagnostics and read sanitized
+  observations after auth is accepted.
+- `action-capable`: may perform diagnostics, read sanitized observations, and
+  propose an inspect action after auth is accepted.
+- `unsupported`: allows no host operations.
+
+Mutating live actions such as stop, resume, retry, and cancel are not allowed by
+any host permission mode in the current milestone. They remain deferred until
+the live action proposal and approval flow is explicitly accepted.
+
+Credential references are local-only configuration. Tracked docs, tests, CI
+output, issues, PRs, screenshots, and release notes must not include tokens,
+authorization headers, one-time codes, account ids, raw endpoint details, or
+private parser errors.
