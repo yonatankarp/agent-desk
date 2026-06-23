@@ -47,7 +47,10 @@ object AgentDeskCli {
 
         when (val command = options.command) {
             CliCommand.Dashboard -> {
-                val state = options.toOperatorState(input)
+                val state = options.toOperatorState(input).withHostConnectivity(
+                    hostConfigPath = options.hostConfigPath,
+                    hostReachabilityCheck = hostReachabilityCheck,
+                )
                 state.storeReadWarning?.let { warning -> error.println("Warning: $warning") }
                 val renderer = OperatorConsoleRenderer(AnsiStatusColor.fromEnvironment(isTty = System.console() != null))
                 output.println(renderer.render(state))
@@ -177,6 +180,7 @@ object AgentDeskCli {
 
         Usage:
           agent-desk [--sample]
+          agent-desk [--sample|--events <file>|--stdin|--config <file>] [--host-config <file>]
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
           agent-desk sync-live-observations --host-config <file> --event-store <file>
@@ -224,11 +228,22 @@ object AgentDeskCli {
           --observations <file>
                           Sanitized observation export for import-openclaw-observations.
           --host-config <file>
-                          Local ignored host profile for host-smoke or live sync.
+                          Local ignored host profile for dashboard status, host-smoke,
+                          or live sync.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.
           --config <file> Read public-safe runtime configuration properties.
           --help          Show this help.
         """.trimIndent()
+
+    private fun com.yonatankarp.agentdesk.app.operator.OperatorState.withHostConnectivity(
+        hostConfigPath: String?,
+        hostReachabilityCheck: (RuntimeHostProfile) -> RuntimeHostReachabilityDiagnostic,
+    ): com.yonatankarp.agentdesk.app.operator.OperatorState {
+        if (hostConfigPath == null) {
+            return this
+        }
+        return copy(hostConnectivity = HostSmokeCommand.execute(hostConfigPath, hostReachabilityCheck).diagnostic)
+    }
 }

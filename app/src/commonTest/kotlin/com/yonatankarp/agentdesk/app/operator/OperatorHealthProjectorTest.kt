@@ -1,6 +1,8 @@
 package com.yonatankarp.agentdesk.app.operator
 
 import com.yonatankarp.agentdesk.app.fixtures.operatorState
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostAlias
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostics
 import com.yonatankarp.agentdesk.testfixtures.eventTimestampAt
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.assertions.assertSoftly
@@ -118,6 +120,68 @@ class OperatorHealthProjectorTest :
         }
 
         given("source access failures") {
+            `when`("configured host connectivity is unreachable") {
+                then("it exposes a source disconnected health state with a public diagnostic") {
+                    val summary = OperatorHealthProjector.project(
+                        operatorState {
+                            started()
+                        }.copy(
+                            hostConnectivity = RuntimeHostReachabilityDiagnostics.unreachable(
+                                RuntimeHostAlias.parse("host:primary"),
+                            ),
+                        ),
+                    )
+
+                    assertSoftly(summary) {
+                        status shouldBe OperatorHealthStatus.SourceDisconnected
+                        nextSafeAction shouldContain "reconnect the runtime source"
+                        diagnostics.shouldContainExactly(
+                            "Host reachability: host=host:primary state=unreachable failure=network-unavailable.",
+                        )
+                        diagnostics.joinToString("\n").shouldBePublicSafe()
+                    }
+                }
+            }
+
+            `when`("configured host connectivity is reachable") {
+                then("it keeps the operator health state and exposes a public diagnostic") {
+                    val summary = OperatorHealthProjector.project(
+                        operatorState {
+                            started()
+                        }.copy(
+                            hostConnectivity = RuntimeHostReachabilityDiagnostics.reachable(
+                                RuntimeHostAlias.parse("host:primary"),
+                            ),
+                        ),
+                    )
+
+                    assertSoftly(summary) {
+                        status shouldBe OperatorHealthStatus.Healthy
+                        diagnostics.shouldContainExactly("Host reachability: host=host:primary state=reachable.")
+                        diagnostics.joinToString("\n").shouldBePublicSafe()
+                    }
+                }
+            }
+
+            `when`("host connectivity is not configured") {
+                then("it distinguishes missing configuration from an empty queue") {
+                    val summary = OperatorHealthProjector.project(
+                        OperatorState(
+                            workItems = emptyList(),
+                            events = emptyList(),
+                            hostConnectivity = RuntimeHostReachabilityDiagnostics.notConfigured(),
+                        ),
+                    )
+
+                    assertSoftly(summary) {
+                        status shouldBe OperatorHealthStatus.SourceDisconnected
+                        diagnostics.shouldContainExactly(
+                            "Host reachability: host=not-configured state=not-configured failure=missing-configuration.",
+                        )
+                    }
+                }
+            }
+
             `when`("the source is disconnected") {
                 then("it exposes a source disconnected health state") {
                     val summary = OperatorHealthProjector.sourceDisconnected("Runtime source could not be reached.")

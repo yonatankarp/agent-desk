@@ -236,6 +236,26 @@ host alias, diagnostic state, failure category, and the local/CI check names.
 For the local troubleshooting flow, see the
 [failed local host connection runbook](failed-host-connection-runbook.md).
 
+## Host Connectivity In Operator Surfaces
+
+The CLI dashboard can attach the same public-safe host diagnostic to the normal
+Health section:
+
+```bash
+./gradlew :cli:run --args='--config agent-desk.config.properties --host-config agent-desk.host.properties'
+```
+
+The desktop shell accepts the same local host profile:
+
+```bash
+./gradlew :desktop:run --args='--config agent-desk.config.properties --host-config agent-desk.host.properties'
+```
+
+Omit `--config` to render sample state with host connectivity status. The
+surfaces show only the configured host alias plus `reachable`, `unreachable`,
+or `not-configured` diagnostics. They must not print the endpoint, port,
+hostname, URL, token, bridge path, raw runtime id, or parser detail.
+
 ## Host Connectivity Lab
 
 Run the public-safe simulated host connectivity lab with:

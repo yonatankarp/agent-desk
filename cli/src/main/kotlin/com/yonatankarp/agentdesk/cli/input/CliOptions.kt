@@ -8,6 +8,7 @@ internal data class CliOptions(
     val mode: CliInputMode,
     val command: CliCommand = CliCommand.Dashboard,
     val showHelp: Boolean = false,
+    val hostConfigPath: String? = null,
 ) {
     companion object {
         fun parse(args: List<String>): CliOptions {
@@ -18,6 +19,7 @@ internal data class CliOptions(
             var mode: CliInputMode? = null
             var command: CliCommand = CliCommand.Dashboard
             var showHelp = false
+            var hostConfigPath: String? = null
             var index = 0
             while (index < args.size) {
                 when (args[index]) {
@@ -222,7 +224,15 @@ internal data class CliOptions(
                                 selectedCommand.copy(hostConfigPath = path)
                             }
 
-                            else -> throw CliUsageException("--host-config is only valid with host-smoke or sync-live-observations.")
+                            CliCommand.Dashboard -> {
+                                if (hostConfigPath != null) {
+                                    throw CliUsageException("Choose only one host config.")
+                                }
+                                hostConfigPath = path
+                                selectedCommand
+                            }
+
+                            else -> throw CliUsageException("--host-config is only valid with dashboard, host-smoke, or sync-live-observations.")
                         }
                         index += 1
                     }
@@ -274,6 +284,9 @@ internal data class CliOptions(
             if (command is CliCommand.SyncLiveObservations && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
+            if (hostConfigPath != null && command != CliCommand.Dashboard) {
+                throw CliUsageException("--host-config is only valid with dashboard, host-smoke, or sync-live-observations.")
+            }
             if (command is CliCommand.Act && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
@@ -298,6 +311,7 @@ internal data class CliOptions(
                 mode = mode ?: CliInputMode.Sample,
                 command = command,
                 showHelp = showHelp,
+                hostConfigPath = hostConfigPath,
             )
         }
 
