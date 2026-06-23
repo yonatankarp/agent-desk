@@ -118,7 +118,7 @@ Run the sample Compose desktop shell:
 make desktop-run
 ```
 
-Run the sample-only Compose mobile shell:
+Run the Compose mobile shell:
 
 ```bash
 make mobile-run

@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
             title = "Agent Desk Mobile",
             resizable = false,
         ) {
-            AgentDeskMobileApp()
+            AgentDeskMobileApp(MobileRuntimeStateProvider.load(args))
         }
     }
 }

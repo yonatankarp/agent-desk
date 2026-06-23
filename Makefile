@@ -100,5 +100,5 @@ desktop-run: ## Run the sample Compose desktop shell.
 	$(GRADLE) :desktop:run
 
 .PHONY: mobile-run
-mobile-run: ## Run the sample-only Compose mobile shell.
+mobile-run: ## Run the Compose mobile shell.
 	$(GRADLE) :mobile:run
