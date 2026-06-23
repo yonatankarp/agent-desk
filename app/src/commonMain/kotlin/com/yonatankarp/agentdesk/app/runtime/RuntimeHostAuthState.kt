@@ -7,4 +7,10 @@ enum class RuntimeHostAuthState(val wireName: String) {
     Rejected("rejected"),
     Expired("expired"),
     Unsupported("unsupported"),
+    ;
+
+    companion object {
+        fun parse(raw: String): RuntimeHostAuthState = entries.firstOrNull { it.wireName == raw.trim() }
+            ?: throw RuntimeHostReachabilityException("hostAuthState is not supported")
+    }
 }

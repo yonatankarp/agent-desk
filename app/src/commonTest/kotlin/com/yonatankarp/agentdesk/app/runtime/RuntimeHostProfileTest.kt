@@ -19,6 +19,9 @@ class RuntimeHostProfileTest :
                             "hostAlias" to "operator-lab",
                             "hostEndpoint" to privateHttpEndpoint(),
                             "hostAliasMappings" to "runtime-primary=host:primary,runtime-backup=operator-backup",
+                            "hostAuthState" to "accepted",
+                            "hostPermissionMode" to "read-only-observation",
+                            "hostObservationBridge" to "sanitized-observations.json",
                         ),
                     )
 
@@ -32,6 +35,10 @@ class RuntimeHostProfileTest :
                         "runtime-primary",
                         "runtime-backup",
                     )
+                    profile.authState shouldBe RuntimeHostAuthState.Accepted
+                    profile.permissionMode shouldBe RuntimeHostPermissionMode.ReadOnlyObservation
+                    profile.observationBridge.toString() shouldBe "<local-host-observation-bridge>"
+                    profile.accessBoundary().allows(RuntimeHostOperation.ReadObservation) shouldBe true
                     profile.toString().shouldBePublicSafe()
                     profile.aliasMappings.joinToString().shouldBePublicSafe()
                     profile.publicSummary().shouldBePublicSafe()
@@ -45,6 +52,7 @@ class RuntimeHostProfileTest :
                         shouldNotContain(privateHost())
                         shouldNotContain("8443")
                         shouldNotContain("runtime-primary")
+                        shouldNotContain("sanitized-observations.json")
                     }
                 }
             }
@@ -112,6 +120,30 @@ class RuntimeHostProfileTest :
                     }
                 }
             }
+
+            `when`("sync fields are unsupported or unsafe") {
+                then("validation rejects them without echoing private values") {
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostAuthState.parse("approved")
+                    }.message shouldBe "hostAuthState is not supported"
+
+                    shouldThrow<RuntimeHostReachabilityException> {
+                        RuntimeHostPermissionMode.parse("control")
+                    }.message shouldBe "hostPermissionMode is not supported"
+
+                    unsafeObservationBridgeValues().forEach { unsafe ->
+                        val error = shouldThrow<RuntimeHostReachabilityException> {
+                            RuntimeHostObservationBridge.parse(unsafe)
+                        }
+
+                        assertSoftly(error.message.orEmpty()) {
+                            shouldContain("hostObservationBridge")
+                            shouldNotContain(unsafe)
+                            shouldNotContain(rawIdentifier())
+                        }
+                    }
+                }
+            }
         }
     })
 
@@ -136,4 +168,10 @@ private fun unsafeRuntimeIds(): List<String> = listOf(
     "runtime=https://${privateHost()}",
     "auth_token=value",
     "channel:${rawIdentifier()}",
+)
+
+private fun unsafeObservationBridgeValues(): List<String> = listOf(
+    "auth_token=value",
+    "channel:${rawIdentifier()}",
+    "raw transcript export",
 )

@@ -97,6 +97,23 @@ object AgentDeskCli {
                 output.println(HostSmokeLabCommand.execute())
             }
 
+            is CliCommand.SyncLiveObservations -> {
+                val hostConfigPath = command.hostConfigPath
+                    ?: throw CliUsageException("Missing value for --host-config.")
+                val eventStorePath = command.eventStorePath
+                    ?: throw CliUsageException("Missing value for --event-store.")
+                val result = LiveObservationSyncCommand.execute(
+                    hostConfigPath = hostConfigPath,
+                    eventStorePath = eventStorePath,
+                    check = hostReachabilityCheck,
+                    now = now(),
+                )
+                output.println(result.text)
+                if (result.exitCode != 0) {
+                    return result.exitCode
+                }
+            }
+
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
                 val read = options.toWorkEventRead(input)
@@ -162,6 +179,7 @@ object AgentDeskCli {
           agent-desk [--sample]
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
+          agent-desk sync-live-observations --host-config <file> --event-store <file>
           agent-desk host-smoke --host-config <file>
           agent-desk host-smoke-lab
           agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
@@ -179,6 +197,9 @@ object AgentDeskCli {
                           Import public-safe mock runtime events into a local event store.
           import-openclaw-observations
                           Import a sanitized observation export into a local event store.
+          sync-live-observations
+                          Read a configured local host observation bridge and import
+                          sanitized observations. Read-only: no runtime actions are run.
           host-smoke
                           Check a configured local host profile and render a public-safe
                           reachability diagnostic. Read-only: no runtime actions are run.
@@ -203,7 +224,7 @@ object AgentDeskCli {
           --observations <file>
                           Sanitized observation export for import-openclaw-observations.
           --host-config <file>
-                          Local ignored host profile for host-smoke.
+                          Local ignored host profile for host-smoke or live sync.
           --sample        Render built-in public-safe sample state.
           --events <file> Read newline-delimited sanitized work event JSON records.
           --stdin         Read newline-delimited sanitized work event JSON records from stdin.

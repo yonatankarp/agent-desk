@@ -34,4 +34,9 @@ enum class RuntimeHostPermissionMode(
     fun allowedOperationNames(): List<String> = RuntimeHostOperation.entries
         .filter(::allows)
         .map(RuntimeHostOperation::wireName)
+
+    companion object {
+        fun parse(raw: String): RuntimeHostPermissionMode = entries.firstOrNull { it.wireName == raw.trim() }
+            ?: throw RuntimeHostReachabilityException("hostPermissionMode is not supported")
+    }
 }
