@@ -61,13 +61,25 @@ The desktop UI labels sample data as `Sample state` and stored event data as `Lo
 
 ## Mobile Wiring
 
-The runnable mobile JVM dev host is sample-only today:
+The runnable mobile JVM dev host uses sample mode when launched without
+arguments:
 
 ```bash
 ./gradlew :mobile:run
 ```
 
-It starts the read-only mobile shell with built-in public-safe sample state and does not accept `--config` yet. Stored-event runtime configuration is currently wired through CLI and desktop only; add mobile config support in a later slice if mobile needs to demonstrate loaded stored-event state directly.
+To render derived state from a sanitized local event store, pass the same config
+file shape:
+
+```bash
+./gradlew :mobile:run --args='--config agent-desk.config.properties'
+```
+
+The mobile shell remains read-only. Invalid args, unreadable config files,
+event-store projection failures, and torn trailing records render as
+public-safe projection warnings on the mobile surface. They must not echo local
+file paths, raw config values, private endpoints, credentials, raw transcripts,
+or adapter details.
 
 ## Mock Runtime Import
 
