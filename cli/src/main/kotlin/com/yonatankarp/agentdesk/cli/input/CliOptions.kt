@@ -64,6 +64,13 @@ internal data class CliOptions(
                         command = CliCommand.HostSmokeLab
                     }
 
+                    "sync-live-observations" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        command = CliCommand.SyncLiveObservations()
+                    }
+
                     "report" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -126,8 +133,15 @@ internal data class CliOptions(
                                 selectedCommand.copy(eventStorePath = path)
                             }
 
+                            is CliCommand.SyncLiveObservations -> {
+                                if (selectedCommand.eventStorePath != null) {
+                                    throw CliUsageException("Choose only one event store.")
+                                }
+                                selectedCommand.copy(eventStorePath = path)
+                            }
+
                             else -> throw CliUsageException(
-                                "--event-store is only valid with import commands or act.",
+                                "--event-store is only valid with import commands, live sync, or act.",
                             )
                         }
                         index += 1
@@ -201,7 +215,14 @@ internal data class CliOptions(
                                 selectedCommand.copy(hostConfigPath = path)
                             }
 
-                            else -> throw CliUsageException("--host-config is only valid with host-smoke.")
+                            is CliCommand.SyncLiveObservations -> {
+                                if (selectedCommand.hostConfigPath != null) {
+                                    throw CliUsageException("Choose only one host config.")
+                                }
+                                selectedCommand.copy(hostConfigPath = path)
+                            }
+
+                            else -> throw CliUsageException("--host-config is only valid with host-smoke or sync-live-observations.")
                         }
                         index += 1
                     }
@@ -247,6 +268,12 @@ internal data class CliOptions(
             if (command is CliCommand.HostSmoke && command.hostConfigPath == null) {
                 throw CliUsageException("Missing value for --host-config.")
             }
+            if (command is CliCommand.SyncLiveObservations && command.hostConfigPath == null) {
+                throw CliUsageException("Missing value for --host-config.")
+            }
+            if (command is CliCommand.SyncLiveObservations && command.eventStorePath == null) {
+                throw CliUsageException("Missing value for --event-store.")
+            }
             if (command is CliCommand.Act && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
@@ -259,6 +286,7 @@ internal data class CliOptions(
                         command is CliCommand.ImportOpenClawObservations ||
                         command is CliCommand.HostSmoke ||
                         command is CliCommand.HostSmokeLab ||
+                        command is CliCommand.SyncLiveObservations ||
                         command is CliCommand.Act
                     ) &&
                 mode != null

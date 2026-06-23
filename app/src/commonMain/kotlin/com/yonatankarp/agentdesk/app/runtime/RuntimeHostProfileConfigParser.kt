@@ -9,11 +9,22 @@ object RuntimeHostProfileConfigParser {
         val aliasMappings = values["hostAliasMappings"]
             ?.let(::parseAliasMappings)
             .orEmpty()
+        val authState = values["hostAuthState"]
+            ?.let(RuntimeHostAuthState::parse)
+            ?: RuntimeHostAuthState.NotConfigured
+        val permissionMode = values["hostPermissionMode"]
+            ?.let(RuntimeHostPermissionMode::parse)
+            ?: RuntimeHostPermissionMode.Unsupported
+        val observationBridge = values["hostObservationBridge"]
+            ?.let(RuntimeHostObservationBridge::parse)
 
         return RuntimeHostProfile(
             alias = alias,
             endpoint = endpoint,
             aliasMappings = aliasMappings,
+            authState = authState,
+            permissionMode = permissionMode,
+            observationBridge = observationBridge,
         )
     }
 

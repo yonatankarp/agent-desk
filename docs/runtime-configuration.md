@@ -249,3 +249,46 @@ as `host-smoke`. It does not require a private real host, real endpoint, token,
 or local-network service. The output covers reachable, unreachable, timeout,
 auth rejected, and unsafe-detail-redacted states so CI and local runs can prove
 the diagnostic surface without leaking private infrastructure.
+
+## Read-Only Live Observation Sync
+
+The first live-host sync path reads sanitized observations through a local
+bridge configured in the ignored host profile. It is read-only: it imports
+observations into the local event store and does not stop, resume, retry,
+cancel, inspect, or otherwise control host work.
+
+```properties
+hostAlias=host:primary
+hostEndpoint=<local-http-or-https-endpoint>
+hostAuthState=accepted
+hostPermissionMode=read-only-observation
+hostObservationBridge=<local-sanitized-observation-export-json>
+```
+
+Run a sync with:
+
+```bash
+./gradlew :cli:run --args='sync-live-observations --host-config agent-desk.host.properties --event-store agent-desk-events.ndjson'
+```
+
+The command first checks host reachability, then verifies the host access
+boundary allows `read-observation`, then imports the sanitized bridge export
+through the same runtime observation mapper used by
+`import-openclaw-observations`. Public output includes only the host alias,
+sync state, freshness, last successful sync timestamp, import counts, and safe
+failure categories. It must not print the endpoint, bridge path, raw runtime
+ids, transcripts, credentials, or raw rejected payloads.
+
+Safe failure categories include unreachable host, timed out host, rejected or
+missing auth, unsupported permission mode, missing observation bridge, no
+current observations, unsafe payload rejection, and event-store rejection.
+
+Run the repeatable public-safe smoke workflow with:
+
+```bash
+make smoke-live-sync
+```
+
+The smoke uses the checked-in synthetic sanitized observation fixture as the
+local bridge, imports it into a temporary event store, reruns the sync to prove
+duplicate skipping, and removes temporary files before exiting.

@@ -114,11 +114,11 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
     ),
     UsageErrorCase(
         args = listOf("inspect", "agent-task:42", "--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
     ),
     UsageErrorCase(
         args = listOf("--observations", "observations.json"),
@@ -194,7 +194,7 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("report", "agent-task:42", "--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
     ),
     UsageErrorCase(
         args = listOf("report", "agent-task:42", "--approve"),
@@ -230,7 +230,37 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("--host-config", "agent-desk.host.properties"),
-        expectedErrors = listOf("--host-config is only valid with host-smoke."),
+        expectedErrors = listOf("--host-config is only valid with host-smoke or sync-live-observations."),
+    ),
+    UsageErrorCase(
+        args = listOf("sync-live-observations"),
+        expectedErrors = listOf("Missing value for --host-config."),
+    ),
+    UsageErrorCase(
+        args = listOf("sync-live-observations", "--host-config", "agent-desk.host.properties"),
+        expectedErrors = listOf("Missing value for --event-store."),
+    ),
+    UsageErrorCase(
+        args = listOf(
+            "sync-live-observations",
+            "--host-config",
+            "one.properties",
+            "--host-config",
+            "two.properties",
+        ),
+        expectedErrors = listOf("Choose only one host config."),
+    ),
+    UsageErrorCase(
+        args = listOf(
+            "sync-live-observations",
+            "--host-config",
+            "agent-desk.host.properties",
+            "--event-store",
+            "one.ndjson",
+            "--event-store",
+            "two.ndjson",
+        ),
+        expectedErrors = listOf("Choose only one event store."),
     ),
 )
 

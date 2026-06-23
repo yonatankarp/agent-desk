@@ -18,6 +18,11 @@ internal sealed interface CliCommand {
 
     data object HostSmokeLab : CliCommand
 
+    data class SyncLiveObservations(
+        val hostConfigPath: String? = null,
+        val eventStorePath: String? = null,
+    ) : CliCommand
+
     data class Act(
         val intent: OperatorActionIntent,
         val rawWorkItemId: String,
