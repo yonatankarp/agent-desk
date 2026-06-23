@@ -43,9 +43,6 @@ jobs:
       - name: Run mock runtime smoke
         run: bash scripts/mock-runtime-smoke.sh
 
-      - name: Build executable CLI jar
-        run: ./gradlew :cli:executableJar
-
       - name: Smoke-run executable CLI jar
         run: bash scripts/runnable-operator-build-smoke.sh
 
