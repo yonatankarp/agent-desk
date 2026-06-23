@@ -229,8 +229,12 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
         expectedErrors = listOf("Choose only one host config."),
     ),
     UsageErrorCase(
-        args = listOf("--host-config", "agent-desk.host.properties"),
-        expectedErrors = listOf("--host-config is only valid with host-smoke or sync-live-observations."),
+        args = listOf("inspect", "agent-task:42", "--host-config", "agent-desk.host.properties"),
+        expectedErrors = listOf("--host-config is only valid with dashboard, host-smoke, or sync-live-observations."),
+    ),
+    UsageErrorCase(
+        args = listOf("--host-config", "agent-desk.host.properties", "inspect", "agent-task:42"),
+        expectedErrors = listOf("--host-config is only valid with dashboard, host-smoke, or sync-live-observations."),
     ),
     UsageErrorCase(
         args = listOf("sync-live-observations"),

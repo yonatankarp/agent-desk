@@ -1,5 +1,8 @@
 package com.yonatankarp.agentdesk.desktop
 
+import com.yonatankarp.agentdesk.app.operator.OperatorState
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostAlias
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostics
 import com.yonatankarp.agentdesk.app.serialization.WorkEventJson
 import com.yonatankarp.agentdesk.core.domain.events.EventSource
 import com.yonatankarp.agentdesk.core.domain.events.WorkEventId
@@ -38,13 +41,72 @@ class DesktopRuntimeStateProviderTest :
                 }
             }
 
+            `when`("loading with a host config and default state") {
+                then("it includes a public not-configured host diagnostic") {
+                    val directory = Files.createTempDirectory(testRoot(), "agent-desk-desktop-host-test")
+                    val hostConfig = directory.resolve("agent-desk.host.properties")
+                    hostConfig.writeText("")
+
+                    val screenState =
+                        DesktopRuntimeStateProvider.load(arrayOf("--host-config", hostConfig.toString()))
+
+                    val ready = screenState.shouldBeInstanceOf<DesktopScreenState.Ready>()
+                    val rows = DesktopReplayStatus.rows(ready).joinToString("\n")
+                    rows shouldContain "Health: Source disconnected."
+                    rows shouldContain
+                        "Diagnostic: Host reachability: host=not-configured state=not-configured failure=missing-configuration."
+                }
+            }
+
+            `when`("desktop replay rows receive an unreachable host diagnostic") {
+                then("they show the host alias without endpoint details") {
+                    val rows = DesktopReplayStatus.rows(
+                        DesktopScreenState.Ready(
+                            state = OperatorState(
+                                workItems = emptyList(),
+                                events = emptyList(),
+                                hostConnectivity = RuntimeHostReachabilityDiagnostics.unreachable(
+                                    RuntimeHostAlias.parse("host:primary"),
+                                ),
+                            ),
+                            modeLabel = "Sample state",
+                        ),
+                    ).joinToString("\n")
+
+                    rows shouldContain "Health: Source disconnected."
+                    rows shouldContain
+                        "Diagnostic: Host reachability: host=host:primary state=unreachable failure=network-unavailable."
+                }
+            }
+
+            `when`("desktop replay rows receive a reachable host diagnostic") {
+                then("they show reachable host status") {
+                    val rows = DesktopReplayStatus.rows(
+                        DesktopScreenState.Ready(
+                            state = OperatorState(
+                                workItems = emptyList(),
+                                events = emptyList(),
+                                hostConnectivity = RuntimeHostReachabilityDiagnostics.reachable(
+                                    RuntimeHostAlias.parse("host:primary"),
+                                ),
+                            ),
+                            modeLabel = "Sample state",
+                        ),
+                    ).joinToString("\n")
+
+                    rows shouldContain "Health: Empty."
+                    rows shouldContain "Diagnostic: Host reachability: host=host:primary state=reachable."
+                }
+            }
+
             `when`("loading with invalid args") {
                 then("it returns a public-safe error state") {
                     val screenState =
                         DesktopRuntimeStateProvider.load(arrayOf("--events", "agent-desk-events.ndjson"))
 
                     val error = screenState.shouldBeInstanceOf<DesktopScreenState.Error>()
-                    error.message shouldBe "Usage: agent-desk-desktop [--config <properties-file>]"
+                    error.message shouldBe
+                        "Usage: agent-desk-desktop [--config <properties-file>] [--host-config <properties-file>]"
                 }
             }
         }

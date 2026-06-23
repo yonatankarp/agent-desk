@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.app.operator
 
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostic
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.core.domain.events.WorkEvent
 import com.yonatankarp.agentdesk.core.domain.projections.OperatorStateProjection
@@ -10,6 +11,7 @@ data class OperatorState(
     val events: List<WorkEvent>,
     val staleAttention: List<StaleWorkAttention> = emptyList(),
     val storeReadWarning: String? = null,
+    val hostConnectivity: RuntimeHostReachabilityDiagnostic? = null,
 ) {
     companion object {
         fun from(projection: OperatorStateProjection): OperatorState = OperatorState(

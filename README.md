@@ -91,6 +91,10 @@ The command prints only public-safe host aliases and diagnostic categories; keep
 real host endpoints and credentials out of public issues, PRs, logs, and
 screenshots.
 
+Render host connectivity in the operator dashboard or desktop status by passing
+the same ignored profile with `--host-config`; the output stays limited to the
+public host alias and diagnostic category.
+
 For CLI examples, runtime configuration, desktop status, and local event store workflows, use the Wiki links above. Repo docs remain canonical for architecture and implementation details.
 
 Build the standalone executable CLI jar:

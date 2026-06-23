@@ -28,6 +28,9 @@ object ReplayStatusPresenter {
             add(health.lastEvent)
             add(health.lastReplay)
             add(health.nextSafeAction)
+            health.diagnostics.forEach { diagnostic ->
+                add("Diagnostic: $diagnostic")
+            }
             add("Import diagnostics: available from the canonical replay smoke command.")
             add("Discovery/no-issue output is triage, not product completion.")
         }

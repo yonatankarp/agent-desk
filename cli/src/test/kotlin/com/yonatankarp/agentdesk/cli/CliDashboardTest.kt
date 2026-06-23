@@ -1,5 +1,6 @@
 package com.yonatankarp.agentdesk.cli
 
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityDiagnostics
 import com.yonatankarp.agentdesk.testfixtures.matchers.shouldBePublicSafe
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -97,6 +98,74 @@ class CliDashboardTest :
                     result.output shouldContain "work.blocked agent-task:42 from mock-adapter"
                     result.output.shouldBePublicSafe()
                     result.error shouldBe ""
+                }
+            }
+        }
+
+        given("a dashboard host config") {
+            `when`("the configured host is reachable") {
+                then("dashboard health renders the public host alias without endpoint details") {
+                    val hostConfig = Files.createTempFile("agent-desk-host", ".properties")
+                    Files.writeString(
+                        hostConfig,
+                        """
+                        hostAlias=host:primary
+                        hostEndpoint=http://localhost:65535
+                        """.trimIndent(),
+                    )
+
+                    val result = runCli(
+                        "--sample",
+                        "--host-config",
+                        hostConfig.toString(),
+                        hostReachabilityCheck = { RuntimeHostReachabilityDiagnostics.reachable(it.alias) },
+                    )
+
+                    result.exitCode shouldBe 0
+                    result.output shouldContain "- Status: Healthy"
+                    result.output shouldContain
+                        "- Diagnostic: Host reachability: host=host:primary state=reachable."
+                    result.output shouldNotContain "localhost"
+                    result.output shouldNotContain "65535"
+                    result.output.shouldBePublicSafe()
+                }
+            }
+
+            `when`("the configured host is unavailable") {
+                then("dashboard health distinguishes source connectivity from empty work") {
+                    val hostConfig = Files.createTempFile("agent-desk-host", ".properties")
+                    Files.writeString(
+                        hostConfig,
+                        """
+                        hostAlias=host:primary
+                        hostEndpoint=http://localhost:65535
+                        """.trimIndent(),
+                    )
+
+                    val result = runCli("--host-config", hostConfig.toString())
+
+                    result.exitCode shouldBe 0
+                    result.output shouldContain "- Status: Source disconnected"
+                    result.output shouldContain
+                        "- Diagnostic: Host reachability: host=host:primary state=unreachable failure=network-unavailable."
+                    result.output shouldNotContain "localhost"
+                    result.output shouldNotContain "65535"
+                    result.output.shouldBePublicSafe()
+                }
+            }
+
+            `when`("the host config is missing required fields") {
+                then("dashboard health renders not configured") {
+                    val hostConfig = Files.createTempFile("agent-desk-host", ".properties")
+                    Files.writeString(hostConfig, "")
+
+                    val result = runCli("--sample", "--host-config", hostConfig.toString())
+
+                    result.exitCode shouldBe 0
+                    result.output shouldContain "- Status: Source disconnected"
+                    result.output shouldContain
+                        "- Diagnostic: Host reachability: host=not-configured state=not-configured failure=missing-configuration."
+                    result.output.shouldBePublicSafe()
                 }
             }
         }

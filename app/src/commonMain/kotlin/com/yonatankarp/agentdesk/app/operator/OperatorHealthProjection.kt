@@ -1,5 +1,7 @@
 package com.yonatankarp.agentdesk.app.operator
 
+import com.yonatankarp.agentdesk.app.runtime.RuntimeHostReachabilityState
+
 data class OperatorHealthSummary(
     val status: OperatorHealthStatus,
     val ingestion: String,
@@ -31,11 +33,18 @@ object OperatorHealthProjector {
         val eventCount = state.events.size
         val warning = state.storeReadWarning
         val staleCount = state.staleAttention.size
+        val hostConnectivity = state.hostConnectivity
 
         val status = when {
             warning != null -> OperatorHealthStatus.PartialImport
+
+            hostConnectivity != null && hostConnectivity.state != RuntimeHostReachabilityState.Reachable ->
+                OperatorHealthStatus.SourceDisconnected
+
             state.workItems.isEmpty() && state.events.isEmpty() -> OperatorHealthStatus.Empty
+
             staleCount > 0 -> OperatorHealthStatus.Delayed
+
             else -> OperatorHealthStatus.Healthy
         }
 
@@ -63,7 +72,10 @@ object OperatorHealthProjector {
                 OperatorHealthStatus.SourceDisconnected -> "Next safe action: reconnect the runtime source before importing observations."
                 OperatorHealthStatus.SourcePermissionMissing -> "Next safe action: restore runtime source read permission before importing observations."
             },
-            diagnostics = warning?.let(::listOf).orEmpty(),
+            diagnostics = buildList {
+                warning?.let(::add)
+                hostConnectivity?.publicMessage()?.let(::add)
+            },
         )
     }
 

@@ -67,6 +67,9 @@ class OperatorConsoleRenderer(private val color: AnsiStatusColor = AnsiStatusCol
         appendLine("- ${health.lastEvent}")
         appendLine("- ${health.lastReplay}")
         appendLine("- ${health.nextSafeAction}")
+        health.diagnostics.forEach { diagnostic ->
+            appendLine("- Diagnostic: $diagnostic")
+        }
     }
 
     fun render(health: OperatorHealthSummary): String = buildString {
