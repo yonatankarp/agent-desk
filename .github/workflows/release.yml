@@ -47,7 +47,7 @@ jobs:
         run: ./gradlew :cli:executableJar
 
       - name: Smoke-run executable CLI jar
-        run: java -jar cli/build/libs/agent-desk-cli-all.jar
+        run: bash scripts/runnable-operator-build-smoke.sh
 
       - name: Validate release branch
         env:

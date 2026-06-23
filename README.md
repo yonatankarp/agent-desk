@@ -100,6 +100,14 @@ make cli-jar
 java -jar cli/build/libs/agent-desk-cli-all.jar
 ```
 
+Smoke the runnable operator build, including the packaged host connectivity
+diagnostic:
+
+```bash
+make cli-smoke
+java -jar cli/build/libs/agent-desk-cli-all.jar host-smoke-lab
+```
+
 Run the sample Compose desktop shell:
 
 ```bash
@@ -134,7 +142,7 @@ make release-gate
 
 Releases are created from the `Release` GitHub Actions workflow. Run it manually from `main` and choose the SemVer bump: `patch`, `minor`, or `major`.
 
-The workflow resolves the next `vX.Y.Z` tag from existing tags, runs public hygiene, `spotlessCheck`, CLI tests, mock runtime smoke, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar`, creates the release tag, uploads the jar as an Actions artifact, and attaches the same jar to the GitHub Release. Test and smoke gates run before tag creation, artifact upload, or GitHub Release creation.
+The workflow resolves the next `vX.Y.Z` tag from existing tags, runs public hygiene, `spotlessCheck`, CLI tests, mock runtime smoke, builds `:cli:executableJar`, smoke-runs `cli/build/libs/agent-desk-cli-all.jar` including the packaged host connectivity diagnostic, creates the release tag, uploads the jar as an Actions artifact, and attaches the same jar to the GitHub Release. Test and smoke gates run before tag creation, artifact upload, or GitHub Release creation.
 
 GitHub generates release notes from merged PRs. Maintainers should label PRs before running a release so notes land in the right sections; use labels such as `feature`, `enhancement`, `slice`, `bug`, `fix`, `decision`, `docs`, `dependencies`, `ci`, `tooling`, `chore`, or `refactor`. Use `no-release-notes` or `skip-release-notes` only for PRs that should be omitted from public notes.
 

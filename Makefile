@@ -82,15 +82,14 @@ cli-jar: ## Build the standalone executable CLI jar.
 	$(GRADLE) :cli:executableJar
 
 .PHONY: cli-smoke
-cli-smoke: cli-jar ## Smoke-run the standalone executable CLI jar.
-	java -jar cli/build/libs/agent-desk-cli-all.jar
+cli-smoke: ## Smoke-run the standalone executable CLI jar and host diagnostic.
+	bash scripts/runnable-operator-build-smoke.sh
 
 .PHONY: release-gate
 release-gate: hygiene format-check ## Run local release gates that do not tag, publish, or require secrets.
 	$(GRADLE) :cli:test
 	bash scripts/mock-runtime-smoke.sh
-	$(GRADLE) :cli:executableJar
-	java -jar cli/build/libs/agent-desk-cli-all.jar
+	bash scripts/runnable-operator-build-smoke.sh
 
 .PHONY: desktop-run
 desktop-run: ## Run the sample Compose desktop shell.
