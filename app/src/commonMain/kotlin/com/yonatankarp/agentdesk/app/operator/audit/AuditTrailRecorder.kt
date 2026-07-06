@@ -25,4 +25,6 @@ class AuditTrailRecorder(
         recordedAt: EventTimestamp,
     ): List<AuditEntry> = AuditTrailProjector.fromMockActionResult(result, recordedAt = recordedAt)
         .onEach(repository::append)
+
+    fun record(entry: AuditEntry): AuditEntry = entry.also(repository::append)
 }
