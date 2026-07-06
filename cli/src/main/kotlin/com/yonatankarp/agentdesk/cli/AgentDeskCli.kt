@@ -117,6 +117,24 @@ object AgentDeskCli {
                 }
             }
 
+            is CliCommand.LiveInspectSmoke -> {
+                val eventStorePath = command.eventStorePath
+                    ?: throw CliUsageException("Missing value for --event-store.")
+                val auditStorePath = command.auditStorePath
+                    ?: throw CliUsageException("Missing value for --audit-store.")
+                val result = LiveInspectSmokeCommand.execute(
+                    workItemId = parseWorkItemId(command.rawWorkItemId),
+                    eventStorePath = eventStorePath,
+                    auditStorePath = auditStorePath,
+                    approve = command.approve,
+                    now = now(),
+                )
+                output.println(result.text)
+                if (result.exitCode != 0) {
+                    return result.exitCode
+                }
+            }
+
             is CliCommand.Inspect -> {
                 val workItemId = parseWorkItemId(command.rawWorkItemId)
                 val read = options.toWorkEventRead(input)
@@ -184,6 +202,7 @@ object AgentDeskCli {
           agent-desk import-mock-runtime --event-store <file>
           agent-desk import-openclaw-observations --observations <file> --event-store <file>
           agent-desk sync-live-observations --host-config <file> --event-store <file>
+          agent-desk live-inspect-smoke <work-item-id> --event-store <file> --audit-store <file> [--approve]
           agent-desk host-smoke --host-config <file>
           agent-desk host-smoke-lab
           agent-desk act resume <work-item-id> --event-store <file> --audit-store <file> [--approve]
@@ -204,6 +223,10 @@ object AgentDeskCli {
           sync-live-observations
                           Read a configured local host observation bridge and import
                           sanitized observations. Read-only: no runtime actions are run.
+          live-inspect-smoke <work-item-id>
+                          Exercise the approval-gated live inspect path with the
+                          synthetic adapter. Without --approve the proposal is
+                          denied and audited (exit 3). No real host action is run.
           host-smoke
                           Check a configured local host profile and render a public-safe
                           reachability diagnostic. Read-only: no runtime actions are run.

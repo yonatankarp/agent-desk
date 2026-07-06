@@ -23,6 +23,13 @@ internal sealed interface CliCommand {
         val eventStorePath: String? = null,
     ) : CliCommand
 
+    data class LiveInspectSmoke(
+        val rawWorkItemId: String,
+        val eventStorePath: String? = null,
+        val auditStorePath: String? = null,
+        val approve: Boolean = false,
+    ) : CliCommand
+
     data class Act(
         val intent: OperatorActionIntent,
         val rawWorkItemId: String,

@@ -114,11 +114,11 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, live inspect smoke, or act."),
     ),
     UsageErrorCase(
         args = listOf("inspect", "agent-task:42", "--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, live inspect smoke, or act."),
     ),
     UsageErrorCase(
         args = listOf("--observations", "observations.json"),
@@ -163,11 +163,11 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("--audit-store", "audit.ndjson"),
-        expectedErrors = listOf("--audit-store is only valid with act or report."),
+        expectedErrors = listOf("--audit-store is only valid with act, report, or live inspect smoke."),
     ),
     UsageErrorCase(
         args = listOf("import-mock-runtime", "--audit-store", "audit.ndjson"),
-        expectedErrors = listOf("--audit-store is only valid with act or report."),
+        expectedErrors = listOf("--audit-store is only valid with act, report, or live inspect smoke."),
     ),
     UsageErrorCase(
         args = listOf("report"),
@@ -194,19 +194,19 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("report", "agent-task:42", "--event-store", "store.ndjson"),
-        expectedErrors = listOf("--event-store is only valid with import commands, live sync, or act."),
+        expectedErrors = listOf("--event-store is only valid with import commands, live sync, live inspect smoke, or act."),
     ),
     UsageErrorCase(
         args = listOf("report", "agent-task:42", "--approve"),
-        expectedErrors = listOf("--approve is only valid with act."),
+        expectedErrors = listOf("--approve is only valid with act or live inspect smoke."),
     ),
     UsageErrorCase(
         args = listOf("--approve"),
-        expectedErrors = listOf("--approve is only valid with act."),
+        expectedErrors = listOf("--approve is only valid with act or live inspect smoke."),
     ),
     UsageErrorCase(
         args = listOf("inspect", "agent-task:42", "--approve"),
-        expectedErrors = listOf("--approve is only valid with act."),
+        expectedErrors = listOf("--approve is only valid with act or live inspect smoke."),
     ),
     UsageErrorCase(
         args = listOf("inspect"),
@@ -242,6 +242,22 @@ internal fun usageErrorCases(): List<UsageErrorCase> = listOf(
     ),
     UsageErrorCase(
         args = listOf("sync-live-observations", "--host-config", "agent-desk.host.properties"),
+        expectedErrors = listOf("Missing value for --event-store."),
+    ),
+    UsageErrorCase(
+        args = listOf("live-inspect-smoke"),
+        expectedErrors = listOf("Missing work item id for live-inspect-smoke."),
+    ),
+    UsageErrorCase(
+        args = listOf("live-inspect-smoke", "--event-store"),
+        expectedErrors = listOf("Missing work item id for live-inspect-smoke."),
+    ),
+    UsageErrorCase(
+        args = listOf("live-inspect-smoke", "agent-task:42", "--event-store", "store.ndjson"),
+        expectedErrors = listOf("Missing value for --audit-store."),
+    ),
+    UsageErrorCase(
+        args = listOf("live-inspect-smoke", "agent-task:42", "--audit-store", "audit.ndjson"),
         expectedErrors = listOf("Missing value for --event-store."),
     ),
     UsageErrorCase(

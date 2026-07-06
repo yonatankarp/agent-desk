@@ -73,6 +73,19 @@ internal data class CliOptions(
                         command = CliCommand.SyncLiveObservations()
                     }
 
+                    "live-inspect-smoke" -> {
+                        if (command != CliCommand.Dashboard) {
+                            throw CliUsageException("Choose only one command.")
+                        }
+                        val workItemId = args.getOrNull(index + 1)
+                            ?: throw CliUsageException("Missing work item id for live-inspect-smoke.")
+                        if (workItemId.startsWith("-")) {
+                            throw CliUsageException("Missing work item id for live-inspect-smoke.")
+                        }
+                        command = CliCommand.LiveInspectSmoke(rawWorkItemId = workItemId)
+                        index += 1
+                    }
+
                     "report" -> {
                         if (command != CliCommand.Dashboard) {
                             throw CliUsageException("Choose only one command.")
@@ -142,8 +155,15 @@ internal data class CliOptions(
                                 selectedCommand.copy(eventStorePath = path)
                             }
 
+                            is CliCommand.LiveInspectSmoke -> {
+                                if (selectedCommand.eventStorePath != null) {
+                                    throw CliUsageException("Choose only one event store.")
+                                }
+                                selectedCommand.copy(eventStorePath = path)
+                            }
+
                             else -> throw CliUsageException(
-                                "--event-store is only valid with import commands, live sync, or act.",
+                                "--event-store is only valid with import commands, live sync, live inspect smoke, or act.",
                             )
                         }
                         index += 1
@@ -170,7 +190,14 @@ internal data class CliOptions(
                                 selectedCommand.copy(auditStorePath = path)
                             }
 
-                            else -> throw CliUsageException("--audit-store is only valid with act or report.")
+                            is CliCommand.LiveInspectSmoke -> {
+                                if (selectedCommand.auditStorePath != null) {
+                                    throw CliUsageException("Choose only one audit store.")
+                                }
+                                selectedCommand.copy(auditStorePath = path)
+                            }
+
+                            else -> throw CliUsageException("--audit-store is only valid with act, report, or live inspect smoke.")
                         }
                         index += 1
                     }
@@ -178,7 +205,8 @@ internal data class CliOptions(
                     "--approve" -> {
                         command = when (val selectedCommand = command) {
                             is CliCommand.Act -> selectedCommand.copy(approve = true)
-                            else -> throw CliUsageException("--approve is only valid with act.")
+                            is CliCommand.LiveInspectSmoke -> selectedCommand.copy(approve = true)
+                            else -> throw CliUsageException("--approve is only valid with act or live inspect smoke.")
                         }
                     }
 
@@ -284,6 +312,12 @@ internal data class CliOptions(
             if (command is CliCommand.SyncLiveObservations && command.eventStorePath == null) {
                 throw CliUsageException("Missing value for --event-store.")
             }
+            if (command is CliCommand.LiveInspectSmoke && command.eventStorePath == null) {
+                throw CliUsageException("Missing value for --event-store.")
+            }
+            if (command is CliCommand.LiveInspectSmoke && command.auditStorePath == null) {
+                throw CliUsageException("Missing value for --audit-store.")
+            }
             if (hostConfigPath != null && command != CliCommand.Dashboard) {
                 throw CliUsageException("--host-config is only valid with dashboard, host-smoke, or sync-live-observations.")
             }
@@ -300,6 +334,7 @@ internal data class CliOptions(
                         command is CliCommand.HostSmoke ||
                         command is CliCommand.HostSmokeLab ||
                         command is CliCommand.SyncLiveObservations ||
+                        command is CliCommand.LiveInspectSmoke ||
                         command is CliCommand.Act
                     ) &&
                 mode != null
