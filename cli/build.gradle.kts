@@ -1,16 +1,19 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.JavaExec
 
 plugins {
     application
     alias(libs.plugins.kover)
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.shadow)
+    alias(libs.plugins.shadow) apply false
 }
 
 kotlin {
     jvmToolchain(25)
 }
+
+apply(plugin = "com.gradleup.shadow")
 
 application {
     mainClass = "com.yonatankarp.agentdesk.cli.AgentDeskCliKt"
@@ -44,6 +47,11 @@ tasks.named<JavaExec>("run") {
     standardInput = System.`in`
 }
 
+tasks.withType<ShadowJar>().configureEach {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF", "META-INF/versions/**/module-info.class")
+}
+
 val executableJar by tasks.registering(ShadowJar::class) {
     group = "distribution"
     description = "Assembles a standalone executable CLI jar."
@@ -55,7 +63,6 @@ val executableJar by tasks.registering(ShadowJar::class) {
         attributes["Main-Class"] = application.mainClass.get()
     }
 
-    exclude("META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.SF")
     from(sourceSets.main.get().output)
     configurations = listOf(project.configurations.runtimeClasspath.get())
 }
