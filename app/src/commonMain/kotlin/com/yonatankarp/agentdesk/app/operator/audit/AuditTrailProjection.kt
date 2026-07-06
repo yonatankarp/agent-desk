@@ -3,6 +3,7 @@ package com.yonatankarp.agentdesk.app.operator.audit
 import com.yonatankarp.agentdesk.app.operator.Actor
 import com.yonatankarp.agentdesk.app.operator.EvidenceDisplayFormatter
 import com.yonatankarp.agentdesk.app.operator.action.ActionPermissionDecision
+import com.yonatankarp.agentdesk.app.operator.action.LiveHostInspectProposal
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalResult
 import com.yonatankarp.agentdesk.app.operator.action.MockActionApprovalState
 import com.yonatankarp.agentdesk.app.operator.action.PermissionDecisionState
@@ -168,6 +169,31 @@ object AuditTrailProjector {
         detail = "Imported sanitized replay event ${event.type.wireName}.",
     )
 
+    fun liveHostInspectEntry(
+        proposal: LiveHostInspectProposal,
+        actor: Actor,
+        recordedAt: EventTimestamp,
+        phase: String,
+        result: AuditResult,
+        detail: String,
+    ): AuditEntry = AuditEntry(
+        id = AuditEntryId.parse("audit:${proposal.target}:inspect:$phase:$recordedAt"),
+        actor = if (phase.startsWith("adapter.")) liveHostInspectAdapterActor else actor,
+        actorKind = if (phase.startsWith("adapter.")) AuditActorKind.Agent else AuditActorKind.Human,
+        timestamp = recordedAt,
+        recordedAt = recordedAt,
+        action = "live-inspect.$phase",
+        target = proposal.target,
+        result = result,
+        sourceItem = proposal.target,
+        correlationId = proposal.correlationId,
+        evidenceReference = sanitizedNote(
+            label = "Live inspect $phase",
+            target = "${proposal.proposalId}:$phase",
+        ),
+        detail = detail,
+    )
+
     fun systemFailure(
         id: AuditEntryId,
         actor: Actor,
@@ -217,6 +243,8 @@ object AuditTrailProjector {
         MockActionApprovalState.PartialSuccess -> AuditResult.PartialSuccess
         MockActionApprovalState.Unsupported -> AuditResult.Unsupported
     }
+
+    private val liveHostInspectAdapterActor = Actor.parse("live-host-inspect-adapter")
 
     private fun PermissionDecisionState.toAuditResult(): AuditResult = when (this) {
         PermissionDecisionState.Approved -> AuditResult.Approved
