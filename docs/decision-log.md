@@ -1,5 +1,28 @@
 # Decision Log
 
+## 2026-07-06: Live host action milestone starts with approval-gated inspect
+
+Decision: The first live-host action milestone is limited to approval-gated
+inspect. Stop, resume, retry, cancel, delete, archive, provider sends,
+credential changes, account changes, purchases, and any other mutating live
+operation remain out of scope.
+
+Rationale: Inspect is read-only, but it can expose fresher host state than the
+local event store. Treating it as a live action forces the same explicit
+approval, audit, aliasing, disablement, and unsafe-output rejection discipline
+that later higher-risk actions will need, while keeping the first milestone
+narrow enough to verify with a synthetic adapter.
+
+Consequence: Follow-up implementation should cite the accepted
+[Live host action approval](live-host-action-approval-proposal.md) decision and
+preserve this dependency direction:
+`concrete host adapter -> :app runtime/action port -> :core domain model`.
+Private runtime ids, endpoints, bridge paths, credentials, raw payload
+locations, and local alias mappings remain local-only and must not appear in
+tracked files, issues, PRs, CI logs, screenshots, or rendered public output.
+Mutating live actions require a separate explicit decision before
+implementation.
+
 ## 2026-06-19: Live host connectivity is staged before control
 
 Decision: Live-host work is split into three stages: diagnostic-only host connectivity, read-only live observation sync, and approval-gated live inspect. Mutating live actions such as stop, resume, retry, and cancel remain deferred until the live action proposal and approval flow is separately accepted.

@@ -325,11 +325,11 @@ The smoke uses the checked-in synthetic sanitized observation fixture as the
 local bridge, imports it into a temporary event store, reruns the sync to prove
 duplicate skipping, and removes temporary files before exiting.
 
-## Proposed Live Inspect Action
+## Live Inspect Action
 
-The next action-capable host milestone is proposed in
-[Live host action approval proposal](live-host-action-approval-proposal.md).
-Until that proposal is accepted and implemented, live host actions remain
-limited to diagnostics and read-only observation sync. `action-capable` mode is
-reserved for approval-gated inspect proposals only; mutating live actions remain
-out of scope.
+The next action-capable host milestone is scoped by the accepted
+[Live host action approval](live-host-action-approval-proposal.md) decision.
+Until that decision is implemented, live host actions remain limited to
+diagnostics and read-only observation sync. `action-capable` mode is reserved
+for approval-gated inspect proposals only; mutating live actions remain out of
+scope.

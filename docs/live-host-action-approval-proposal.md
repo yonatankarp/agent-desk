@@ -1,11 +1,11 @@
 # Live Host Action Approval Proposal
 
-Status: Proposed for issue [#389](https://github.com/yonatankarp/agent-desk/issues/389).
+Status: Accepted for issue [#389](https://github.com/yonatankarp/agent-desk/issues/389).
 
-This proposal defines the first live-host action approval flow. It is not an
-accepted decision until the owner approves it in issue or PR review.
+This decision defines the first live-host action approval flow. It was accepted
+when the owner merged [#408](https://github.com/yonatankarp/agent-desk/pull/408).
 
-## Recommended Decision
+## Decision
 
 Agent Desk should implement only one live-host action in the first action
 milestone: approval-gated inspect. The action-capable host mode may propose and
