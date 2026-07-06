@@ -37,7 +37,7 @@ test: ## Run all module test tasks covered by the standard build.
 check: hygiene format-check build ## Run the default local pre-PR check set.
 
 .PHONY: smoke
-smoke: smoke-mock smoke-mobile smoke-compose smoke-sanitized-runtime smoke-host-lab smoke-live-sync ## Run all public-safe smoke workflows.
+smoke: smoke-mock smoke-mobile smoke-compose smoke-sanitized-runtime smoke-host-lab smoke-live-sync smoke-live-inspect ## Run all public-safe smoke workflows.
 
 .PHONY: smoke-local-first
 smoke-local-first: hygiene replay-sanitized-runtime smoke-mock ## Run the core local-first operator loop smoke without external services.
@@ -64,6 +64,10 @@ smoke-host-lab: ## Run the public-safe simulated host connectivity lab.
 .PHONY: smoke-live-sync
 smoke-live-sync: ## Run the public-safe read-only live observation sync smoke.
 	bash scripts/live-observation-sync-smoke.sh
+
+.PHONY: smoke-live-inspect
+smoke-live-inspect: ## Run the public-safe synthetic live inspect action smoke.
+	bash scripts/live-inspect-smoke.sh
 
 .PHONY: replay-sanitized-runtime
 replay-sanitized-runtime: ## Run the canonical sanitized replay scenario.
