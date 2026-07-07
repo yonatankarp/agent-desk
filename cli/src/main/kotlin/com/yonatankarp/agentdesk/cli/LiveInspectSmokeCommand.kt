@@ -34,20 +34,40 @@ internal object LiveInspectSmokeCommand {
         auditStorePath: String,
         approve: Boolean,
         now: EventTimestamp,
+    ): Result = execute(
+        workItemId = workItemId,
+        eventStorePath = eventStorePath,
+        auditStorePath = auditStorePath,
+        approvalMode = if (approve) ApprovalMode.Exact else ApprovalMode.Denied,
+        now = now,
+    )
+
+    internal fun execute(
+        workItemId: WorkItemId,
+        eventStorePath: String,
+        auditStorePath: String,
+        approvalMode: ApprovalMode,
+        now: EventTimestamp,
     ): Result {
         val hostAlias = RuntimeHostAlias.parse("host:primary")
         val outcome = inspect(
             workItemId = workItemId,
             eventStorePath = eventStorePath,
             auditStorePath = auditStorePath,
-            approval = if (approve) exactApproval(workItemId, hostAlias, now) else LiveHostInspectApproval.Deny,
+            approval = approvalFor(approvalMode, workItemId, hostAlias, now),
             hostAlias = hostAlias,
             now = now,
         )
         return Result(
-            text = render(workItemId, approve, outcome),
+            text = render(workItemId, approvalMode != ApprovalMode.Denied, outcome),
             exitCode = if (outcome is LiveHostInspectOutcome.Executed) 0 else POLICY_DENIED_EXIT_CODE,
         )
+    }
+
+    enum class ApprovalMode {
+        Denied,
+        Exact,
+        Mismatched,
     }
 
     private fun inspect(
@@ -139,6 +159,26 @@ internal object LiveInspectSmokeCommand {
         hostAlias = hostAlias,
         target = workItemId,
     )
+
+    private fun mismatchedApproval(
+        workItemId: WorkItemId,
+        hostAlias: RuntimeHostAlias,
+    ): LiveHostInspectApproval = LiveHostInspectApproval.Approve(
+        proposalId = "inspect:$workItemId:mismatched",
+        hostAlias = hostAlias,
+        target = workItemId,
+    )
+
+    private fun approvalFor(
+        mode: ApprovalMode,
+        workItemId: WorkItemId,
+        hostAlias: RuntimeHostAlias,
+        now: EventTimestamp,
+    ): LiveHostInspectApproval = when (mode) {
+        ApprovalMode.Denied -> LiveHostInspectApproval.Deny
+        ApprovalMode.Exact -> exactApproval(workItemId, hostAlias, now)
+        ApprovalMode.Mismatched -> mismatchedApproval(workItemId, hostAlias)
+    }
 
     private const val POLICY_DENIED_EXIT_CODE = 3
 }
