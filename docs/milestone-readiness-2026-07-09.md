@@ -41,8 +41,9 @@ commit, workflow, command, and documentation references.
 - Gap: current manual desktop and mobile UI evidence was not refreshed or waived.
   Impact: the verification matrix marks desktop and mobile display surfaces as
   requiring manual QA when evaluating release readiness. Automated desktop,
-  Compose, and mobile smoke checks passed, but this cron run did not capture a
-  manual screenshot or interactive review artifact.
+  Compose, and mobile smoke checks passed, but this non-interactive daily run
+  only exercised automated smoke paths and did not capture a manual screenshot
+  or interactive review artifact.
   Required next action: capture public-safe desktop and mobile UI evidence in a
   dedicated manual QA pass, or explicitly document an owner-approved waiver for
   this release candidate.
