@@ -18,6 +18,8 @@ Agent Desk keeps `README.md` short. It should explain what the project is, how t
 - [Milestone readiness report](milestone-readiness-report.md): release readiness template and checklist.
 - [Milestone readiness report - 2026-07-08](milestone-readiness-2026-07-08.md): current public-safe readiness status after the live inspect slices.
 - [Milestone readiness report - 2026-07-09](milestone-readiness-2026-07-09.md): not-ready release-candidate readiness pass with green automated gates and a manual UI evidence gap.
+- [Milestone readiness report - 2026-07-10](milestone-readiness-2026-07-10.md): ready release-candidate readiness pass with refreshed public-safe manual UI evidence.
+- [Manual desktop and mobile UI evidence - 2026-07-10](manual-ui-evidence-2026-07-10.md): dated public-safe desktop and mobile UI evidence for the current release candidate.
 - [Runtime configuration](runtime-configuration.md): public-safe mode/source/store configuration contract and mock runtime smoke.
 - [Failed local host connection runbook](failed-host-connection-runbook.md): public-safe troubleshooting flow for local-network host connection failures.
 - [Action permission gates](action-permission-gates.md): action class inventory and fail-closed permission behavior.
