@@ -26,4 +26,11 @@ class OperatorDisplayStructureTest :
                 "Evidence detail" to ("Evidence drilldown" to "Evidence detail"),
             )
         }
+
+        test("settings is a separate app page, not part of the main operator section order") {
+            OperatorDisplayStructure.settingsSection.canonicalTitle shouldBe "Settings"
+            OperatorDisplayStructure.settingsSection.desktopLabel shouldBe "Settings"
+            OperatorDisplayStructure.settingsSection.mobileLabel shouldBe "Settings"
+            OperatorDisplayStructure.orderedSections.contains(OperatorDisplayStructure.settingsSection) shouldBe false
+        }
     })

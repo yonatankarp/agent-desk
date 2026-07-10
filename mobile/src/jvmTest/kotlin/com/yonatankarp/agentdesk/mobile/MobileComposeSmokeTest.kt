@@ -35,12 +35,27 @@ class MobileComposeSmokeTest :
 
                 onNodeWithText("Agent Desk").assertIsDisplayed()
                 onNodeWithText("3 current / 2 attention").assertIsDisplayed()
+                onNodeWithText("Settings").assertIsDisplayed()
                 onNodeWithText("Current work").assertIsDisplayed()
                 onNodeWithText("Attention queue").assertIsDisplayed()
                 onNodeWithText("Run public hygiene check").assertIsDisplayed()
                 onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
                 onAllNodesWithText("Review build failure").assertCountEquals(2)
                 onNodeWithText("Recent events").performScrollTo().assertIsDisplayed()
+            }
+        }
+
+        test("settings renders as a separate page") {
+            runComposeUiTest {
+                setContent {
+                    AgentDeskMobileApp(MobileOperatorStateContract.sample())
+                }
+
+                onNodeWithText("Platform detail panels: host-specific capabilities stay platform-scoped").assertDoesNotExist()
+                onNodeWithText("Settings").performClick()
+                onNodeWithText("Platform detail panels: host-specific capabilities stay platform-scoped").assertIsDisplayed()
+                onNodeWithText("Theme: Auto").assertIsDisplayed()
+                onNodeWithText("Current work").assertDoesNotExist()
             }
         }
 

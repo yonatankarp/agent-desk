@@ -79,6 +79,7 @@ object DesktopSmokeSnapshotBuilder {
         OperatorDisplaySection.Timeline -> timelineRows
         OperatorDisplaySection.DecisionQueue -> message?.let(::listOf) ?: attentionRows
         OperatorDisplaySection.EvidenceDetail -> DesktopEvidenceDrilldown.rows(screenState)
+        OperatorDisplaySection.Settings -> error("Settings is rendered as a separate app page.")
     }
 
     private fun DesktopScreenState.summaryText(): String {

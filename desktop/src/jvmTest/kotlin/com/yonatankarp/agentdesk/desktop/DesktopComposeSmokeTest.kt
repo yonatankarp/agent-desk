@@ -28,6 +28,7 @@ class DesktopComposeSmokeTest :
                 onNodeWithText("Agent Desk").assertIsDisplayed()
                 onNodeWithText("Sample state").assertIsDisplayed()
                 onNodeWithText("Replay status").assertIsDisplayed()
+                onNodeWithText("Settings").assertIsDisplayed()
                 onNodeWithText("Work state").assertIsDisplayed()
                 onNodeWithText("Read-only timeline").assertIsDisplayed()
                 onNodeWithText("Decision queue").assertIsDisplayed()
@@ -37,6 +38,20 @@ class DesktopComposeSmokeTest :
                 onAllNodesWithText("Choose adapter boundary").assertCountEquals(2)
                 onAllNodesWithText("Review build failure").assertCountEquals(2)
                 onNodeWithText("Observation: work.blocked for agent-task:44").assertIsDisplayed()
+            }
+        }
+
+        test("settings renders as a separate page") {
+            runComposeUiTest {
+                setContent {
+                    AgentDeskApp(DesktopScreenState.Ready(SampleOperatorState.current(), modeLabel = "Sample state"))
+                }
+
+                onNodeWithText("Platform detail panels: host-specific capabilities stay platform-scoped").assertDoesNotExist()
+                onNodeWithText("Settings").performClick()
+                onNodeWithText("Platform detail panels: host-specific capabilities stay platform-scoped").assertIsDisplayed()
+                onNodeWithText("Theme: Auto").assertIsDisplayed()
+                onNodeWithText("Work state").assertDoesNotExist()
             }
         }
 
@@ -84,6 +99,7 @@ class DesktopComposeSmokeTest :
                     )
                 }
 
+                onNodeWithText("Settings").performClick()
                 onNodeWithText("Theme: Auto").assertIsDisplayed()
                 onNodeWithText("Theme: Auto").performClick()
                 onNodeWithText("Theme: Light").assertIsDisplayed()

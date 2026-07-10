@@ -30,8 +30,20 @@ enum class OperatorDisplaySection(
         desktopLabel = "Evidence drilldown",
         mobileLabel = "Evidence detail",
     ),
+    Settings(
+        canonicalTitle = "Settings",
+        desktopLabel = "Settings",
+        mobileLabel = "Settings",
+    ),
 }
 
 object OperatorDisplayStructure {
-    val orderedSections: List<OperatorDisplaySection> = OperatorDisplaySection.entries
+    val orderedSections: List<OperatorDisplaySection> = listOf(
+        OperatorDisplaySection.ReplayStatus,
+        OperatorDisplaySection.WorkState,
+        OperatorDisplaySection.Timeline,
+        OperatorDisplaySection.DecisionQueue,
+        OperatorDisplaySection.EvidenceDetail,
+    )
+    val settingsSection: OperatorDisplaySection = OperatorDisplaySection.Settings
 }

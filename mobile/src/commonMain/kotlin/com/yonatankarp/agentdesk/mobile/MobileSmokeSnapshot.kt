@@ -61,6 +61,8 @@ object MobileSmokeSnapshotBuilder {
         OperatorDisplaySection.EvidenceDetail -> state.evidenceDetails.firstOrNull()
             ?.let(MobileDisplayText::evidenceDetailRows)
             ?: listOf(MobileDisplayText.EVIDENCE_DETAIL_MISSING)
+
+        OperatorDisplaySection.Settings -> error("Settings is rendered as a separate app page.")
     }
 
     private fun List<MobileWorkItem>.toWorkRows(emptyText: String): List<String> {
