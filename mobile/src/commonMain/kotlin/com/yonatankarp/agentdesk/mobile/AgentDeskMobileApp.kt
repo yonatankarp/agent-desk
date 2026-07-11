@@ -3,6 +3,7 @@
 package com.yonatankarp.agentdesk.mobile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
+import com.yonatankarp.agentdesk.app.operator.SettingsDisplay
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileAttentionItem
 import com.yonatankarp.agentdesk.app.operator.mobile.MobileEventLine
@@ -44,6 +48,7 @@ import com.yonatankarp.agentdesk.design.theme.ThemeMode
 @Composable
 fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.sample()) {
     var mode by remember { mutableStateOf(ThemeMode.System) }
+    var page by remember { mutableStateOf(MobilePage.Main) }
     AgentDeskTheme(mode = mode) {
         val spacing = AgentDeskTheme.spacing
         Surface(
@@ -57,62 +62,10 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
                     .padding(horizontal = spacing.lg, vertical = spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(spacing.md),
             ) {
-                MobileHeader(state, mode) { mode = it }
-                Panel(title = MobileDisplayText.CURRENT_WORK_TITLE, modifier = Modifier.fillMaxWidth()) {
-                    if (state.currentWork.isEmpty()) {
-                        MobileEmptyRow(MobileDisplayText.NO_CURRENT_WORK)
-                    } else {
-                        state.currentWork.forEach { item -> MobileWorkRow(item) }
-                    }
-                }
-                Panel(title = MobileDisplayText.ATTENTION_QUEUE_TITLE, modifier = Modifier.fillMaxWidth()) {
-                    if (state.attentionQueue.isEmpty()) {
-                        MobileEmptyRow(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
-                    } else {
-                        state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
-                    }
-                }
-                Panel(title = MobileDisplayText.RECENT_EVENTS_TITLE, modifier = Modifier.fillMaxWidth()) {
-                    if (state.recentEvents.isEmpty()) {
-                        MobileEmptyRow(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
-                    } else {
-                        state.recentEvents.forEach { event -> MobileEventRow(event) }
-                    }
-                }
-                Panel(title = MobileDisplayText.TIMELINE_TITLE, modifier = Modifier.fillMaxWidth()) {
-                    if (state.timeline.isEmpty()) {
-                        MobileEmptyRow(MobileDisplayText.NO_TIMELINE_ENTRIES)
-                    } else {
-                        if (state.timelineStatusMarkers.isNotEmpty()) {
-                            Text(
-                                text = MobileDisplayText.timelineStatus(state.timelineStatusMarkers),
-                                color = AgentDeskTheme.colors.textMuted,
-                                style = AgentDeskTheme.typography.mono,
-                            )
-                        }
-                        val detailsByEventId = state.evidenceDetails.associateBy { detail -> detail.eventId }
-                        var previousWindow: String? = null
-                        state.timeline.forEach { entry ->
-                            if (entry.timeWindow != previousWindow) {
-                                previousWindow = entry.timeWindow
-                                Text(
-                                    text = entry.timeWindow,
-                                    color = AgentDeskTheme.colors.textMuted,
-                                    style = AgentDeskTheme.typography.mono,
-                                    fontWeight = FontWeight.Medium,
-                                )
-                            }
-                            MobileTimelineRow(
-                                entry = entry,
-                                detail = detailsByEventId[entry.eventId],
-                            )
-                        }
-                    }
-                }
-                if (state.projectionWarnings.isNotEmpty()) {
-                    Panel(title = MobileDisplayText.PROJECTION_WARNINGS_TITLE, modifier = Modifier.fillMaxWidth()) {
-                        state.projectionWarnings.forEach { warning -> MobileWarningRow(warning) }
-                    }
+                MobileHeader(state, page) { page = it }
+                when (page) {
+                    MobilePage.Main -> MobileMainPage(state)
+                    MobilePage.Settings -> MobileSettingsPage(mode) { mode = it }
                 }
             }
         }
@@ -120,10 +73,85 @@ fun AgentDeskMobileApp(state: MobileOperatorState = MobileOperatorStateContract.
 }
 
 @Composable
-private fun MobileHeader(
-    state: MobileOperatorState,
+private fun MobileMainPage(state: MobileOperatorState) {
+    Column(verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.md)) {
+        Panel(title = MobileDisplayText.CURRENT_WORK_TITLE, modifier = Modifier.fillMaxWidth()) {
+            if (state.currentWork.isEmpty()) {
+                MobileEmptyRow(MobileDisplayText.NO_CURRENT_WORK)
+            } else {
+                state.currentWork.forEach { item -> MobileWorkRow(item) }
+            }
+        }
+        Panel(title = MobileDisplayText.ATTENTION_QUEUE_TITLE, modifier = Modifier.fillMaxWidth()) {
+            if (state.attentionQueue.isEmpty()) {
+                MobileEmptyRow(MobileDisplayText.NO_ITEMS_NEED_ATTENTION)
+            } else {
+                state.attentionQueue.forEach { item -> MobileAttentionRow(item) }
+            }
+        }
+        Panel(title = MobileDisplayText.RECENT_EVENTS_TITLE, modifier = Modifier.fillMaxWidth()) {
+            if (state.recentEvents.isEmpty()) {
+                MobileEmptyRow(MobileDisplayText.NO_RECENT_ACCEPTED_EVENTS)
+            } else {
+                state.recentEvents.forEach { event -> MobileEventRow(event) }
+            }
+        }
+        Panel(title = MobileDisplayText.TIMELINE_TITLE, modifier = Modifier.fillMaxWidth()) {
+            if (state.timeline.isEmpty()) {
+                MobileEmptyRow(MobileDisplayText.NO_TIMELINE_ENTRIES)
+            } else {
+                if (state.timelineStatusMarkers.isNotEmpty()) {
+                    Text(
+                        text = MobileDisplayText.timelineStatus(state.timelineStatusMarkers),
+                        color = AgentDeskTheme.colors.textMuted,
+                        style = AgentDeskTheme.typography.mono,
+                    )
+                }
+                val detailsByEventId = state.evidenceDetails.associateBy { detail -> detail.eventId }
+                var previousWindow: String? = null
+                state.timeline.forEach { entry ->
+                    if (entry.timeWindow != previousWindow) {
+                        previousWindow = entry.timeWindow
+                        Text(
+                            text = entry.timeWindow,
+                            color = AgentDeskTheme.colors.textMuted,
+                            style = AgentDeskTheme.typography.mono,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                    MobileTimelineRow(
+                        entry = entry,
+                        detail = detailsByEventId[entry.eventId],
+                    )
+                }
+            }
+        }
+        if (state.projectionWarnings.isNotEmpty()) {
+            Panel(title = MobileDisplayText.PROJECTION_WARNINGS_TITLE, modifier = Modifier.fillMaxWidth()) {
+                state.projectionWarnings.forEach { warning -> MobileWarningRow(warning) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MobileSettingsPage(
     mode: ThemeMode,
     onCycle: (ThemeMode) -> Unit,
+) {
+    Panel(title = OperatorDisplayStructure.settingsSection.mobileLabel, modifier = Modifier.fillMaxWidth()) {
+        SettingsDisplay.rows.forEach { row ->
+            Text(row, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
+        }
+        ThemeModeControl(mode = mode, onCycle = onCycle)
+    }
+}
+
+@Composable
+private fun MobileHeader(
+    state: MobileOperatorState,
+    page: MobilePage,
+    onPageChange: (MobilePage) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
         Text(
@@ -140,8 +168,34 @@ private fun MobileHeader(
             color = AgentDeskTheme.colors.textMuted,
             style = AgentDeskTheme.typography.mono,
         )
-        ThemeModeControl(mode = mode, onCycle = onCycle)
+        Row(horizontalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
+            MobilePageLink("Overview", active = page == MobilePage.Main) { onPageChange(MobilePage.Main) }
+            MobilePageLink(OperatorDisplayStructure.settingsSection.mobileLabel, active = page == MobilePage.Settings) {
+                onPageChange(MobilePage.Settings)
+            }
+        }
     }
+}
+
+@Composable
+private fun MobilePageLink(
+    label: String,
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = AgentDeskTheme.colors
+    val spacing = AgentDeskTheme.spacing
+    Text(
+        text = label,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (active) colors.accent.copy(alpha = 0.18f) else colors.row)
+            .border(spacing.lineWidth, if (active) colors.accent else colors.line, RoundedCornerShape(50))
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
+        color = if (active) colors.textPrimary else colors.textSecondary,
+        style = AgentDeskTheme.typography.label,
+    )
 }
 
 @Composable
@@ -387,3 +441,8 @@ private fun MobileEmptyRow(text: String) {
 }
 
 internal const val MOBILE_EMPTY_ROW_TEST_TAG = "mobile-empty-row"
+
+private enum class MobilePage {
+    Main,
+    Settings,
+}

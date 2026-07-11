@@ -2,6 +2,9 @@
 
 package com.yonatankarp.agentdesk.desktop
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +22,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
+import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.OperatorState
 import com.yonatankarp.agentdesk.app.operator.OperatorStatePresenter
 import com.yonatankarp.agentdesk.app.operator.SampleOperatorState
+import com.yonatankarp.agentdesk.app.operator.SettingsDisplay
 import com.yonatankarp.agentdesk.app.operator.StatusTone
 import com.yonatankarp.agentdesk.core.domain.entities.WorkItem
 import com.yonatankarp.agentdesk.design.component.ActionRow
@@ -54,6 +61,7 @@ fun AgentDeskApp(
     themeStore: ThemeModeStore = InMemoryThemeModeStore(),
 ) {
     var mode by remember { mutableStateOf(themeStore.load()) }
+    var page by remember { mutableStateOf(DesktopPage.Main) }
     AgentDeskTheme(mode = mode) {
         val spacing = AgentDeskTheme.spacing
         Surface(modifier = Modifier.fillMaxSize(), color = AgentDeskTheme.colors.background) {
@@ -61,59 +69,13 @@ fun AgentDeskApp(
                 modifier = Modifier.fillMaxSize().padding(spacing.xl),
                 verticalArrangement = Arrangement.spacedBy(spacing.lg),
             ) {
-                DesktopHeader(screenState, mode) { next ->
-                    mode = next
-                    themeStore.save(next)
-                }
-                Panel(title = OperatorDisplaySection.ReplayStatus.desktopLabel, modifier = Modifier.fillMaxWidth()) {
-                    DesktopReplayStatus.rows(screenState).forEach { row ->
-                        Text(row, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
-                    }
-                }
-                Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.lg)) {
-                    Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
-                        Panel(title = OperatorDisplaySection.WorkState.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            val rows = screenState.workRows()
-                            if (rows.isEmpty()) {
-                                DesktopEmptyRow("No current work")
-                            } else {
-                                rows.forEach { row -> DesktopWorkMetadataRow(row) }
-                            }
-                        }
-                        Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            val lines = DesktopTimelinePresenter.rows(screenState.readyState())
-                            if (lines.isEmpty()) {
-                                DesktopEmptyRow("No recent events")
-                            } else {
-                                lines.forEachIndexed { i, line ->
-                                    EventRow(
-                                        type = line.type,
-                                        occurredAt = line.occurredAt,
-                                        detail = line.detail,
-                                        source = line.source,
-                                        showDivider = i < lines.lastIndex,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
-                        Panel(
-                            title = OperatorDisplaySection.DecisionQueue.desktopLabel,
-                            modifier = Modifier.weight(1f).fillMaxWidth(),
-                            titleColor = AgentDeskTheme.statusRole(StatusTone.Blocked).text,
-                        ) {
-                            val attention = screenState.attentionItems()
-                            val message = screenState.message()
-                            when {
-                                message != null -> DesktopEmptyRow(message)
-                                attention.isEmpty() -> DesktopEmptyRow("No items need a decision")
-                                else -> screenState.attentionRows().forEach { row -> DesktopWorkMetadataRow(row) }
-                            }
-                        }
-                        Panel(title = OperatorDisplaySection.EvidenceDetail.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                            DesktopEvidenceDrilldown.rows(screenState).forEach { row -> EvidenceItem(label = row) }
-                        }
+                DesktopHeader(screenState, page) { page = it }
+                when (page) {
+                    DesktopPage.Main -> DesktopMainPage(screenState)
+
+                    DesktopPage.Settings -> DesktopSettingsPage(mode) { next ->
+                        mode = next
+                        themeStore.save(next)
                     }
                 }
             }
@@ -122,10 +84,81 @@ fun AgentDeskApp(
 }
 
 @Composable
-private fun DesktopHeader(
-    screenState: DesktopScreenState,
+private fun DesktopMainPage(screenState: DesktopScreenState) {
+    val spacing = AgentDeskTheme.spacing
+    Panel(title = OperatorDisplaySection.ReplayStatus.desktopLabel, modifier = Modifier.fillMaxWidth()) {
+        DesktopReplayStatus.rows(screenState).forEach { row ->
+            Text(row, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
+        }
+    }
+    Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.lg)) {
+        Column(Modifier.weight(1.35f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
+            Panel(title = OperatorDisplaySection.WorkState.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
+                val rows = screenState.workRows()
+                if (rows.isEmpty()) {
+                    DesktopEmptyRow("No current work")
+                } else {
+                    rows.forEach { row -> DesktopWorkMetadataRow(row) }
+                }
+            }
+            Panel(title = OperatorDisplaySection.Timeline.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
+                val lines = DesktopTimelinePresenter.rows(screenState.readyState())
+                if (lines.isEmpty()) {
+                    DesktopEmptyRow("No recent events")
+                } else {
+                    lines.forEachIndexed { i, line ->
+                        EventRow(
+                            type = line.type,
+                            occurredAt = line.occurredAt,
+                            detail = line.detail,
+                            source = line.source,
+                            showDivider = i < lines.lastIndex,
+                        )
+                    }
+                }
+            }
+        }
+        Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.lg)) {
+            Panel(
+                title = OperatorDisplaySection.DecisionQueue.desktopLabel,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                titleColor = AgentDeskTheme.statusRole(StatusTone.Blocked).text,
+            ) {
+                val attention = screenState.attentionItems()
+                val message = screenState.message()
+                when {
+                    message != null -> DesktopEmptyRow(message)
+                    attention.isEmpty() -> DesktopEmptyRow("No items need a decision")
+                    else -> screenState.attentionRows().forEach { row -> DesktopWorkMetadataRow(row) }
+                }
+            }
+            Panel(title = OperatorDisplaySection.EvidenceDetail.desktopLabel, modifier = Modifier.weight(1f).fillMaxWidth()) {
+                DesktopEvidenceDrilldown.rows(screenState).forEach { row -> EvidenceItem(label = row) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DesktopSettingsPage(
     mode: ThemeMode,
     onCycle: (ThemeMode) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.lg)) {
+        Panel(title = OperatorDisplayStructure.settingsSection.desktopLabel, modifier = Modifier.fillMaxWidth()) {
+            SettingsDisplay.rows.forEach { row ->
+                Text(row, color = AgentDeskTheme.colors.textSecondary, style = AgentDeskTheme.typography.body)
+            }
+            ThemeModeControl(mode = mode, onCycle = onCycle)
+        }
+    }
+}
+
+@Composable
+private fun DesktopHeader(
+    screenState: DesktopScreenState,
+    page: DesktopPage,
+    onPageChange: (DesktopPage) -> Unit,
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
         Column(verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.xs)) {
@@ -140,9 +173,33 @@ private fun DesktopHeader(
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
             Text(screenState.summaryText(), color = AgentDeskTheme.colors.textMuted, style = AgentDeskTheme.typography.label)
-            ThemeModeControl(mode = mode, onCycle = onCycle)
+            Row(horizontalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
+                DesktopPageLink("Overview", active = page == DesktopPage.Main) { onPageChange(DesktopPage.Main) }
+                DesktopPageLink("Settings", active = page == DesktopPage.Settings) { onPageChange(DesktopPage.Settings) }
+            }
         }
     }
+}
+
+@Composable
+private fun DesktopPageLink(
+    label: String,
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = AgentDeskTheme.colors
+    val spacing = AgentDeskTheme.spacing
+    Text(
+        text = label,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (active) colors.accent.copy(alpha = 0.18f) else colors.row)
+            .border(spacing.lineWidth, if (active) colors.accent else colors.line, RoundedCornerShape(50))
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
+        color = if (active) colors.textPrimary else colors.textSecondary,
+        style = AgentDeskTheme.typography.label,
+    )
 }
 
 @Composable
@@ -205,4 +262,9 @@ private fun DesktopScreenState.message(): String? = when (this) {
 private fun DesktopScreenState.summaryText(): String {
     val state = readyState() ?: return "0 active / 0 attention"
     return "${OperatorStatePresenter.activeCount(state)} active / ${DesktopWorkItemPresenter.attentionItems(state).size} attention"
+}
+
+private enum class DesktopPage {
+    Main,
+    Settings,
 }
