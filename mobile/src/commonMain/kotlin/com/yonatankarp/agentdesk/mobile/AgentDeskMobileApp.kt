@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplayStructure
 import com.yonatankarp.agentdesk.app.operator.SettingsDisplay
@@ -169,7 +170,9 @@ private fun MobileHeader(
         )
         Row(horizontalArrangement = Arrangement.spacedBy(AgentDeskTheme.spacing.sm)) {
             MobilePageLink("Overview", active = page == MobilePage.Main) { onPageChange(MobilePage.Main) }
-            MobilePageLink("Settings", active = page == MobilePage.Settings) { onPageChange(MobilePage.Settings) }
+            MobilePageLink(OperatorDisplayStructure.settingsSection.mobileLabel, active = page == MobilePage.Settings) {
+                onPageChange(MobilePage.Settings)
+            }
         }
     }
 }
@@ -188,7 +191,7 @@ private fun MobilePageLink(
             .clip(RoundedCornerShape(50))
             .background(if (active) colors.accent.copy(alpha = 0.18f) else colors.row)
             .border(spacing.lineWidth, if (active) colors.accent else colors.line, RoundedCornerShape(50))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Tab, onClick = onClick)
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         color = if (active) colors.textPrimary else colors.textSecondary,
         style = AgentDeskTheme.typography.label,

@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.yonatankarp.agentdesk.app.operator.OperatorDisplaySection
@@ -194,7 +195,7 @@ private fun DesktopPageLink(
             .clip(RoundedCornerShape(50))
             .background(if (active) colors.accent.copy(alpha = 0.18f) else colors.row)
             .border(spacing.lineWidth, if (active) colors.accent else colors.line, RoundedCornerShape(50))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Tab, onClick = onClick)
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         color = if (active) colors.textPrimary else colors.textSecondary,
         style = AgentDeskTheme.typography.label,
