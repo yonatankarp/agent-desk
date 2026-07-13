@@ -93,8 +93,9 @@ commit, workflow, command, and documentation references.
 
 ## Verification Evidence
 
-- Local tests: `bash scripts/validate-public-hygiene.sh` and `git diff --check`
-  passed while preparing this docs-only readiness refresh.
+- Local tests: `bash scripts/validate-public-hygiene.sh`, `git diff --check`,
+  and pre-push `./gradlew spotlessCheck` passed while preparing this docs-only
+  readiness refresh.
 - Integration tests: latest `main` CI at `08a0e8c` passed Gradle module builds
   for core, test-fixtures, app, CLI, design, desktop, and mobile.
 - Smoke tests: latest `main` CI at `08a0e8c` passed mock runtime smoke, mobile
