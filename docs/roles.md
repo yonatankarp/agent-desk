@@ -114,6 +114,8 @@ Discovery should not create noisy issues for every idea. It should favor small, 
 
 Discovery must not revive closed issues or stale local workspaces as new work unless the owner explicitly asks for a rerun. When the open backlog contains only decision issues, Discovery should report that no independent follow-up issue was warranted yet and hand control back to Manager to resolve the decision issue next.
 
+When the actionable backlog is empty or the product appears release-ready, Manager/Product owns creation or proposal of the next narrow issue. Release readiness is not a reason to stop quietly; it should produce a release execution, post-release hardening, roadmap clarification, or next-product-slice issue unless a public-safe blocker prevents responsible issue creation.
+
 In a timeboxed run, Discovery is the handoff back to Manager, not the end of the run by default. If it creates or identifies a new unblocked slice and meaningful time remains, the orchestrator should return to Manager selection.
 
 ## Docs/Operator
@@ -133,4 +135,4 @@ Every slice completion report should list QA/Tester and Compliance explicitly. I
 
 Compliance entries in slice reports should include `Architecture boundary check:` with the result or a clear not-applicable reason.
 
-Every loop report should include Discovery output. The report must list new follow-up issues or state why no follow-up issues were warranted.
+Every loop report should include Discovery output. The report must list new follow-up issues or state why no follow-up issues were warranted. For empty-backlog or release-ready runs, the report must also show Manager/Product no-issue triage and the issue created/proposed, or the concrete blocker that prevented responsible issue creation. A `none warranted` triage result is allowed only when the report names the evidence reviewed, the candidate issue considered, and why each plausible candidate was rejected as not public-safe or not useful without invented product direction.
