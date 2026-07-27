@@ -7,7 +7,7 @@ kover = "0.9.9"
 kotlin = "2.4.10"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.10"
-shadow = "9.6.0"
+shadow = "9.6.1"
 spotless = "8.8.0"
 
 [plugins]
