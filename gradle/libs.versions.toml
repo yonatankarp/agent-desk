@@ -6,7 +6,7 @@ kotest = "6.2.3"
 kover = "0.9.9"
 kotlin = "2.4.10"
 kotlinx-serialization = "1.11.0"
-ksp = "2.3.10"
+ksp = "2.3.11"
 shadow = "9.6.1"
 spotless = "8.9.0"
 
