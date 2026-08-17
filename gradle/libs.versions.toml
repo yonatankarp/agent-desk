@@ -2,7 +2,7 @@
 compose = "1.11.1"
 compose-material3 = "1.9.0"
 konsist = "0.17.3"
-kotest = "6.2.3"
+kotest = "6.2.4"
 kover = "0.9.9"
 kotlin = "2.4.10"
 kotlinx-serialization = "1.11.0"
