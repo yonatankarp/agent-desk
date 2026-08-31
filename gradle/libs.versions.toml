@@ -1,5 +1,5 @@
 [versions]
-compose = "1.11.1"
+compose = "1.12.0"
 compose-material3 = "1.9.0"
 konsist = "0.17.3"
 kotest = "6.2.4"
